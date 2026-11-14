@@ -73,6 +73,8 @@ def test_pressure_embedded_unit_and_bad():
     assert parse_pressure("", "atm") is None
     assert parse_pressure("0.5; 1.0; 1.5", "atm") is None
     assert parse_pressure("RAMPED", "atm") is None
+    assert parse_pressure("0", "mmHg") is None  # PSI-69#114: zero pressure is a data glitch
+    assert parse_pressure("5", "atm") is None  # 506.6 kPa, above the contract range
 
 
 def test_flow_and_burn():

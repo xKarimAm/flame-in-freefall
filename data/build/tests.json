@@ -3060,7 +3060,7 @@
     "o2_pct_min": null,
     "o2_pct_max": null,
     "o2_note": null,
-    "pressure_kpa": 0.0,
+    "pressure_kpa": null,
     "flow_cm_s": null,
     "outcome": "extinction",
     "outcome_raw": "Extinction",
@@ -3075,7 +3075,8 @@
         "outcome": "Test end",
         "burn_time_s": "Burn time; s"
       }
-    }
+    },
+    "pressure_note": "0"
   },
   {
     "id": "PSI-69#115",

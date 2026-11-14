@@ -89,7 +89,8 @@ def parse_pressure(raw, unit):
     if value is None:
         return None
     result = round(value * factor, 2)
-    if result < 0 or result > 400:
+    # 0 kPa is not a physical test pressure (csv_69_34.csv row 114 says 0 mmHg): treat as unparseable.
+    if result <= 0 or result > 400:
         return None
     return result
 

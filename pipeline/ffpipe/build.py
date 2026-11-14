@@ -6,6 +6,7 @@ import json
 import re
 from pathlib import Path
 
+from .experiments import build_experiments, build_psi_text
 from .parsers import PARSERS
 from .sources import SOURCES
 
@@ -53,7 +54,11 @@ def main():
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     tests = build_tests()
     write_json(BUILD_DIR / "tests.json", tests)
-    print(f"wrote tests.json ({len(tests)} rows)")
+    experiments = build_experiments(SNAPSHOT, tests)
+    write_json(BUILD_DIR / "experiments.json", experiments)
+    texts = build_psi_text(SNAPSHOT)
+    write_json(BUILD_DIR / "psi-text.json", texts)
+    print(f"wrote tests.json ({len(tests)} rows), experiments.json ({len(experiments)}), psi-text.json ({len(texts)})")
 
 
 if __name__ == "__main__":

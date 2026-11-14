@@ -83,3 +83,8 @@ def test_no_outcome_guessed_for_files_without_outcome_column():
     for row in build_tests(SNAPSHOT):
         if row["investigation"] in {"PSI-25", "PSI-26", "PSI-68", "PSI-39", "PSI-10", "PSI-107", "PSI-100", "PSI-101", "PSI-102"}:
             assert row["outcome"] == "unknown" and row["outcome_raw"] is None
+
+
+def test_zero_pressure_glitch_is_null_with_note():
+    row = {r["id"]: r for r in build_tests(SNAPSHOT)}["PSI-69#114"]
+    assert row["pressure_kpa"] is None and row["pressure_note"] == "0"
