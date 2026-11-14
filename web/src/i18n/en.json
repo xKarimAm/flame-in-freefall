@@ -6,7 +6,7 @@
   "ui.engine.chapter": "Chapter {n}",
   "ui.engine.page": "Page {n} of {total}",
   "ui.cover.title": "Fire, oxygen and the Moon",
-  "ui.cover.lead": "Every NASA microgravity fire test in one picture, and where the evidence for a Moon base runs out.",
+  "ui.cover.lead": "NASA microgravity fire tests on one chart, with the ones that cannot be placed listed beside it, and where the evidence for a Moon base runs out.",
   "ui.cover.cue": "Scroll to turn the page",
   "ui.stage.title": "Evidence chart: NASA microgravity fire tests by air pressure and oxygen",
   "ui.stage.x-axis": "Air pressure (kPa)",

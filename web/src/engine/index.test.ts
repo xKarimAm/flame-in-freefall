@@ -129,17 +129,20 @@ describe("engine mount", () => {
   it("renders the question only when its key exists", () => {
     const story = stories[0];
     const qKey = story.title_key.replace(/\.title$/, ".question");
-    expect(dicts.en![qKey]).toBeUndefined();
-    expect(setup().el.querySelector(".chapter-question")).toBeNull();
-    dicts.en![qKey] = "Why does a flame behave so differently up there?";
+    const original = dicts.en![qKey]; // the story-JSON coder may add the real key; test both states either way
     try {
+      delete dicts.en![qKey];
+      expect(setup().el.querySelector(".chapter-question")).toBeNull();
+      dicts.en![qKey] = "Test question text that is not shipped";
       const { el } = setup();
       const qs = el.querySelectorAll(".chapter-question");
       expect(qs).toHaveLength(1);
       expect(qs[0].textContent).toBe(dicts.en![qKey]);
       expect(el.querySelector(`#story-${story.id}`)!.contains(qs[0])).toBe(true);
+      expect(el.querySelector(`#story-${story.id} h2.story-title`)!.nextElementSibling).toBe(qs[0]);
     } finally {
-      delete dicts.en![qKey];
+      if (original === undefined) delete dicts.en![qKey];
+      else dicts.en![qKey] = original;
     }
   });
 
