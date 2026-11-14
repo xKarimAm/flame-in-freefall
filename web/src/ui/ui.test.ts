@@ -207,14 +207,15 @@ describe("ui", () => {
   });
 
   it("the chapter rail has one chip per story, marks the one in view and scrolls to it", () => {
-    const { store } = setup();
+    const { store, ctx } = setup();
     const nav = roots().chrome.querySelector("nav.rail")!;
     expect(nav.getAttribute("aria-label")).toBe("Chapters");
     const chips = [...nav.querySelectorAll<HTMLButtonElement>("button.chip")];
     expect(stories.length).toBeGreaterThan(0);
     expect(chips.length).toBe(stories.length);
     expect(chips[0].textContent).toContain(String(stories[0].act));
-    expect(chips[0].textContent).toContain("Build your Moon-base air");
+    expect(chips[0].textContent).toContain(ctx.t(stories[0].title_key));
+    expect(chips.map((c) => c.textContent).join(" ")).toContain("Build your Moon-base air");
     expect(chips.some((c) => c.getAttribute("aria-current") === "true")).toBe(false);
     store.set({ beat: { story: stories[0].id, scene: "s", beat: "b", kind: "focus" } });
     expect(chips.map((c) => c.getAttribute("aria-current"))).toEqual(stories.map((st, i) => (i === 0 ? "true" : null)));

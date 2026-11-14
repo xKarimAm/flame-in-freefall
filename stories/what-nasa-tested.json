@@ -7,6 +7,18 @@
       "id": "what-nasa-tested-main",
       "beats": [
         {
+          "id": "why-test",
+          "kind": "hook",
+          "stage": {
+            "view": "micro-g",
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.why-test.public"
+          },
+          "sources": []
+        },
+        {
           "id": "droplets",
           "kind": "reveal",
           "stage": {
