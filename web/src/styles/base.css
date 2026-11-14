@@ -17,8 +17,8 @@ a { color: inherit; }
 /* header: lens switch, Stories, Skip to Moon air */
 #chrome {
   position: sticky; top: 0; z-index: 30;
-  min-height: var(--chrome-h);
   background: #000; color: var(--ink-dark);
+  border-bottom: 3px solid var(--flame); /* NASA black header, fire rule from the Firebreak mark */
 }
 
 /* the stage stays in view while the story scrolls over it */
@@ -44,6 +44,13 @@ a { color: inherit; }
 }
 #panel[hidden], #sheet[hidden], #overlay[hidden] { display: none; }
 
+/* wide screens: the story cards (28rem + 4vw margin, see engine.css) are on the left and the panel on the right,
+   so the chart takes the middle and never sits under either */
+@media (min-width: 1100px) {
+  #stage { padding-left: calc(4vw + 28rem + 24px); }
+  body:has(#panel:not([hidden])) #stage { padding-right: calc(var(--panel-w) + 2 * var(--gap)); }
+}
+
 /* analyst sheet: a light sheet over the dark story */
 #sheet {
   position: fixed; z-index: 25;
@@ -57,11 +64,12 @@ a { color: inherit; }
 
 #status { position: fixed; z-index: 50; left: var(--gap); bottom: var(--gap); color: var(--muted-dark); }
 
-@media (max-width: 767px) {
-  #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: 55vh; }
+/* below 1100px the panel is a bottom sheet and the chart keeps the full width */
+@media (max-width: 1099px) {
+  #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: 45vh; }
 }
 
-/* narrow screens: the header wraps to two rows, so the stage offset grows with it */
+/* narrow screens: the header wraps to two rows; this is the first-paint guess, chrome.ts then measures it */
 @media (max-width: 767px) {
   :root { --chrome-h: 104px; }
 }

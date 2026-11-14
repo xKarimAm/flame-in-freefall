@@ -24,6 +24,7 @@ export function mountOverlay(root: HTMLElement, ctx: Ctx): { open(opener: HTMLEl
       const card = h(
         "button",
         { type: "button", class: "story-card" },
+        h("span", { class: "story-num", "aria-hidden": "true" }, sec.dataset.act ?? ""),
         h("span", { class: "story-act" }, t("ui.engine.act", { n: sec.dataset.act ?? "" })),
         h("span", { class: "story-title" }, sec.dataset.title ?? sec.dataset.story ?? ""),
       );
