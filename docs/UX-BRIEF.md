@@ -5,7 +5,7 @@ Karim's direction (02:22, his words): for the public "it needs to be simple... a
 Hard limits (unchanged): never invent data; public text uses only facts in `docs/STORY.md` and the curated files; tokens from `web/src/styles/tokens.css`; flat colour, no gradients, glows or emoji; yellow only on the Moon box and the primary button; reduced motion gives a still picture with the same content. Do not edit `docs/design/`, `docs/STORY.md`, `docs/wireframes/`.
 
 ## What a visitor must leave with (the one sentence)
-"Firebreak puts every NASA space-fire test in one picture, and shows the one test nobody has run yet: fire in Moon gravity."
+"Firebreak puts NASA's space-fire tests in one picture, and shows the one test nobody has run yet: fire in Moon gravity." (Not "every test": 897 of the 1,883 have no oxygen or pressure recorded and are listed, not plotted.)
 Every lens ends on this. If a screen does not serve it, cut it.
 
 ## The story spine (Pixar's: once, every day, one day, because of that, until finally)
