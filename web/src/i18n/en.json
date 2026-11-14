@@ -25,6 +25,7 @@
   "story.moon-air.moon-air-main.compare.public": "These highlighted dots are the real tests closest to Moon-base air. None of them was burned in Moon gravity.",
   "story.moon-air.moon-air-main.compare.astronaut": "Air-cooled racks need about 80 % more airflow at 8.2 psia (ICES-2022-45).",
   "story.moon-air.moon-air-main.compare.analyst": "Lunar-gravity oxygen margins run from 0.32 to 2.3 percentage points by material (ICES-2025-392, Table 2). Polycarbonate and Nomex Velcro measured less flammable in lunar gravity.",
+  "story.moon-air.moon-air-main.compare.annotation": "No fire test has run in Moon gravity.",
   "story.why-oxygen.title": "Why oxygen matters",
   "story.why-oxygen.question": "Why should anyone care about fire and oxygen?",
   "story.why-oxygen.why-oxygen-main.hook.public": "In January 1967, a fire broke out inside an Apollo spacecraft during a test on the ground. The crew of three died.",
