@@ -1,25 +1,35 @@
-import "./style.css";
-import { loadAll } from "./data.js";
+// App entry. Orchestrator-owned: loads data, builds the shared context, mounts each module.
+// Generated with Claude, SI-assisted.
+import "./styles/tokens.css";
+import "./styles/base.css";
+import type { Ctx } from "./contract";
+import { createDataApi, loadData } from "./data/index";
+import { mount as mountEngine } from "./engine/index";
+import { dicts, makeT } from "./i18n/index";
+import { mount as mountStage } from "./stage/index";
+import { createStore } from "./store";
+import { mount as mountUi } from "./ui/index";
+
+function el(id: string): HTMLElement {
+  const node = document.getElementById(id);
+  if (!node) throw new Error(`index.html is missing #${id}`);
+  return node;
+}
 
 async function main(): Promise<void> {
-  const app = document.getElementById("app")!;
+  const store = createStore();
+  const t = makeT(() => store.get().locale);
+  const status = el("status");
+  status.textContent = t("ui.loading");
   try {
-    const data = await loadAll();
-    app.innerHTML = "";
-    const h = document.createElement("h1");
-    h.textContent = "Flame in Freefall";
-    const p = document.createElement("p");
-    p.textContent =
-      `Loaded ${data.experiments.length} investigations, ` +
-      `${data.tests.length} test runs, ` +
-      `${data.moon.atmospheres.length} atmospheres, ` +
-      `${data.incidents.incidents.length} incidents.`;
-    app.append(h, p);
+    const api = createDataApi(await loadData());
+    const ctx: Ctx = { api, store, dicts, t };
+    mountStage(el("stage"), ctx);
+    mountUi({ chrome: el("chrome"), panel: el("panel"), sheet: el("sheet"), overlay: el("overlay") }, ctx);
+    mountEngine(el("story"), ctx); // last: it sets the first beat, the others are already listening
+    status.remove();
   } catch (err) {
-    app.innerHTML = "";
-    const p = document.createElement("p");
-    p.textContent = `Could not load data: ${(err as Error).message}`;
-    app.append(p);
+    status.textContent = `${t("ui.load-error")} ${(err as Error).message}`;
   }
 }
 

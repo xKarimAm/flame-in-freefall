@@ -1,0 +1,10 @@
+{
+  "ui.loading": "Loading NASA test data…",
+  "ui.load-error": "Could not load the data.",
+  "story.moon-air.title": "Build your Moon-base air",
+  "story.moon-air.moon-air-main.hook.public": "Things that are safe on the space station can burn in Moon-base air.",
+  "story.moon-air.moon-air-main.compare.public": "Moon-base air has 34-40 % oxygen (Earth: 21 %) at a bit over half Earth's pressure. Drag the sliders and see how far the real tests are.",
+  "story.moon-air.moon-air-main.compare.astronaut": "At NASA's planned 8.2 psia (56.5 kPa) with 33.7-40 % oxygen, many materials used on the space station are unlikely to pass the flammability test, Nomex among them.",
+  "story.moon-air.moon-air-main.compare.analyst": "The 10 nearest real PSI tests to the chosen air, each with its distance, recorded outcome and source link.",
+  "story.moon-air.moon-air-main.compare.annotation": "No fire test has run in Moon gravity."
+}

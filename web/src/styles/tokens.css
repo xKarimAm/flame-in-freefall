@@ -1,0 +1,30 @@
+/* Design tokens, copied from docs/design/DESIGN.md (the design session owns the values). */
+:root {
+  /* story (dark, Space Apps) */
+  --space-deep: #151622;
+  --space-black: #1b1b1b;
+  --electric-blue: #1b2b85;
+  --ink-dark: #ffffff;
+  --muted-dark: #dfe1e2;
+  /* data highlight */
+  --data-on-dark: #2491ff;
+  --data-on-light: #0050d8;
+  --moon: #e7f434;
+  --flame: #ff5804;
+  --danger: #e52207;
+  /* analyst panels (light, NASA Horizon) */
+  --sheet: #ffffff;
+  --sheet-ground: #dfe1e2;
+  --ink: #1b1b1b;
+  --muted: #3d4551;
+  --rule: #8d9297;
+  --link: #005ea2;
+  /* shape and type */
+  --radius: 0px;
+  --font: "Fira Sans", "Public Sans", system-ui, sans-serif;
+  --font-id: "Fira Code", ui-monospace, monospace;
+  /* layout (build session) */
+  --chrome-h: 56px;
+  --panel-w: 380px;
+  --gap: 16px;
+}
