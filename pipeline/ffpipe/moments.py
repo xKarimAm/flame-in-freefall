@@ -73,7 +73,7 @@ def build_moments(tests, experiments):
             if have:
                 lo, hi = _extreme(have, field, min, low), _extreme(have, field, max, high)
                 how = "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct)" if field == "o2_pct" else f"min and max of {field}"
-                out.append(_moment(inv, kind, f"Range of {subject} across {acr} tests", low(lo), unit, [lo, hi], url,
+                out.append(_moment(inv, kind, f"Range of {subject} across {acr} tests", low(lo), unit, list({r["id"]: r for r in (lo, hi)}.values()), url,
                                    f"{how}, rows where {'a bound or o2_pct' if field == 'o2_pct' else field} is recorded ({len(have)} of {total} rows)",
                                    value_max=high(hi), n=len(have)))
         have = [r for r in rows if r.get("burn_time_s") is not None]
@@ -83,8 +83,8 @@ def build_moments(tests, experiments):
                                f"max of burn_time_s, rows where burn_time_s is recorded ({len(have)} of {total} rows)",
                                fuel=top["fuel"], n=len(have)))
         for kind, group, pick, label, how in (
-            ("lowest-o2-burned", BURNED, min, f"Lowest oxygen at which a {acr} test burned to the end of the test", "min"),
-            ("highest-o2-went-out", WENT_OUT, max, f"Highest oxygen at which a {acr} test went out", "max"),
+            ("lowest-o2-burned", BURNED, min, f"Lowest oxygen at which {acr} recorded a sustained burn", "min"),
+            ("highest-o2-went-out", WENT_OUT, max, f"Highest oxygen at which {acr} recorded a flame going out", "max"),
         ):
             have = [r for r in rows if r["outcome"] in group and r["o2_pct"] is not None]
             if have:

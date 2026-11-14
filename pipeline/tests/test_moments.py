@@ -100,4 +100,6 @@ def test_synthetic_min_max_and_tie_rules():
     assert m["PSI-1.highest-o2-went-out"]["value"] == 40.0 and m["PSI-1.highest-o2-went-out"]["test_ids"] == ["PSI-1#3"]
     assert m["PSI-1.longest-burn"]["test_ids"] == ["PSI-1#2"]
     assert m["PSI-1.pressure-range"]["value"] == m["PSI-1.pressure-range"]["value_max"] == 70.0
+    assert m["PSI-1.pressure-range"]["test_ids"] == ["PSI-1#5"]  # min and max in the same row: listed once
+    assert m["PSI-1.lowest-o2-burned"]["label"] == "Lowest oxygen at which TST recorded a sustained burn"
     assert "PSI-1.flow-range" not in m and m["PSI-1.outcome-count-burned"]["value"] == 1

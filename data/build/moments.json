@@ -52,7 +52,6 @@
     "unit": "cm/s",
     "n": 2,
     "test_ids": [
-      "PSI-100#1",
       "PSI-100#1"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-100",
@@ -154,7 +153,7 @@
     "id": "PSI-159.highest-o2-went-out",
     "investigation": "PSI-159",
     "kind": "highest-o2-went-out",
-    "label": "Highest oxygen at which a ACME CFI-G test went out",
+    "label": "Highest oxygen at which ACME CFI-G recorded a flame going out",
     "value": 85.0,
     "unit": "%",
     "fuel": "ethane",
@@ -184,7 +183,7 @@
     "id": "PSI-159.lowest-o2-burned",
     "investigation": "PSI-159",
     "kind": "lowest-o2-burned",
-    "label": "Lowest oxygen at which a ACME CFI-G test burned to the end of the test",
+    "label": "Lowest oxygen at which ACME CFI-G recorded a sustained burn",
     "value": 15.0,
     "unit": "%",
     "fuel": "ethane",
@@ -365,7 +364,6 @@
     "unit": "%",
     "n": 8,
     "test_ids": [
-      "PSI-68#1",
       "PSI-68#1"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-68",
@@ -386,7 +384,7 @@
     "id": "PSI-69.highest-o2-went-out",
     "investigation": "PSI-69",
     "kind": "highest-o2-went-out",
-    "label": "Highest oxygen at which a FLEX test went out",
+    "label": "Highest oxygen at which FLEX recorded a flame going out",
     "value": 30.0,
     "unit": "%",
     "fuel": "Methanol",
@@ -416,7 +414,7 @@
     "id": "PSI-69.lowest-o2-burned",
     "investigation": "PSI-69",
     "kind": "lowest-o2-burned",
-    "label": "Lowest oxygen at which a FLEX test burned to the end of the test",
+    "label": "Lowest oxygen at which FLEX recorded a sustained burn",
     "value": 14.0,
     "unit": "%",
     "fuel": "Heptane",
@@ -516,7 +514,6 @@
     "unit": "cm/s",
     "n": 2,
     "test_ids": [
-      "PSI-98#1",
       "PSI-98#1"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
@@ -541,7 +538,7 @@
     "id": "PSI-98.lowest-o2-burned",
     "investigation": "PSI-98",
     "kind": "lowest-o2-burned",
-    "label": "Lowest oxygen at which a SAFFIRE-I test burned to the end of the test",
+    "label": "Lowest oxygen at which SAFFIRE-I recorded a sustained burn",
     "value": 21.5,
     "unit": "%",
     "fuel": "SIBAL Fabric",
@@ -562,7 +559,6 @@
     "unit": "%",
     "n": 2,
     "test_ids": [
-      "PSI-98#1",
       "PSI-98#1"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
@@ -601,7 +597,6 @@
     "unit": "cm/s",
     "n": 9,
     "test_ids": [
-      "PSI-99#1",
       "PSI-99#1"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
@@ -625,7 +620,7 @@
     "id": "PSI-99.lowest-o2-burned",
     "investigation": "PSI-99",
     "kind": "lowest-o2-burned",
-    "label": "Lowest oxygen at which a SAFFIRE-II test burned to the end of the test",
+    "label": "Lowest oxygen at which SAFFIRE-II recorded a sustained burn",
     "value": 21.95,
     "unit": "%",
     "n": 5,
