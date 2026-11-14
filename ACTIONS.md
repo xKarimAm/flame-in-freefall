@@ -8,7 +8,7 @@ Karim switches between three Claude accounts. Every session, on every account, *
 Times are local (UTC+3).
 
 ## Last action
-2026-11-15 01:35, planning session: **handover complete.** Karim approved (01:17, his words: "If the approval and all of the backend are done, then just hand over everything. Let's be finished so I can give it to the other account."). The repo stays **private** (Karim: "If you're going to put it public, I don't think you should."). The build order is now a task list, `docs/plan.xml` (T1-T14, no clock gates); the diagram is updated (page 3 build tasks, page 4 development). **Next: Karim opens the development session in `E:lame-in-freefall`, types his go-ahead, and pastes `KICKOFF.md`.**
+2026-11-15 01:35, planning session: **handover complete.** Karim approved (01:17, his words: "If the approval and all of the backend are done, then just hand over everything. Let's be finished so I can give it to the other account."). The repo stays **private** (Karim: "If you're going to put it public, I don't think you should."). The build order is now a task list, `docs/plan.xml` (T1-T14, no clock gates); the diagram is updated (page 3 build tasks, page 4 development). **Next: Karim opens the development session in `E:\flame-in-freefall`, types his go-ahead, and pastes `KICKOFF.md`.**
 
 ## Action table (the plan)
 | # | Action | Who | Status | Done when |
