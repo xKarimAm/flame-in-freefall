@@ -1,0 +1,661 @@
+[
+  {
+    "id": "PSI-10.o2-range",
+    "investigation": "PSI-10",
+    "kind": "o2-range",
+    "label": "Range of oxygen concentration across ACME/Flame Design tests",
+    "value": 19.8,
+    "value_max": 85.0,
+    "unit": "%",
+    "n": 316,
+    "test_ids": [
+      "PSI-10#187",
+      "PSI-10#56-4"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-10",
+    "method": "min and max of o2_pct, rows where o2_pct is recorded (316 of 327 rows)"
+  },
+  {
+    "id": "PSI-10.pressure-range",
+    "investigation": "PSI-10",
+    "kind": "pressure-range",
+    "label": "Range of ambient pressure across ACME/Flame Design tests",
+    "value": 43.16,
+    "value_max": 305.82,
+    "unit": "kPa",
+    "n": 307,
+    "test_ids": [
+      "PSI-10#56-23",
+      "PSI-10#56-98"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-10",
+    "method": "min and max of pressure_kpa, rows where pressure_kpa is recorded (307 of 327 rows)"
+  },
+  {
+    "id": "PSI-10.tests-count",
+    "investigation": "PSI-10",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for ACME/Flame Design",
+    "value": 327,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-10",
+    "method": "count of rows in tests.json for PSI-10 (327 rows)"
+  },
+  {
+    "id": "PSI-100.flow-range",
+    "investigation": "PSI-100",
+    "kind": "flow-range",
+    "label": "Range of flow speed across SAFFIRE-III tests",
+    "value": 30.0,
+    "value_max": 30.0,
+    "unit": "cm/s",
+    "n": 2,
+    "test_ids": [
+      "PSI-100#1",
+      "PSI-100#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-100",
+    "method": "min and max of flow_cm_s, rows where flow_cm_s is recorded (2 of 2 rows)"
+  },
+  {
+    "id": "PSI-100.tests-count",
+    "investigation": "PSI-100",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for SAFFIRE-III",
+    "value": 2,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-100",
+    "method": "count of rows in tests.json for PSI-100 (2 rows)"
+  },
+  {
+    "id": "PSI-101.flow-range",
+    "investigation": "PSI-101",
+    "kind": "flow-range",
+    "label": "Range of flow speed across SAME-R tests",
+    "value": 0.0,
+    "value_max": 8.1,
+    "unit": "cm/s",
+    "n": 109,
+    "test_ids": [
+      "PSI-101#23",
+      "PSI-101#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-101",
+    "method": "min and max of flow_cm_s, rows where flow_cm_s is recorded (109 of 109 rows)"
+  },
+  {
+    "id": "PSI-101.tests-count",
+    "investigation": "PSI-101",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for SAME-R",
+    "value": 109,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-101",
+    "method": "count of rows in tests.json for PSI-101 (109 rows)"
+  },
+  {
+    "id": "PSI-102.flow-range",
+    "investigation": "PSI-102",
+    "kind": "flow-range",
+    "label": "Range of flow speed across SAME tests",
+    "value": 5.0,
+    "value_max": 10.0,
+    "unit": "cm/s",
+    "n": 4,
+    "test_ids": [
+      "PSI-102#1",
+      "PSI-102#4"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-102",
+    "method": "min and max of flow_cm_s, rows where flow_cm_s is recorded (4 of 8 rows)"
+  },
+  {
+    "id": "PSI-102.tests-count",
+    "investigation": "PSI-102",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for SAME",
+    "value": 8,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-102",
+    "method": "count of rows in tests.json for PSI-102 (8 rows)"
+  },
+  {
+    "id": "PSI-107.flow-range",
+    "investigation": "PSI-107",
+    "kind": "flow-range",
+    "label": "Range of flow speed across SPICE tests",
+    "value": -5.92,
+    "value_max": 85.28,
+    "unit": "cm/s",
+    "n": 444,
+    "test_ids": [
+      "PSI-107#336",
+      "PSI-107#138"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-107",
+    "method": "min and max of flow_cm_s, rows where flow_cm_s is recorded (444 of 469 rows)"
+  },
+  {
+    "id": "PSI-107.tests-count",
+    "investigation": "PSI-107",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for SPICE",
+    "value": 469,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-107",
+    "method": "count of rows in tests.json for PSI-107 (469 rows)"
+  },
+  {
+    "id": "PSI-159.highest-o2-went-out",
+    "investigation": "PSI-159",
+    "kind": "highest-o2-went-out",
+    "label": "Highest oxygen at which a ACME CFI-G test went out",
+    "value": 85.0,
+    "unit": "%",
+    "fuel": "ethane",
+    "n": 183,
+    "test_ids": [
+      "PSI-159#51-18"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "max of o2_pct, rows with outcome extinction / self-extinguished and o2_pct recorded (183 of 333 rows)"
+  },
+  {
+    "id": "PSI-159.longest-burn",
+    "investigation": "PSI-159",
+    "kind": "longest-burn",
+    "label": "Longest recorded burn time in ACME CFI-G",
+    "value": 304.0,
+    "unit": "s",
+    "fuel": "30% ethane",
+    "n": 329,
+    "test_ids": [
+      "PSI-159#143"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "max of burn_time_s, rows where burn_time_s is recorded (329 of 333 rows)"
+  },
+  {
+    "id": "PSI-159.lowest-o2-burned",
+    "investigation": "PSI-159",
+    "kind": "lowest-o2-burned",
+    "label": "Lowest oxygen at which a ACME CFI-G test burned to the end of the test",
+    "value": 15.0,
+    "unit": "%",
+    "fuel": "ethane",
+    "n": 88,
+    "test_ids": [
+      "PSI-159#51-3"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "min of o2_pct, rows with outcome burned / completion / flow-terminated and o2_pct recorded (88 of 333 rows)"
+  },
+  {
+    "id": "PSI-159.o2-range",
+    "investigation": "PSI-159",
+    "kind": "o2-range",
+    "label": "Range of oxygen concentration across ACME CFI-G tests",
+    "value": 12.0,
+    "value_max": 85.0,
+    "unit": "%",
+    "n": 333,
+    "test_ids": [
+      "PSI-159#51-4",
+      "PSI-159#51-17"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "min and max of o2_pct, rows where o2_pct is recorded (333 of 333 rows)"
+  },
+  {
+    "id": "PSI-159.outcome-count-flow-terminated",
+    "investigation": "PSI-159",
+    "kind": "outcome-count",
+    "label": "Number of ACME CFI-G tests that ended in flow-terminated",
+    "value": 88,
+    "unit": "tests",
+    "outcome": "flow-terminated",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "count of rows with outcome flow-terminated (88 of 333 rows)"
+  },
+  {
+    "id": "PSI-159.outcome-count-no-ignition",
+    "investigation": "PSI-159",
+    "kind": "outcome-count",
+    "label": "Number of ACME CFI-G tests that ended in no-ignition",
+    "value": 11,
+    "unit": "tests",
+    "outcome": "no-ignition",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "count of rows with outcome no-ignition (11 of 333 rows)"
+  },
+  {
+    "id": "PSI-159.outcome-count-self-extinguished",
+    "investigation": "PSI-159",
+    "kind": "outcome-count",
+    "label": "Number of ACME CFI-G tests that ended in self-extinguished",
+    "value": 183,
+    "unit": "tests",
+    "outcome": "self-extinguished",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "count of rows with outcome self-extinguished (183 of 333 rows)"
+  },
+  {
+    "id": "PSI-159.pressure-range",
+    "investigation": "PSI-159",
+    "kind": "pressure-range",
+    "label": "Range of ambient pressure across ACME CFI-G tests",
+    "value": 49.54,
+    "value_max": 330.99,
+    "unit": "kPa",
+    "n": 333,
+    "test_ids": [
+      "PSI-159#51-11",
+      "PSI-159#51-41"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "min and max of pressure_kpa, rows where pressure_kpa is recorded (333 of 333 rows)"
+  },
+  {
+    "id": "PSI-159.tests-count",
+    "investigation": "PSI-159",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for ACME CFI-G",
+    "value": 333,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+    "method": "count of rows in tests.json for PSI-159 (333 rows)"
+  },
+  {
+    "id": "PSI-25.o2-range",
+    "investigation": "PSI-25",
+    "kind": "o2-range",
+    "label": "Range of oxygen concentration across BASS-II tests",
+    "value": 13.6,
+    "value_max": 22.2,
+    "unit": "%",
+    "n": 129,
+    "test_ids": [
+      "PSI-25#61",
+      "PSI-25#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-25",
+    "method": "min and max of o2_pct, rows where o2_pct is recorded (129 of 129 rows)"
+  },
+  {
+    "id": "PSI-25.tests-count",
+    "investigation": "PSI-25",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for BASS-II",
+    "value": 129,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-25",
+    "method": "count of rows in tests.json for PSI-25 (129 rows)"
+  },
+  {
+    "id": "PSI-26.tests-count",
+    "investigation": "PSI-26",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for BASS",
+    "value": 122,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-26",
+    "method": "count of rows in tests.json for PSI-26 (122 rows)"
+  },
+  {
+    "id": "PSI-39.o2-range",
+    "investigation": "PSI-39",
+    "kind": "o2-range",
+    "label": "Range of oxygen concentration across CFI tests",
+    "value": 17.0,
+    "value_max": 21.0,
+    "unit": "%",
+    "n": 87,
+    "test_ids": [
+      "PSI-39#7",
+      "PSI-39#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-39",
+    "method": "min and max of o2_pct, rows where o2_pct is recorded (87 of 87 rows)"
+  },
+  {
+    "id": "PSI-39.pressure-range",
+    "investigation": "PSI-39",
+    "kind": "pressure-range",
+    "label": "Range of ambient pressure across CFI tests",
+    "value": 50.66,
+    "value_max": 303.98,
+    "unit": "kPa",
+    "n": 84,
+    "test_ids": [
+      "PSI-39#63",
+      "PSI-39#47"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-39",
+    "method": "min and max of pressure_kpa, rows where pressure_kpa is recorded (84 of 87 rows)"
+  },
+  {
+    "id": "PSI-39.tests-count",
+    "investigation": "PSI-39",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for CFI",
+    "value": 87,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-39",
+    "method": "count of rows in tests.json for PSI-39 (87 rows)"
+  },
+  {
+    "id": "PSI-68.tests-count",
+    "investigation": "PSI-68",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for FLEX-2",
+    "value": 8,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-68",
+    "method": "count of rows in tests.json for PSI-68 (8 rows)"
+  },
+  {
+    "id": "PSI-69.highest-o2-went-out",
+    "investigation": "PSI-69",
+    "kind": "highest-o2-went-out",
+    "label": "Highest oxygen at which a FLEX test went out",
+    "value": 30.0,
+    "unit": "%",
+    "fuel": "Methanol",
+    "n": 186,
+    "test_ids": [
+      "PSI-69#30"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "max of o2_pct, rows with outcome extinction / self-extinguished and o2_pct recorded (186 of 274 rows)"
+  },
+  {
+    "id": "PSI-69.longest-burn",
+    "investigation": "PSI-69",
+    "kind": "longest-burn",
+    "label": "Longest recorded burn time in FLEX",
+    "value": 39.2,
+    "unit": "s",
+    "fuel": "Methanol",
+    "n": 268,
+    "test_ids": [
+      "PSI-69#146"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "max of burn_time_s, rows where burn_time_s is recorded (268 of 274 rows)"
+  },
+  {
+    "id": "PSI-69.lowest-o2-burned",
+    "investigation": "PSI-69",
+    "kind": "lowest-o2-burned",
+    "label": "Lowest oxygen at which a FLEX test burned to the end of the test",
+    "value": 14.0,
+    "unit": "%",
+    "fuel": "Heptane",
+    "n": 27,
+    "test_ids": [
+      "PSI-69#69"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "min of o2_pct, rows with outcome burned / completion / flow-terminated and o2_pct recorded (27 of 274 rows)"
+  },
+  {
+    "id": "PSI-69.o2-range",
+    "investigation": "PSI-69",
+    "kind": "o2-range",
+    "label": "Range of oxygen concentration across FLEX tests",
+    "value": 12.0,
+    "value_max": 34.0,
+    "unit": "%",
+    "n": 274,
+    "test_ids": [
+      "PSI-69#83",
+      "PSI-69#19"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "min and max of o2_pct, rows where o2_pct is recorded (274 of 274 rows)"
+  },
+  {
+    "id": "PSI-69.outcome-count-completion",
+    "investigation": "PSI-69",
+    "kind": "outcome-count",
+    "label": "Number of FLEX tests that ended in completion",
+    "value": 27,
+    "unit": "tests",
+    "outcome": "completion",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "count of rows with outcome completion (27 of 274 rows)"
+  },
+  {
+    "id": "PSI-69.outcome-count-disruption",
+    "investigation": "PSI-69",
+    "kind": "outcome-count",
+    "label": "Number of FLEX tests that ended in disruption",
+    "value": 61,
+    "unit": "tests",
+    "outcome": "disruption",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "count of rows with outcome disruption (61 of 274 rows)"
+  },
+  {
+    "id": "PSI-69.outcome-count-extinction",
+    "investigation": "PSI-69",
+    "kind": "outcome-count",
+    "label": "Number of FLEX tests that ended in extinction",
+    "value": 186,
+    "unit": "tests",
+    "outcome": "extinction",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "count of rows with outcome extinction (186 of 274 rows)"
+  },
+  {
+    "id": "PSI-69.pressure-range",
+    "investigation": "PSI-69",
+    "kind": "pressure-range",
+    "label": "Range of ambient pressure across FLEX tests",
+    "value": 70.17,
+    "value_max": 309.29,
+    "unit": "kPa",
+    "n": 273,
+    "test_ids": [
+      "PSI-69#121",
+      "PSI-69#12"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "min and max of pressure_kpa, rows where pressure_kpa is recorded (273 of 274 rows)"
+  },
+  {
+    "id": "PSI-69.tests-count",
+    "investigation": "PSI-69",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for FLEX",
+    "value": 274,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "method": "count of rows in tests.json for PSI-69 (274 rows)"
+  },
+  {
+    "id": "PSI-98.flow-range",
+    "investigation": "PSI-98",
+    "kind": "flow-range",
+    "label": "Range of flow speed across SAFFIRE-I tests",
+    "value": 20.0,
+    "value_max": 20.0,
+    "unit": "cm/s",
+    "n": 2,
+    "test_ids": [
+      "PSI-98#1",
+      "PSI-98#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+    "method": "min and max of flow_cm_s, rows where flow_cm_s is recorded (2 of 4 rows)"
+  },
+  {
+    "id": "PSI-98.longest-burn",
+    "investigation": "PSI-98",
+    "kind": "longest-burn",
+    "label": "Longest recorded burn time in SAFFIRE-I",
+    "value": 420.0,
+    "unit": "s",
+    "fuel": "SIBAL Fabric",
+    "n": 2,
+    "test_ids": [
+      "PSI-98#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+    "method": "max of burn_time_s, rows where burn_time_s is recorded (2 of 4 rows)"
+  },
+  {
+    "id": "PSI-98.lowest-o2-burned",
+    "investigation": "PSI-98",
+    "kind": "lowest-o2-burned",
+    "label": "Lowest oxygen at which a SAFFIRE-I test burned to the end of the test",
+    "value": 21.5,
+    "unit": "%",
+    "fuel": "SIBAL Fabric",
+    "n": 2,
+    "test_ids": [
+      "PSI-98#2"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+    "method": "min of o2_pct, rows with outcome burned / completion / flow-terminated and o2_pct recorded (2 of 4 rows)"
+  },
+  {
+    "id": "PSI-98.o2-range",
+    "investigation": "PSI-98",
+    "kind": "o2-range",
+    "label": "Range of oxygen concentration across SAFFIRE-I tests",
+    "value": 21.5,
+    "value_max": 21.6,
+    "unit": "%",
+    "n": 2,
+    "test_ids": [
+      "PSI-98#2",
+      "PSI-98#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+    "method": "min and max of o2_pct, rows where o2_pct is recorded (2 of 4 rows)"
+  },
+  {
+    "id": "PSI-98.outcome-count-burned",
+    "investigation": "PSI-98",
+    "kind": "outcome-count",
+    "label": "Number of SAFFIRE-I tests that ended in burned",
+    "value": 2,
+    "unit": "tests",
+    "outcome": "burned",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+    "method": "count of rows with outcome burned (2 of 4 rows)"
+  },
+  {
+    "id": "PSI-98.tests-count",
+    "investigation": "PSI-98",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for SAFFIRE-I",
+    "value": 4,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+    "method": "count of rows in tests.json for PSI-98 (4 rows)"
+  },
+  {
+    "id": "PSI-99.flow-range",
+    "investigation": "PSI-99",
+    "kind": "flow-range",
+    "label": "Range of flow speed across SAFFIRE-II tests",
+    "value": 20.0,
+    "value_max": 20.0,
+    "unit": "cm/s",
+    "n": 9,
+    "test_ids": [
+      "PSI-99#1",
+      "PSI-99#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
+    "method": "min and max of flow_cm_s, rows where flow_cm_s is recorded (9 of 11 rows)"
+  },
+  {
+    "id": "PSI-99.longest-burn",
+    "investigation": "PSI-99",
+    "kind": "longest-burn",
+    "label": "Longest recorded burn time in SAFFIRE-II",
+    "value": 900.0,
+    "unit": "s",
+    "n": 5,
+    "test_ids": [
+      "PSI-99#9"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
+    "method": "max of burn_time_s, rows where burn_time_s is recorded (5 of 11 rows)"
+  },
+  {
+    "id": "PSI-99.lowest-o2-burned",
+    "investigation": "PSI-99",
+    "kind": "lowest-o2-burned",
+    "label": "Lowest oxygen at which a SAFFIRE-II test burned to the end of the test",
+    "value": 21.95,
+    "unit": "%",
+    "n": 5,
+    "test_ids": [
+      "PSI-99#9"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
+    "method": "min of o2_pct, rows with outcome burned / completion / flow-terminated and o2_pct recorded (5 of 11 rows)"
+  },
+  {
+    "id": "PSI-99.o2-range",
+    "investigation": "PSI-99",
+    "kind": "o2-range",
+    "label": "Range of oxygen concentration across SAFFIRE-II tests",
+    "value": 21.5,
+    "value_max": 22.1,
+    "unit": "%",
+    "n": 9,
+    "test_ids": [
+      "PSI-99#1",
+      "PSI-99#2"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
+    "method": "min and max of o2_pct, rows where o2_pct is recorded (9 of 11 rows)"
+  },
+  {
+    "id": "PSI-99.outcome-count-burned",
+    "investigation": "PSI-99",
+    "kind": "outcome-count",
+    "label": "Number of SAFFIRE-II tests that ended in burned",
+    "value": 5,
+    "unit": "tests",
+    "outcome": "burned",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
+    "method": "count of rows with outcome burned (5 of 11 rows)"
+  },
+  {
+    "id": "PSI-99.tests-count",
+    "investigation": "PSI-99",
+    "kind": "tests-count",
+    "label": "Number of tests recorded for SAFFIRE-II",
+    "value": 11,
+    "unit": "tests",
+    "test_ids": [],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
+    "method": "count of rows in tests.json for PSI-99 (11 rows)"
+  }
+]
