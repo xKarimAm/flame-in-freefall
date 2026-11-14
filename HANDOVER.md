@@ -30,7 +30,7 @@ Out of scope: fine-tuning (no live data; see STORY.md), predictions, raw sensor/
 2. Which incident opens act 1 (Apollo 1 or Mir 1997).
 3. The three.js stage as designed (x pressure, y O2, z gravity planes) or simpler.
 4. Sunday work hours → feature-freeze time (submit target Sun 6:30 PM, deadline 8:00 PM, judging 9:00 PM: 5 min + 3 min Q&A).
-5. Product name (his call).
+5. Product name (his call). Team name is **Firebreak** (chosen 2026-11-14 10:35 PM); the product may share it.
 
 ## 5. Build order (phase 2; demo first)
 | Step | Who | Done when |
