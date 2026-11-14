@@ -1,0 +1,33 @@
+/* Story steps scroll over the stage. Generated with Claude, SI-assisted. */
+.story-title {
+  margin: 0;
+  padding: 24px 4vw 0;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--ink-dark);
+}
+#story .step {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+}
+#story .story:last-child .step:last-child { margin-bottom: 40vh; }
+.step-card {
+  max-width: 28rem;
+  margin-left: 4vw;
+  padding: 16px;
+  background: var(--space-black);
+  color: var(--ink-dark);
+  border: 1px solid transparent;
+}
+.step.is-active .step-card { border-color: var(--muted-dark); }
+.step-text { margin: 0; }
+.step-sources-label { margin: 12px 0 4px; font-size: 0.875rem; font-weight: 500; color: var(--muted-dark); }
+.step-sources { margin: 0; padding-left: 1.2em; font-size: 0.875rem; }
+.step-sources a { color: var(--muted-dark); text-decoration: underline; }
+@media (max-width: 767px) {
+  .step-card { max-width: none; margin: 0 16px; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-card, .step-card * { transition: none; animation: none; }
+}
