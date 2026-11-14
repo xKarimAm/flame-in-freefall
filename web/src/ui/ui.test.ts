@@ -1,0 +1,215 @@
+// @vitest-environment jsdom
+// Generated with Claude, SI-assisted. Real golden and curated files; fixtures only for the two missing experiments.
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AppData, Ctx, DataApi, Experiment, NearestRow, PlacedTest, TestRun } from "../contract";
+import { createDataApi } from "../data/index";
+import { makeT } from "../i18n/index";
+import { createStore, initialState } from "../store";
+import { mount } from "./index";
+
+const read = (rel: string): any => JSON.parse(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8"));
+const tests: TestRun[] = read("../../../contracts/golden/tests.json");
+const moon = read("../../../data/curated/moon.json");
+const incidents = read("../../../data/curated/incidents.json");
+const fixture = (id: string, family: Experiment["family"], n: number): Experiment => ({
+  id, acronym: `fixture-${family}`, title: `Fixture for ${id}`, family, doi: null,
+  psi_url: `https://psi.nasa.gov/physci/repo/data/investigations/${id}`, license: "CC0-1.0", objective: "",
+  test_count: n, o2_pct_range: null, pressure_kpa_range: null, has_outcomes: true, publications: [],
+});
+const experiments: Experiment[] = [
+  ...read("../../../contracts/golden/experiments.json"),
+  fixture("PSI-69", "droplets", 1),
+  fixture("PSI-159", "gas jets", 1),
+];
+const data: AppData = { experiments, tests, moon, incidents };
+
+/** Just enough of the real data API for the UI: placed / nearest / notPlaced computed from the golden rows. */
+function fakeApi(): DataApi {
+  const base = createDataApi(data);
+  const placed = (): PlacedTest[] =>
+    tests.flatMap((t) => {
+      const family = base.familyOf(t.investigation);
+      if (t.gravity !== "micro-g" || t.o2_pct == null || t.pressure_kpa == null || !family) return [];
+      return [{ id: t.id, investigation: t.investigation, family, fuel: t.fuel, o2_pct: t.o2_pct, pressure_kpa: t.pressure_kpa, flow_cm_s: t.flow_cm_s ?? null, outcome: t.outcome, url: t.source.url }];
+    });
+  return {
+    ...base,
+    placed,
+    notPlaced: (family) =>
+      tests
+        .filter((t) => t.pressure_kpa == null || t.o2_pct == null)
+        .map((t) => ({ id: t.id, investigation: t.investigation, family: base.familyOf(t.investigation), fuel: t.fuel, o2_pct: t.o2_pct, pressure_kpa: t.pressure_kpa, outcome: t.outcome, url: t.source.url, reason: "no pressure recorded" }))
+        .filter((r) => !family || r.family === family),
+    nearest(query, n = 10, family) {
+      if (query.kind !== "point") throw new Error("fake: point queries only");
+      const rows: NearestRow[] = placed()
+        .filter((p) => !family || p.family === family)
+        .map((p) => ({
+          ...p,
+          ppo2_kpa: Math.round(p.pressure_kpa * p.o2_pct) / 100,
+          gravity: "micro-g" as const,
+          d: Math.hypot((query.pressure_kpa - p.pressure_kpa) / 25, (query.o2_pct - p.o2_pct) / 5),
+        }))
+        .sort((a, b) => a.d - b.d || a.id.localeCompare(b.id))
+        .slice(0, n);
+      const wentOut = rows.find((r) => r.outcome === "extinction" || r.outcome === "self-extinguished") ?? null;
+      return { query, rows, familyMix: [], nearestBurned: null, nearestWentOut: wentOut };
+    },
+  };
+}
+
+const roots = () => ({
+  chrome: document.getElementById("chrome")!,
+  panel: document.getElementById("panel")!,
+  sheet: document.getElementById("sheet")!,
+  overlay: document.getElementById("overlay")!,
+});
+const p159 = tests.find((t) => t.id === "PSI-159#1")!;
+const p69 = tests.find((t) => t.id === "PSI-69#2")!;
+
+function setup(sliders: { pressure_kpa: number; o2_pct: number } | null = { pressure_kpa: p159.pressure_kpa!, o2_pct: p159.o2_pct! }) {
+  document.body.innerHTML = `<header id="chrome"></header><div id="story"></div><aside id="panel" hidden></aside><section id="sheet" hidden></section><div id="overlay" hidden></div>`;
+  const store = createStore({ ...initialState, sliders });
+  const ctx: Ctx = { api: fakeApi(), store, dicts: {}, t: makeT(() => "en") };
+  mount(roots(), ctx);
+  return { store, ctx };
+}
+
+/** Text nodes with a digit that are neither inside an https link nor marked data-own. */
+function unlinkedNumbers(root: Element): string[] {
+  const out: string[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if (/\d/.test(n.textContent ?? "") && !n.parentElement!.closest('a[href^="https://"], [data-own]')) out.push(n.textContent!.trim());
+  }
+  return out;
+}
+
+const buttons = (root: Element) => [...root.querySelectorAll("button")];
+
+describe("ui", () => {
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  it("the rule check can fail: a bare number is reported", () => {
+    const d = document.createElement("div");
+    d.innerHTML = `<p>56 kPa</p><p data-own>5</p><a href="https://x.test/">7</a><a href="http://x.test/">8</a>`;
+    expect(unlinkedNumbers(d)).toEqual(["56 kPa", "8"]);
+  });
+
+  it("every number in the panel and the sheet is linked to its source or marked data-own", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    for (const root of [roots().panel, sheet]) expect(unlinkedNumbers(root)).toEqual([]);
+    buttons(sheet)[1].click(); // margins tab
+    expect(sheet.querySelector(".margin-table")).not.toBeNull();
+    expect(unlinkedNumbers(sheet)).toEqual([]);
+    expect(roots().panel.querySelectorAll("a.num").length).toBeGreaterThan(0);
+  });
+
+  it("shows the two exact sentences", () => {
+    setup();
+    const text = roots().panel.textContent!;
+    expect(text).toContain("Nearest tested conditions, not a prediction. All tests ran in microgravity.");
+    expect(text).toContain("Distance counts 5 oxygen points the same as 25 kPa of pressure.");
+  });
+
+  it("a slider input changes store.sliders and the list re-renders from the api", () => {
+    const { store } = setup();
+    const first = () => roots().panel.querySelector("ol.nearest li")!.textContent!;
+    expect(first()).toContain(p159.fuel!);
+    const o2 = roots().panel.querySelector<HTMLInputElement>("#slider-o2")!;
+    const pr = roots().panel.querySelector<HTMLInputElement>("#slider-pressure")!;
+    o2.value = String(p69.o2_pct);
+    pr.value = String(p69.pressure_kpa);
+    o2.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(store.get().sliders!.o2_pct).toBe(p69.o2_pct);
+    expect(first()).toContain(p69.fuel!);
+    expect(roots().panel.querySelector("#slider-o2")).toBe(o2); // not re-created while dragging
+  });
+
+  it("shows a null flow as 'not recorded', never 0", () => {
+    setup({ pressure_kpa: p69.pressure_kpa!, o2_pct: p69.o2_pct! });
+    const li = roots().panel.querySelector("ol.nearest li")!;
+    expect(li.textContent).toContain(p69.fuel!);
+    expect(li.textContent).toMatch(/Flow\s+\S*\s*not recorded/);
+  });
+
+  it("lists the not-placed SAFFIRE rows and both nearest lines", () => {
+    setup();
+    const t = roots().panel.textContent!;
+    expect(t).toContain("SIBAL Fabric");
+    expect(t).toContain("no pressure recorded");
+    expect(t).toContain("Nearest test that burned to the end: none recorded");
+    expect(t).toContain("Nearest test that went out by itself");
+  });
+
+  it("the panel is hidden while the sliders are locked", () => {
+    const { store } = setup(null);
+    expect(roots().panel.hidden).toBe(true);
+    store.set({ sliders: { pressure_kpa: 50, o2_pct: 30 } });
+    expect(roots().panel.hidden).toBe(false);
+  });
+
+  it("lens buttons set store.lens and toggle the sheet", () => {
+    const { store } = setup();
+    const btn = (lens: string) => roots().chrome.querySelector<HTMLButtonElement>(`[data-lens="${lens}"]`)!;
+    expect(btn("public").getAttribute("aria-pressed")).toBe("true");
+    expect(roots().sheet.hidden).toBe(true);
+    btn("analyst").click();
+    expect(store.get().lens).toBe("analyst");
+    expect(btn("analyst").getAttribute("aria-pressed")).toBe("true");
+    expect(roots().sheet.hidden).toBe(false);
+    btn("astronaut").click();
+    expect(roots().sheet.hidden).toBe(true);
+  });
+
+  it("the investigations table has one row per experiment, sorted by family then acronym", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const rows = [...roots().sheet.querySelectorAll("table.investigations tbody tr")];
+    expect(rows.length).toBe(experiments.length);
+    expect(rows.map((r) => r.children[2].textContent)).toEqual(["droplets", "gas jets", "large-scale solids"]);
+    expect(roots().sheet.querySelector("caption")!.textContent).toBe(`3 investigations, ${tests.length} tests in the data`);
+    expect(rows[2].textContent).toContain("not recorded"); // PSI-98 has no pressure range
+  });
+
+  it("the default sheet tab follows the beat; the person can switch freely", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const selected = () => roots().sheet.querySelector('[aria-selected="true"]')!.textContent;
+    expect(selected()).toBe("All investigations");
+    store.set({ beat: { story: "s", scene: "a", beat: "b", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "lunar-margins" } });
+    expect(selected()).toBe("Moon-gravity margins");
+    buttons(roots().sheet)[0].click();
+    expect(selected()).toBe("All investigations");
+    store.set({ beat: { story: "s", scene: "a", beat: "c", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "table" } });
+    expect(selected()).toBe("All investigations");
+  });
+
+  it("Skip scrolls to the first slider step; Stories opens, cards scroll, Escape closes and returns focus", () => {
+    setup();
+    document.getElementById("story")!.innerHTML =
+      `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="Build your Moon-base air"><div class="step" id="x"></div><div class="step" id="y" data-sliders="true"></div></section>`;
+    const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
+    buttons(roots().chrome).find((b) => b.className.includes("primary"))!.click();
+    expect(scroll.mock.contexts.at(-1)).toBe(document.getElementById("y"));
+
+    const stories = buttons(roots().chrome).find((b) => b.textContent === "Stories")!;
+    stories.click();
+    expect(roots().overlay.hidden).toBe(false);
+    const card = roots().overlay.querySelector<HTMLButtonElement>(".story-card")!;
+    expect(card.textContent).toContain("Build your Moon-base air");
+    card.click();
+    expect(roots().overlay.hidden).toBe(true);
+    expect(scroll.mock.contexts.at(-1)).toBe(document.getElementById("story-moon-air"));
+    stories.click();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    expect(roots().overlay.hidden).toBe(true);
+    expect(document.activeElement).toBe(stories);
+  });
+});
