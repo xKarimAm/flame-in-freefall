@@ -1,5 +1,8 @@
 # HANDOVER: start the next session here
 
+> **Superseded where it differs (2026-11-15 01:25):** `KICKOFF.md`, `docs/review/STRUCTURE-v2.md`, `docs/STORY-LIBRARY.md`, `contracts/`, `docs/OWNERS.md`, `docs/structure.drawio` (4 pages). The structure was reviewed twice by three reviewers; the build order and gate are in STRUCTURE-v2.
+
+
 Written 2026-11-14 ~10:40 PM local (UTC+3) by the planning session (Opus 5.5) for the **Fable orchestrator session**. Repo: `E:\flame-in-freefall` → github.com/xKarimAm/flame-in-freefall (private). Planning repo with all research: `E:\spaceapps-2026-plan`.
 
 ## 0. How this session runs (Karim's rules)

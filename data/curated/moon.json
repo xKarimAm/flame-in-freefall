@@ -1,23 +1,26 @@
 {
   "atmospheres": [
     {
+      "id": "iss-air",
       "name": "Earth sea level / ISS cabin",
       "pressure_kpa": 101.4,
       "o2_pct_min": 21,
       "o2_pct_max": 21,
       "source": "Challenge #7 brief",
-      "url": "https://www.spaceappschallenge.org/2026/challenges/ (challenge #7 brief)"
+      "url": "https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/"
     },
     {
+      "id": "moon-base-brief",
       "name": "Moon base / rover (brief)",
       "pressure_kpa": 70.3,
       "o2_pct_min": 30,
       "o2_pct_max": null,
       "note": ">= 30% O2 at <= 10.2 psi",
       "source": "Challenge #7 brief",
-      "url": "https://www.spaceappschallenge.org/2026/challenges/ (challenge #7 brief)"
+      "url": "https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/"
     },
     {
+      "id": "heo-dm-1006",
       "name": "Exploration atmosphere HEO-DM-1006 (8.2 psia)",
       "pressure_kpa": 56.5,
       "o2_pct_min": 33.7,
@@ -27,6 +30,7 @@
       "url": "https://ntrs.nasa.gov/citations/20220006612"
     },
     {
+      "id": "exp-10-2",
       "name": "Exploration atmosphere (10.2 psia)",
       "pressure_kpa": 70.3,
       "o2_pct_min": 26.5,
@@ -36,12 +40,13 @@
       "url": "https://ntrs.nasa.gov/citations/20220006612"
     },
     {
+      "id": "suit",
       "name": "Spacesuit",
       "pressure_kpa": 29.6,
       "o2_pct_min": 100,
       "o2_pct_max": 100,
       "source": "Challenge #7 brief",
-      "url": "https://www.spaceappschallenge.org/2026/challenges/ (challenge #7 brief)"
+      "url": "https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/"
     }
   ],
   "lunar_margins": {

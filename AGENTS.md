@@ -1,6 +1,6 @@
 # Agent rules: Flame in Freefall (NASA Space Apps 2026, challenge #7)
 
-Read in order: `HANDOVER.md`, this file, `PLAN.md`, your lane's `PLAN.md`, `contracts/README.md`.
+Read in order: `ACTIONS.md` (last action + plan; update it after every action, Karim switches between 3 Claude accounts), `HANDOVER.md`, this file, `PLAN.md`, your lane's `PLAN.md`, `contracts/README.md`.
 
 ## The product in one line
 A dashboard that puts every NASA microgravity fire experiment (PSI) on one comparable footing, every number traceable to its PSI row, and shows where the evidence for a Moon base runs out.

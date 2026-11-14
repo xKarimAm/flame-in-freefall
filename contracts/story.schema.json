@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "story.schema.json",
+  "title": "Story: scenes and scroll beats",
+  "type": "object",
+  "required": ["id", "act", "title_key", "scenes"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "act": { "type": "integer", "minimum": 1, "maximum": 4 },
+    "title_key": { "type": "string" },
+    "scenes": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "beats"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "beats": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["id", "kind", "stage", "text", "sources"],
+              "additionalProperties": false,
+              "properties": {
+                "id": { "type": "string" },
+                "kind": { "enum": ["hook", "reveal", "focus", "compare", "takeaway", "interactive"] },
+                "stage": { "$ref": "#/$defs/stage" },
+                "text": {
+                  "description": "i18n keys per lens; public is required, the others fall back to public",
+                  "type": "object",
+                  "required": ["public"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "public": { "type": "string" },
+                    "astronaut": { "type": "string" },
+                    "analyst": { "type": "string" }
+                  }
+                },
+                "sources": {
+                  "description": "hook beats may have none; every beat that shows a number needs at least one",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["label", "url"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "label": { "type": "string" },
+                      "url": { "type": "string", "pattern": "^https://" },
+                      "psi_row": { "type": "string", "description": "test id from tests.json, e.g. PSI-98#1" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "required": ["view"],
+      "additionalProperties": false,
+      "properties": {
+        "view": { "enum": ["empty", "incident", "micro-g", "tilt-lunar"], "description": "empty = no data; incident = Act 1 cards from incidents.json; tilt-lunar = the one three.js hero move (optional until after the gate; SVG shows the lunar plane as a labelled empty band)" },
+        "incident_ids": { "type": "array", "items": { "type": "string" }, "description": "ids from data/curated/incidents.json, shown when view = incident" },
+        "show_families": { "type": "array", "items": { "$ref": "#/$defs/family" }, "description": "families plotted so far; omitted = none" },
+        "highlight": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "family": { "$ref": "#/$defs/family" },
+            "investigation": { "type": "string", "pattern": "^PSI-[0-9]+$" },
+            "test_ids": { "type": "array", "items": { "type": "string" } },
+            "nearest_to": { "enum": ["heo-dm-1006", "slider"] }
+          }
+        },
+        "reference": {
+          "type": "array",
+          "items": { "enum": ["iss-air", "moon-base-brief", "heo-dm-1006", "exp-10-2", "suit", "saffire-vi"] },
+          "description": "atmosphere ids from data/curated/moon.json; saffire-vi = moon.json paper_tests, drawn as hollow 'not in PSI' marks. heo-dm-1006 is the Moon box."
+        },
+        "annotation": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["id", "text_key"], "additionalProperties": false,
+            "properties": { "id": { "type": "string" }, "text_key": { "type": "string" }, "at": { "enum": ["lunar-plane", "moon-box", "iss-air"] } }
+          },
+          "description": "labels on the stage, e.g. 'No fire test has run in Moon gravity' and the FM2 note on the lunar plane"
+        },
+        "coverage": { "type": "boolean", "description": "show 'plotted N of M tests'" },
+        "analyst_sheet": { "enum": ["table", "lunar-margins", "failing-materials"], "description": "what the Analyst lens sheet shows for this beat" },
+        "sliders": {
+          "type": "object", "required": ["pressure_kpa", "o2_pct"], "additionalProperties": false,
+          "properties": {
+            "pressure_kpa": { "type": "number", "minimum": 20, "maximum": 110 },
+            "o2_pct": { "type": "number", "minimum": 15, "maximum": 100 }
+          },
+          "description": "present = sliders live, starting at these values"
+        }
+      }
+    },
+    "family": { "enum": ["large-scale solids", "solids in flow duct", "gas jets", "droplets", "smoke detection", "ground/modeling"] }
+  }
+}

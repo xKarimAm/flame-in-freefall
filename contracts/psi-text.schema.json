@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "psi-text.schema.json",
+  "title": "PSI investigation text: the only source AI-summary quotes may come from (data/build/psi-text.json)",
+  "description": "Quote check: a quote is valid if, after collapsing all whitespace runs to one space and trimming, it is a substring of the same investigation's objective, approach or description (case-sensitive). Nothing else is normalised.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "objective", "source_url"],
+    "additionalProperties": false,
+    "properties": {
+      "id": { "type": "string", "pattern": "^PSI-[0-9]+$" },
+      "objective": { "type": "string", "minLength": 1 },
+      "approach": { "type": ["string", "null"] },
+      "description": { "type": ["string", "null"] },
+      "source_url": { "type": "string", "pattern": "^https://psi\\.nasa\\.gov/" }
+    }
+  }
+}

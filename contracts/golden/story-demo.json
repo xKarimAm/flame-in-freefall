@@ -1,0 +1,41 @@
+{
+  "id": "moon-air",
+  "act": 3,
+  "title_key": "story.moon-air.title",
+  "scenes": [
+    {
+      "id": "moon-air-main",
+      "beats": [
+        {
+          "id": "hook",
+          "kind": "hook",
+          "stage": { "view": "empty" },
+          "text": { "public": "story.moon-air.moon-air-main.hook.public" },
+          "sources": []
+        },
+        {
+          "id": "compare",
+          "kind": "compare",
+          "stage": {
+            "view": "tilt-lunar",
+            "show_families": ["large-scale solids", "solids in flow duct", "gas jets", "droplets", "smoke detection"],
+            "highlight": { "nearest_to": "heo-dm-1006" },
+            "reference": ["iss-air", "heo-dm-1006", "saffire-vi"],
+            "annotation": [{ "id": "no-lunar-tests", "text_key": "story.moon-air.moon-air-main.compare.annotation", "at": "lunar-plane" }],
+            "coverage": true,
+            "analyst_sheet": "failing-materials",
+            "sliders": { "pressure_kpa": 56.5, "o2_pct": 34 }
+          },
+          "text": {
+            "public": "story.moon-air.moon-air-main.compare.public",
+            "astronaut": "story.moon-air.moon-air-main.compare.astronaut",
+            "analyst": "story.moon-air.moon-air-main.compare.analyst"
+          },
+          "sources": [
+            { "label": "ICES-2022-45, NTRS 20220006612 (8.2 psia exploration atmosphere)", "url": "https://ntrs.nasa.gov/citations/20220006612" }
+          ]
+        }
+      ]
+    }
+  ]
+}

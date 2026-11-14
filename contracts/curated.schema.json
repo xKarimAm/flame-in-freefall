@@ -1,6 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Curated facts (orchestrator)",
-  "description": "Every entry carries source + url. moon.json: atmospheres, lunar_margins, paper_tests, gap. incidents.json: incidents.",
-  "type": "object"
+  "description": "Every entry carries source + url. moon.json: atmospheres, lunar_margins, paper_tests, gap. incidents.json: incidents. Atmosphere ids are what story stage.reference points to.",
+  "type": "object",
+  "properties": {
+    "atmospheres": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "pressure_kpa", "o2_pct_min", "source", "url"],
+        "properties": {
+          "id": { "enum": ["iss-air", "moon-base-brief", "heo-dm-1006", "exp-10-2", "suit"] },
+          "pressure_kpa": { "type": "number" },
+          "o2_pct_min": { "type": "number" },
+          "o2_pct_max": { "type": ["number", "null"], "description": "null = open band, drawn from o2_pct_min to 100 % as a dashed band; never used in DISTANCE" },
+          "url": { "type": "string", "pattern": "^https://" }
+        }
+      }
+    }
+  }
 }
