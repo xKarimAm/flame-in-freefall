@@ -101,4 +101,69 @@ describe("engine mount", () => {
     after.forEach((s, i) => expect(s).toBe(before[i]));
     expect(after).toHaveLength(before.length);
   });
+
+  it("renders one cover that is not a step", () => {
+    const { el } = setup();
+    const covers = el.querySelectorAll(".cover");
+    expect(covers).toHaveLength(1);
+    expect(covers[0].classList.contains("step")).toBe(false);
+    expect(el.firstElementChild).toBe(covers[0]);
+    expect(covers[0].querySelector("h1")!.textContent).toBe(dicts.en!["ui.cover.title"]);
+    expect(covers[0].querySelector(".cover-lead")!.textContent).toBe(dicts.en!["ui.cover.lead"]);
+    expect(covers[0].querySelector(".cover-cue")!.textContent).toBe(dicts.en!["ui.cover.cue"]);
+  });
+
+  it("starts each story with a chapter page that is not a step", () => {
+    const { el } = setup();
+    for (const story of stories) {
+      const section = el.querySelector(`#story-${story.id}`)!;
+      const chapter = section.firstElementChild!;
+      expect(chapter.tagName).toBe("HEADER");
+      expect(chapter.classList.contains("chapter")).toBe(true);
+      expect(chapter.classList.contains("step")).toBe(false);
+      expect(chapter.querySelector(".chapter-label")!.textContent).toBe(`Chapter ${story.act}`);
+      expect(chapter.querySelector("h2.story-title")!.textContent).toBe(dicts.en![story.title_key]);
+    }
+  });
+
+  it("renders the question only when its key exists", () => {
+    const story = stories[0];
+    const qKey = story.title_key.replace(/\.title$/, ".question");
+    const original = dicts.en![qKey]; // the story-JSON coder may add the real key; test both states either way
+    try {
+      delete dicts.en![qKey];
+      expect(setup().el.querySelector(".chapter-question")).toBeNull();
+      dicts.en![qKey] = "Test question text that is not shipped";
+      const { el } = setup();
+      const qs = el.querySelectorAll(".chapter-question");
+      expect(qs).toHaveLength(1);
+      expect(qs[0].textContent).toBe(dicts.en![qKey]);
+      expect(el.querySelector(`#story-${story.id}`)!.contains(qs[0])).toBe(true);
+      expect(el.querySelector(`#story-${story.id} h2.story-title`)!.nextElementSibling).toBe(qs[0]);
+    } finally {
+      if (original === undefined) delete dicts.en![qKey];
+      else dicts.en![qKey] = original;
+    }
+  });
+
+  it("numbers every beat page over the whole book", () => {
+    const { steps } = setup();
+    steps.forEach((s, i) =>
+      expect(s.querySelector(".step-page")!.textContent).toBe(`Page ${i + 1} of ${flat.length}`),
+    );
+  });
+
+  it("sets data-lens on the root from the store", () => {
+    const { el, store } = setup();
+    expect(el.dataset.lens).toBe("public");
+    store.set({ lens: "analyst" });
+    expect(el.dataset.lens).toBe("analyst");
+    store.set({ lens: "astronaut" });
+    expect(el.dataset.lens).toBe("astronaut");
+  });
+
+  it("keeps step ids and order", () => {
+    const { steps } = setup();
+    expect(steps.map((s) => s.id)).toEqual(flat.map((f) => `beat-${f.story.id}-${f.scene.id}-${f.beat.id}`));
+  });
 });

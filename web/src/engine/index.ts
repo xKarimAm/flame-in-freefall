@@ -26,10 +26,17 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const steps: HTMLElement[] = [];
   const texts: HTMLElement[] = [];
   const labels: HTMLElement[] = []; // the "Sources" label of each step (a detached stub when the beat has no sources)
-  const headings: { section: HTMLElement; h2: HTMLElement; key: string }[] = [];
+  const pages: HTMLElement[] = []; // the "Page n of total" line of each step
+  const headings: { section: HTMLElement; label: HTMLElement; h2: HTMLElement; question: HTMLElement; key: string; act: number }[] = [];
   const sections = new Map<string, HTMLElement>();
 
   el.replaceChildren();
+  const cover = node("section", "cover");
+  const coverTitle = node("h1", "cover-title");
+  const coverLead = node("p", "cover-lead");
+  const coverCue = node("p", "cover-cue");
+  cover.append(coverTitle, coverLead, coverCue);
+  el.append(cover);
   for (const { story, scene, beat } of flat) {
     let section = sections.get(story.id);
     if (!section) {
@@ -37,9 +44,13 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
       section.id = `story-${story.id}`;
       section.dataset.story = story.id;
       section.dataset.act = String(story.act);
+      const header = node("header", "chapter");
+      const label = node("p", "chapter-label");
       const h2 = node("h2", "story-title");
-      section.append(h2);
-      headings.push({ section, h2, key: story.title_key });
+      const question = node("p", "chapter-question"); // attached in render() only when the dictionary has the key
+      header.append(label, h2);
+      section.append(header);
+      headings.push({ section, label, h2, question, key: story.title_key, act: story.act });
       sections.set(story.id, section);
       el.append(section);
     }
@@ -48,8 +59,9 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     step.dataset.kind = beat.kind;
     if (beat.stage.sliders) step.dataset.sliders = "true";
     const card = node("div", "step-card");
+    const page = node("p", "step-page");
     const text = node("p", "step-text");
-    card.append(text);
+    card.append(page, text);
     const label = node("h3", "step-sources-label");
     if (beat.sources.length) {
       const list = node("ul", "step-sources");
@@ -68,18 +80,32 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     section.append(step);
     steps.push(step);
     texts.push(text);
+    pages.push(page);
     labels.push(label);
   }
 
   function render(): void {
     const { lens, locale } = ctx.store.get();
+    el.dataset.lens = lens;
+    coverTitle.textContent = ctx.t("ui.cover.title");
+    coverLead.textContent = ctx.t("ui.cover.lead");
+    coverCue.textContent = ctx.t("ui.cover.cue");
     flat.forEach(({ beat }, i) => {
+      pages[i].textContent = ctx.t("ui.engine.page", { n: i + 1, total: flat.length });
       texts[i].textContent = resolveText(ctx.dicts, beat.text, lens, locale);
       labels[i].textContent = ctx.t("ui.engine.sources");
     });
-    for (const { section, h2, key } of headings) {
+    for (const { section, label, h2, question, key, act } of headings) {
+      label.textContent = ctx.t("ui.engine.chapter", { n: act });
       h2.textContent = ctx.t(key);
       section.dataset.title = h2.textContent;
+      const qKey = key.replace(/\.title$/, ".question");
+      const q = ctx.t(qKey);
+      if (q === qKey) question.remove(); // missing key: no question element
+      else {
+        question.textContent = q;
+        h2.after(question);
+      }
     }
   }
 
