@@ -1,11 +1,62 @@
-/* Story steps scroll over the stage. Generated with Claude, SI-assisted. */
-.story-title {
+/* Picture-book scroll story: cover, chapter pages, beat pages. Generated with Claude, SI-assisted. */
+
+/* cover: first page, opaque over the stage */
+.cover {
+  min-height: calc(100vh - var(--chrome-h));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4vw;
+  background: var(--space-deep);
+  color: var(--ink-dark);
+  pointer-events: auto;
+}
+.cover-title {
+  max-width: 20ch;
   margin: 0;
-  padding: 24px 4vw 0;
-  font-size: 1.5rem;
-  line-height: 1.2;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.cover-title::before {
+  content: "";
+  display: block;
+  width: 6rem;
+  height: 6px;
+  margin-bottom: 24px;
+  background: var(--flame);
+}
+.cover-lead {
+  max-width: 44ch;
+  margin: 24px 0 0;
+  font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  line-height: 1.4;
+}
+.cover-cue { margin: 40px 0 0; color: var(--muted-dark); font-size: 0.875rem; font-weight: 500; }
+
+/* chapter page: full-width electric-blue field between acts */
+.chapter {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4vw;
+  background: var(--electric-blue);
+  color: var(--ink-dark);
+  pointer-events: auto;
+}
+.chapter-label { margin: 0 0 12px; font-size: 0.875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted-dark); }
+.story-title {
+  max-width: 24ch;
+  margin: 0;
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.1;
   color: var(--ink-dark);
 }
+.chapter-question { max-width: 44ch; margin: 20px 0 0; font-size: clamp(1.125rem, 1.6vw, 1.5rem); line-height: 1.4; }
+
+/* beat pages */
 #story .step {
   min-height: 90vh;
   display: flex;
@@ -13,20 +64,35 @@
 }
 #story .story:last-child .step:last-child { margin-bottom: 40vh; }
 .step-card {
-  max-width: 28rem;
+  width: min(26rem, 92vw);
   margin-left: 4vw;
-  padding: 16px;
+  padding: 28px;
   background: var(--space-black);
   color: var(--ink-dark);
-  border: 1px solid transparent;
+  border-left: 4px solid var(--data-on-dark);
+  opacity: 0.45;
+  transition: opacity 200ms;
 }
-.step.is-active .step-card { border-color: var(--muted-dark); }
-.step-text { margin: 0; }
+.step[data-kind="hook"] .step-card,
+.step[data-kind="takeaway"] .step-card { border-left-color: var(--flame); }
+.step.is-active .step-card { opacity: 1; }
+.step-page { margin: 0 0 12px; font-size: 0.875rem; color: var(--muted-dark); }
+.step-text {
+  margin: 0;
+  font-size: clamp(1.25rem, 1.05rem + 0.9vw, 1.75rem);
+  line-height: 1.3;
+  font-weight: 500;
+}
+#story[data-lens="astronaut"] .step-text,
+#story[data-lens="analyst"] .step-text { font-size: 1.0625rem; line-height: 1.5; font-weight: 400; }
 .step-sources-label { margin: 12px 0 4px; font-size: 0.875rem; font-weight: 500; color: var(--muted-dark); }
 .step-sources { margin: 0; padding-left: 1.2em; font-size: 0.875rem; }
 .step-sources a { color: var(--muted-dark); text-decoration: underline; }
-@media (max-width: 767px) {
-  .step-card { max-width: none; margin: 0 16px; width: 100%; }
+
+/* narrow screens: cards sit at the bottom so the chart above stays readable */
+@media (max-width: 1099px) {
+  #story .step { align-items: flex-end; padding-bottom: 5vh; }
+  .step-card { width: calc(100% - 32px); margin: 0 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .step-card, .step-card * { transition: none; animation: none; }
