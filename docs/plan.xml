@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Firebreak build plan for the development session. Tasks in dependency order; no clock times or gates. Contracts win over this file. -->
+<plan project="Firebreak" challenge="NASA Space Apps 2026 #7 Flame in Freefall" repo="E:\flame-in-freefall" visibility="private" approved="2026-11-15 01:17 by Karim">
+  <read-first>
+    <file>ACTIONS.md</file>
+    <file>AGENTS.md</file>
+    <file>docs/review/STRUCTURE-v2.md</file>
+    <file>docs/STORY-LIBRARY.md</file>
+    <file>contracts/</file>
+    <file>docs/OWNERS.md</file>
+    <file>docs/STORY.md</file>
+    <file>docs/design/DESIGN.md</file>
+    <file>docs/structure.drawio</file>
+  </read-first>
+
+  <rules>
+    <rule>Orchestrator: Fable plans, splits, reviews, merges. Code by Sonnet subagents only (.claude/agents/coder.md), one folder each per docs/OWNERS.md, parallel only on separate folders. No Muse Wonder, no other coding agents; the Muse Spark key is a reserve only.</rule>
+    <rule>Never invent data: every number on screen has a PSI row or a curated NASA source link.</rule>
+    <rule>Merge one PR at a time, rebased on main, with scripts/check.ps1 green.</rule>
+    <rule>Stuck: 3 failures on the same thing → write it in STATE.md, take the next task.</rule>
+    <rule>After every action update ACTIONS.md (last action, table, log).</rule>
+    <rule>The repo stays private. No deploy to a public host until Karim chooses one.</rule>
+    <rule>Do not edit docs/design/, docs/STORY.md, docs/wireframes/ (design session).</rule>
+  </rules>
+
+  <tasks>
+    <task id="T1" owner="orchestrator" depends="">
+      <do>Write scripts/check.ps1 as defined in docs/OWNERS.md.</do>
+      <done>check.ps1 runs and exits non-zero on any failure.</done>
+    </task>
+    <task id="T2" owner="orchestrator" depends="T1">
+      <do>Review PR #1 (Vite + TS + vitest). Drop Observable Plot; add three and scrollama. Create web/src/{data,engine,stage,ui,i18n}/ with a mount() each and main.ts importing them. Add .gitattributes if missing.</do>
+      <done>PR merged; check.ps1 green.</done>
+    </task>
+    <task id="T3" owner="coder A" folder="pipeline/, data/build/" depends="T2">
+      <do>Build tests.json, experiments.json, psi-text.json from data/psi-snapshot/ per contracts/*.schema.json; measure and freeze contracts/COVERAGE.md. Review the old draft in E:\fif-wt\pipeline\pipeline\ first; delete _probe*.py.</do>
+      <done>pytest green: schemas, golden rows exact, ranges, a source on every row, coverage table frozen.</done>
+    </task>
+    <task id="T4" owner="coder B" folder="web/src/data/" depends="T2">
+      <do>Typed loader; nearestTests() per contracts/DISTANCE.md (ppO2, family join, micro-g filter, "not placed" list); Moon box and references from data/curated/moon.json by id.</do>
+      <done>vitest: the 3 DISTANCE cases pass.</done>
+    </task>
+    <task id="T5" owner="coder C" folder="web/src/engine/, stories/" depends="T2">
+      <do>Scroll engine (scrollama steps → active beat → stage state) driven by stories/*.json valid against contracts/story.schema.json; start with contracts/golden/story-demo.json.</do>
+      <done>Engine tests: beat order, reverse on scroll back, lens and locale fallback per contracts/I18N.md.</done>
+    </task>
+    <task id="T6" owner="coder D" folder="web/src/stage/" depends="T4">
+      <do>SVG stage: x = pressure kPa, y = oxygen %, axis labels in words; all tests grey, colour only for meaning (blue nearest, orange burned, red would fail, yellow Moon box); labelled empty lunar plane; "plotted N of M".</do>
+      <done>Renders golden and real data; reduced-motion safe.</done>
+    </task>
+    <task id="T7" owner="coder E" folder="web/src/ui/" depends="T4">
+      <do>Slider panel + nearest list (with "nearest tested conditions, not a prediction", weighting text, nearest burned / nearest went out); analyst table with source links; Stories rail and overlay; Skip to Moon air.</do>
+      <done>Every rendered number has an href (test).</done>
+    </task>
+    <task id="T8" owner="orchestrator" depends="T3 T5 T6 T7">
+      <do>Milestone: contracts/DEMO-SLICE.md works on real data in a local build (npm run build and npm run preview).</do>
+      <done>DEMO-SLICE checklist ticked in STATE.md.</done>
+    </task>
+    <task id="T9" owner="coder D" folder="web/src/stage/" depends="T8">
+      <do>Optional three.js tilt to the empty lunar plane; SVG stays the fallback.</do>
+      <done>Tilt works or is skipped with a note in STATE.md.</done>
+    </task>
+    <task id="T10" owner="coder C" folder="stories/" depends="T8">
+      <do>Acts 1-4 as story files from docs/STORY.md (verified facts only), using the per-act beats in STRUCTURE-v2.</do>
+      <done>All stories validate; every beat that shows a number has a source.</done>
+    </task>
+    <task id="T11" owner="coder C" folder="stories/library/" depends="T8">
+      <do>Story library from docs/STORY-LIBRARY.md: wave 1 FLEX, BASS-II, SAFFIRE, CFI-G, SAME-R, SPICE; wave 2 the rest. Moments are computed by the pipeline, never typed.</do>
+      <done>Each library story validates and links to its PSI page.</done>
+    </task>
+    <task id="T12" owner="coder A" folder="pipeline/" depends="T3">
+      <do>Prepared AI summaries per investigation with verbatim quotes from psi-text.json; tag model and time.</do>
+      <done>Quote test passes (whitespace-normalised substring).</done>
+    </task>
+    <task id="T13" owner="coder E" folder="web/src/i18n/" depends="T10">
+      <do>en complete; then es and hi for chrome and headlines; ar (RTL) last if time remains.</do>
+      <done>i18n tests green.</done>
+    </task>
+    <task id="T14" owner="orchestrator" depends="T10 T11">
+      <do>Taste check (lint.mjs + inspect.mjs from C:\Users\Admin\.claude\skills\taste-skill) at 1440/768/390; README with NASA data, licences, AI use, how to run.</do>
+      <done>0 FAIL; README complete.</done>
+    </task>
+  </tasks>
+
+  <scope-valves order="cut first to last">
+    <valve>Act 2 to 3 families (SAFFIRE, FLEX, SAME-R)</valve>
+    <valve>Library wave 2</valve>
+    <valve>Merge Act 2 takeaway into Act 4</valve>
+    <valve>Astronaut lens copy</valve>
+    <valve>Languages beyond en</valve>
+    <valve>three.js tilt (T9)</valve>
+  </scope-valves>
+</plan>

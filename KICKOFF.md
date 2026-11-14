@@ -8,18 +8,19 @@ You are the build orchestrator for Firebreak (NASA Space Apps 2026 #7, "Flame in
 
 **Read in this order:**
 1. `ACTIONS.md`
-2. `AGENTS.md`
-3. `docs/review/STRUCTURE-v2.md` (decisions, build order, gate)
-4. `docs/STORY-LIBRARY.md`
-5. `contracts/` (all files)
-6. `docs/OWNERS.md`
-7. `docs/STORY.md`
-8. `docs/design/DESIGN.md`
-9. `docs/structure.drawio`: page 1 data flow, 2 story, 3 build order, 4 agents. It's XML; read the cell `value`s.
+2. `docs/plan.xml`: the task list (T1-T14) you work through
+3. `AGENTS.md`
+4. `docs/review/STRUCTURE-v2.md` (decisions; its timed build order is replaced by `docs/plan.xml`)
+5. `docs/STORY-LIBRARY.md`
+6. `contracts/` (all files)
+7. `docs/OWNERS.md`
+8. `docs/STORY.md`
+9. `docs/design/DESIGN.md`
+10. `docs/structure.drawio`: page 1 data flow, 2 story, 3 build tasks, 4 development. It's XML; read the cell `value`s.
 
 Where `HANDOVER.md` differs from these, these win.
 
-**Your job:** build to the contracts, in the order on diagram page 3, until Karim checks in.
+**Your job:** work through the tasks in `docs/plan.xml` (dependency order, no clock times), building to the contracts, until Karim checks in.
 - You plan, split the work, review diffs and merge.
 - **Sonnet subagents** (`.claude/agents/coder.md`) write the code: coders A-E, one folder each per `docs/OWNERS.md`, in parallel only on separate folders, each on its own branch or worktree under `E:\fif-wt\`.
 - No Muse Wonder and no other coding agents. The Muse Spark key in `.env` is a reserve only, for when Claude limits stop work.
@@ -35,9 +36,7 @@ Where `HANDOVER.md` differs from these, these win.
 - **Never invent data.** A number without a PSI row or a curated source is not shown. Story text comes only from `docs/STORY.md`, `docs/STORY-LIBRARY.md` and the PSI text.
 - **Merges:** one PR at a time, rebased on `main`, with `scripts/check.ps1` green.
 - **Stuck rule:** 3 failures → write it in `STATE.md` and move to the next item.
-- **Gate at 09:00 local:** `contracts/DEMO-SLICE.md` must work.
-  - If the repo is public, it runs at the GitHub Pages preview; add the Pages deploy workflow.
-  - If it's still private, build locally and say so in `STATE.md`. Making the repo public is Karim's call; see `E:\spaceapps-2026-plan\docs\HOSTING.md`.
+- **Milestone (task T8):** `contracts/DEMO-SLICE.md` works on real data in a local build (`npm run build`, `npm run preview`). The repo stays **private**; don't deploy to a public host until Karim chooses one.
 - **Don't edit** `docs/design/`, `docs/STORY.md` or `docs/wireframes/`. The design session owns them.
 - **After every action**, update `ACTIONS.md`: last action, table, log. Karim switches between 3 accounts.
 - **When Karim checks in:** at most 10 lines in `STATE.md`: done, not done, needs his call.
