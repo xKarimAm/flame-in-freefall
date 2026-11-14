@@ -1,9 +1,9 @@
 # STATE (build session, started 2026-11-15 01:25 on Karim's go-ahead: "Go ahead and build Firebreak. This is my approval to start coding now.")
 
 ## Check-in (max 10 lines)
-- Done: T1 `scripts/check.ps1` (green path and red path proven).
-- In progress: T2 skeleton (PR #1), T3 pipeline (coder A).
-- Not done: T4-T14.
+- Done: T1 `scripts/check.ps1` (green and red path proven); T2 skeleton merged (PR #1, PR #2).
+- In progress: T3 pipeline (coder A), T4-T7 data, engine, stage, UI (coders B-E), each with a Sonnet QA pass.
+- Not done: T8 milestone, T9-T14.
 - Needs your call: see the list at the bottom.
 
 ## DEMO-SLICE checklist (T8)
@@ -23,6 +23,10 @@
 - 01:35 **Merge gate** is `scripts/check.ps1` green locally (KICKOFF). GitHub CI also runs on each PR; I don't wait for it.
 - 01:35 **Old pipeline draft** (`E:\fif-wt\pipeline\pipeline\`, made by the banned agent; `E:\fif-wt\pipe\pipeline\` holds byte-identical copies of the four `ffpipe` files). No `_probe*.py` files are left in either folder. Reviewed by me: plain parsing code, no network calls, no invented values (unparseable → null + note). Verdict: reuse as a starting point; coder A re-checks every file and its tests decide.
 - 01:35 **`failing-materials` sheet:** `story-demo.json` names it, but `data/curated/moon.json` has no materials list. I did not add one tonight: curated entries must be checked against the paper, not copied from STORY.md. The sheet shows the lunar margins (in `moon.json`) and the source link until a checked list is added.
+
+- 01:39 **PR #1 mishap.** My push of the skeleton commit to PR #1's branch was rejected, so GitHub merged PR #1 at its old head (the Plot scaffold). PR #2 put the skeleton on top within a minute; no coder had started on web. Plot is gone from `package.json`.
+- 01:40 **Outcome words.** `contract.ts` groups recorded outcomes for colour: burned = burned, completion, flow-terminated; went out = extinction, self-extinguished; other = disruption, no-ignition, unknown. This is a reading of NASA's labels, not new data.
+- 01:40 **Chrome strings:** stage and engine keys are seeded in `en.json` by me; only coder E edits `en.json` in this wave, so parallel branches don't collide.
 
 ## Open questions / stuck
 (none yet)

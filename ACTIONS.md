@@ -8,7 +8,7 @@ Karim switches between three Claude accounts. Every session, on every account, *
 Times are local (UTC+3).
 
 ## Last action
-2026-11-15 01:35, planning session: **handover complete.** Karim approved (01:17, his words: "If the approval and all of the backend are done, then just hand over everything. Let's be finished so I can give it to the other account."). The repo stays **private** (Karim: "If you're going to put it public, I don't think you should."). The build order is now a task list, `docs/plan.xml` (T1-T14, no clock gates); the diagram is updated (page 3 build tasks, page 4 development). **Next: Karim opens the development session in `E:\flame-in-freefall`, types his go-ahead, and pastes `KICKOFF.md`.**
+2026-11-15 01:41, build session (Fable orchestrator): **Karim gave the go-ahead at 01:25** (his words: "Go ahead and build Firebreak. This is my approval to start coding now."). T1 done (`scripts/check.ps1`), T2 done (PR #1 + PR #2 merged: skeleton, `web/src/contract.ts`). Running now: coder A (pipeline, T3) and coders B-E (data, engine, stage, UI: T4-T7), each in `E:\fif-wt\A..E` with a Sonnet QA pass. **Next: review and merge their PRs one at a time (A, B first), then milestone T8.** Decisions and open calls: `STATE.md`.
 
 ## Action table (the plan)
 | # | Action | Who | Status | Done when |
@@ -21,8 +21,8 @@ Times are local (UTC+3).
 | 5 | Karim approves the structure (his own words) | Karim | done 01:17 (quoted above) | approval line copied into this log |
 | 5b | Hosting | Karim | decided 01:17: repo stays private; public host chosen later | `E:\spaceapps-2026-plan\docs\HOSTING.md` plan done |
 | 6 | Commit the planning docs + contracts to `main` | planning | done 01:30 | pushed |
-| 6b | Open the build account, type the go-ahead, paste `KICKOFF.md` | Karim | **waiting** | build session running |
-| 7 | Development: Fable orchestrator + Sonnet coders work through `docs/plan.xml` | development session | ready to start | T1-T14 done, `scripts/check.ps1` green |
+| 6b | Open the build account, type the go-ahead, paste `KICKOFF.md` | Karim | done 01:25 | build session running |
+| 7 | Development: Fable orchestrator + Sonnet coders work through `docs/plan.xml` | development session | **running** (T1, T2 done; T3-T7 with coders) | T1-T14 done, `scripts/check.ps1` green |
 | 8 | Wireframes, then the look and feel (Fable proposes; Karim picks) | design session with Karim | pending | Karim picks a direction |
 | 9 | Milestone T8: DEMO-SLICE works in a local build | development | pending | STATE.md checklist |
 | 10 | Story library content (22 stories from specs) | backend coders | pending | each story validates; every number has a link |
@@ -42,3 +42,6 @@ Times are local (UTC+3).
 | 01:15 | planning | Studied dashboards: NASA Eyes/Worldview, Pudding, Reuters, OWID, ISA-101 HMI, industrial XAI, Watch Duty | DASHBOARDS.md; waiting for Karim |
 | 01:30 | planning | Re-verified hosting + domain (7 corrections); global rules added; diagram pages 3-4; KICKOFF.md; commit + push | ready for the build account |
 | 01:35 | planning | Approval recorded; repo private; tasks in docs/plan.xml; diagram pages 3-4 renamed; KICKOFF updated; final commit + push | handover complete |
+| 01:36 | build | T1: `scripts/check.ps1`; contracts: unique test ids, `pressure_note`/`flow_note`; `STATE.md` started | green and red path proven; pushed |
+| 01:39 | build | T2: PR #1 merged (old head, my push was rejected), then PR #2 with the skeleton | main has the skeleton, check.ps1 green |
+| 01:41 | build | Launched coder A (T3) and coders B-E (T4-T7), each with a Sonnet QA pass | running |
