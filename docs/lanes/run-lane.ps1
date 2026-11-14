@@ -8,5 +8,5 @@ $log = "E:\spaceapps-data\logs\$Lane-$(Get-Date -Format 'MMdd-HHmm').jsonl"
 Set-Location $wt
 git -c safe.directory=* fetch -q origin
 muse exec --prompt-file "E:\spaceapps-data\prompts\$Lane.md" --workspace $wt --model $model --contributor-mode on `
-  --trust-workspace --disable-approval --sandbox-network enabled --disable-request-user-input --json *> $log
+  --trust-workspace --disable-approval --sandbox-network enabled --disable-request-user-input --json 2>&1 | Out-File -Encoding utf8 $log
 "$Lane finished, exit $LASTEXITCODE, log $log"
