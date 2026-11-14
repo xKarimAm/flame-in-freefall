@@ -1,60 +1,76 @@
 /* SVG evidence stage. Flat colour from tokens only; colour carries meaning.
+   The stage fills #stage's content box: the UI pads #stage for the story cards and the panel.
    Generated with Claude, SI-assisted. */
-.stage-root { position: absolute; color: var(--ink-dark); font-family: var(--font); }
+.stage-root { display: flex; flex-direction: column; width: 100%; height: 100%; color: var(--ink-dark); font-family: var(--font); }
 .stage-root[hidden], .stage-incidents[hidden] { display: none; }
-.stage-svg { display: block; width: 100%; height: 100%; }
+.stage-plot { position: relative; flex: 1 1 0; min-height: 0; }
+.stage-svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 .stage-svg text { fill: var(--muted-dark); font-size: 12px; }
 .stage-svg .axis-title { font-size: 13px; }
 .stage-svg .plane-label { fill: var(--ink-dark); font-size: 13px; font-weight: 500; }
+.stage-svg .caption { fill: var(--data-on-dark); font-size: 14px; font-weight: 700; }
 .stage-svg .grid { stroke: var(--muted-dark); stroke-opacity: 0.15; stroke-width: 1; }
-.stage-svg .coverage { font-family: var(--font-id); }
 
-/* every test: quiet grey; colour only for meaning */
-.dot { fill: var(--muted-dark); fill-opacity: 0.3; stroke: none; transition: fill 0.2s, fill-opacity 0.2s, stroke 0.2s; }
-[data-layer="tests"] .dot { animation: stage-in 0.25s; }
-.dot.other { fill-opacity: 1; }
+/* every test: quiet grey; colour only for meaning. The reveal (a family's dots appearing) is the
+   one animation: 300ms fade and grow, off under prefers-reduced-motion. */
+.dot { fill: var(--muted-dark); fill-opacity: 0.3; stroke: none; transition: fill 0.2s, fill-opacity 0.2s, stroke 0.2s, cx 0.3s, cy 0.3s; }
+[data-layer="tests"] .dot { transform-box: fill-box; transform-origin: center; animation: stage-in 0.3s ease-out; }
+.dot.other { fill: var(--data-on-dark); fill-opacity: 1; }
 .dot.burned { fill: var(--flame); fill-opacity: 1; }
-.dot.went-out { fill: none; stroke: var(--ink-dark); stroke-width: 1.5; }
+.dot.went-out { fill: none; stroke: var(--data-on-dark); stroke-width: 1.5; }
 .dot.nearest { fill: var(--data-on-dark); fill-opacity: 1; stroke: none; animation: none; }
-@keyframes stage-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes stage-in { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: scale(1); } }
+
+/* tests with oxygen but no pressure: ticks in the strip beside the oxygen axis */
+.strip { fill: var(--muted-dark); fill-opacity: 0.06; stroke: var(--muted-dark); stroke-opacity: 0.4; stroke-dasharray: 3 3; }
+.ptick { stroke: var(--muted-dark); stroke-opacity: 0.4; stroke-width: 1.5; }
+.ptick.other { stroke: var(--data-on-dark); stroke-opacity: 1; }
+.ptick.burned { stroke: var(--flame); stroke-opacity: 1; }
+.ptick.went-out { stroke: var(--data-on-dark); stroke-opacity: 1; stroke-dasharray: 2 2; }
 
 /* references: the Moon box is the only yellow thing */
 .ref { fill: var(--muted-dark); fill-opacity: 0.12; stroke: var(--muted-dark); stroke-width: 1.5; }
 .ref.moon-box { fill: var(--moon); fill-opacity: 0.18; stroke: var(--moon); }
 .ref.open { stroke-dasharray: 5 3; }
 .ref.marker { fill-opacity: 0.6; }
-.stage-svg .ref-label { fill: var(--ink-dark); }
+/* labels in words; a ground-coloured outline keeps them readable over dots (a legibility stroke, not a shadow) */
+.stage-svg .ref-label { fill: var(--ink-dark); paint-order: stroke; stroke: var(--space-deep); stroke-width: 3px; stroke-linejoin: round; }
+.leader { stroke: var(--muted-dark); stroke-width: 1; }
 .paper { fill: none; stroke: var(--ink-dark); stroke-width: 1.5; }
 
 /* the user's air */
 .you-line { stroke: var(--ink-dark); stroke-width: 1.5; fill: none; }
-.stage-svg .you-label { fill: var(--ink-dark); font-weight: 500; }
+.stage-svg .you-label { fill: var(--ink-dark); font-weight: 500; paint-order: stroke; stroke: var(--space-deep); stroke-width: 3px; }
 
 /* the deliberately empty lunar plane */
 .lunar-band { fill: none; stroke: var(--muted-dark); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .stage-svg .lunar-note { fill: var(--ink-dark); font-size: 13px; }
 
-/* legend in words */
-.stage-legend { position: absolute; left: 52px; right: 16px; bottom: 8px; margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; color: var(--muted-dark); }
+/* legend in words, under the plot */
+.stage-legend { flex: none; margin: 0; padding: 4px 16px 8px 52px; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted-dark); }
 .stage-legend li { display: flex; align-items: center; gap: 6px; }
+.stage-legend .coverage { font-family: var(--font-id); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; box-sizing: border-box; }
-.sw-default, .sw-other { background: var(--muted-dark); opacity: 0.5; border-radius: 50%; }
+.sw-default { background: var(--muted-dark); opacity: 0.5; border-radius: 50%; }
+.sw-other { background: var(--data-on-dark); border-radius: 50%; }
 .sw-nearest { background: var(--data-on-dark); border-radius: 50%; }
 .sw-burned { background: var(--flame); border-radius: 50%; }
-.sw-went-out { border: 2px solid var(--ink-dark); border-radius: 50%; }
+.sw-went-out { border: 2px solid var(--data-on-dark); border-radius: 50%; }
+.sw-tick { height: 0; border-top: 2px solid var(--muted-dark); }
 .sw-paper { border: 2px solid var(--ink-dark); transform: rotate(45deg) scale(0.8); }
 .sw-moon { border: 2px solid var(--moon); background: var(--moon); background-clip: content-box; padding: 2px; }
 .sw-ref { border: 2px solid var(--muted-dark); }
 .sw-open { border: 2px dashed var(--muted-dark); }
 .sw-you { border: 2px solid var(--ink-dark); border-radius: 50%; }
 
-/* incident view: cards instead of the chart; the story cards cover the left 32rem */
-.stage-incidents { position: absolute; inset: 0; overflow: auto; padding: 24px 16px 16px; color: var(--ink-dark); font-family: var(--font); }
-@media (min-width: 900px) { .stage-incidents { padding-left: calc(32rem + 16px); } }
-.incident-card { max-width: 40rem; margin: 0 0 16px; padding: 12px 16px; border-left: 4px solid var(--danger); background: var(--space-black); }
-.incident-card h3 { margin: 0 0 2px; font-size: 20px; }
-.incident-card .incident-date { margin: 0 0 8px; color: var(--muted-dark); font-family: var(--font-id); font-size: 14px; }
-.incident-card p { margin: 0 0 8px; }
+/* incident view: one large page per incident; one fills the box, two sit side by side (stacked under 1100px) */
+.stage-incidents { display: grid; grid-template-columns: 1fr; align-content: start; gap: 24px; width: 100%; height: 100%; overflow: auto; color: var(--ink-dark); font-family: var(--font); }
+@media (min-width: 1100px) { .stage-incidents[data-count="2"] { grid-template-columns: 1fr 1fr; } }
+.incident-card { padding: 24px 28px; border-left: 6px solid var(--danger); background: var(--space-black); font-size: 18px; line-height: 1.55; }
+.incident-card h3 { margin: 0 0 4px; font-size: 32px; line-height: 1.15; }
+.incident-card .incident-meta { margin: 0 0 16px; color: var(--muted-dark); font-family: var(--font-id); font-size: 14px; }
+.incident-card .incident-lead { font-size: 22px; line-height: 1.4; }
+.incident-card p { margin: 0 0 12px; }
 .incident-card strong { font-weight: 700; }
 .incident-card a { color: var(--ink-dark); }
 
