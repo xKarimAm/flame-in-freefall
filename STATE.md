@@ -1,13 +1,14 @@
 # STATE (build session 1: 2026-11-15 01:25 to 02:00, on Karim's go-ahead: "Go ahead and build Firebreak. This is my approval to start coding now.")
 
-## Check-in (max 10 lines), build session 2, written 02:24 on Karim's go-ahead typed in that session
-- **Done and merged on `main`:** T1-T8, T12 (session 1); PR #11 `moments.json` (49 computed facts, session 2). `scripts/check.ps1` green: 45 pipeline tests, 65 web tests, build.
-- **Running, not merged (Sonnet coders + Sonnet QA, worktrees `E:\fif-wt\B-E`):** T10 acts 1-4 (`lane/stories/t10-acts`), storybook engine (`lane/engine/storybook`), logo + theme + rail + layout + investigation detail (`lane/ui/brand-theme`), chart follow-up (`lane/stage/followup`). Coder A: `library.json` drafted by Meta Spark (`lane/pipeline/library`).
-- **Next, in order:** merge those PRs one at a time (a Sonnet agent rebases, runs `check.ps1`, merges); look at all four acts in the browser; then UX wave 3 from `docs/UX-BRIEF.md` (public picture book with the flame guide and the oxygen dial, analyst workspace, ending card); then library pages, T13 languages (`python scripts/translate.py es hi`, Spark API), T14.
-- **Not done:** T11 pages, T13, T14. T9 (three.js tilt) skipped: the labelled Moon-gravity band is the fallback.
-- **Roles (Karim, 02:17, final):** Sonnet codes, reviews and merges; Meta Spark builds text through the API; Fable plans, briefs and checks the browser.
-- **Decisions this session:** the Firebreak mark is allowed (DESIGN.md "No logos" is about NASA and Space Apps marks); coders may add `en.json` keys under their own prefix this wave; new contracts `moments.schema.json`, `library.schema.json`; "burned to the end of the test" is an overclaim and is being reworded to "sustained burn".
-- **Needs your call:** the 5 items at the bottom (unchanged); Azure and Google Cloud credits are not needed for a static site, so they are unused unless you want a public host.
+## Check-in (max 10 lines), build session 2, written 02:45
+- **On `main`, green (45 pipeline, 94 web tests):** T1-T8, T12, `moments.json` (#11), cover + chapter pages + book pages (#9), Firebreak mark + rail + layout + investigation detail (#10), chart follow-up (#13).
+- **Not merged:** PR #12 (T10, the four acts). QA found 4 engine tests to repoint and a missing bridge page; its fixer died on the Claude limit. It is task 0 of the web night lane.
+- **Running unattended (Muse Spark, Karim 02:37):** lane web on `night/web` (`docs/NIGHT-QUEUE.md`, 18 tasks: acts, public picture book, slider sentence, ending card, analyst workspace, search/sort/filter, explainer boxes, three.js tilt, library pages, languages, README) and lane backend on `night/backend` (`docs/NIGHT-QUEUE-BACKEND.md`, 7 tasks: library.json with Spark text, number and AI-text audits, coverage.json, search.json, translations, docs).
+- **Nothing from the night lanes is reviewed.** They never touch `main`. Review and merge after waking: backend first, then web.
+- **Roles now (Karim, 02:37):** Muse Spark codes; Sonnet reviews when its limit is back (07:00); Fable supervises.
+- **Design source:** `docs/UX-BRIEF.md`. Contracts added this session: `moments.schema.json`, `library.schema.json`.
+- **Risk to know:** the night agents run with approvals off and network on. They get the Meta key in their environment (the CLI needs it) but no GitHub token, and `main` has no branch protection.
+- **Needs your call:** the 5 older items at the bottom; turning on branch protection for `main`.
 
 ## DEMO-SLICE checklist (T8), checked by me in the browser at 1440x900 on `npm run build` + `vite preview`
 - [x] 1. Local build + preview works; no public deploy (the repo stays private)

@@ -17,6 +17,9 @@ PLACEHOLDER = re.compile(r"\{[a-z_]+\}")
 
 
 def api_key() -> str:
+    import os
+    if os.environ.get("META_API_KEY"):
+        return os.environ["META_API_KEY"]
     for line in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
         if line.startswith("META_API_KEY="):
             return line.split("=", 1)[1].strip()
