@@ -14,6 +14,7 @@ from .sources import SOURCES
 ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOT = ROOT / "data" / "psi-snapshot"
 BUILD_DIR = ROOT / "data" / "build"
+SUMMARIES = ROOT / "pipeline" / "summaries.json"
 COVERAGE_MD = ROOT / "contracts" / "COVERAGE.md"
 
 # csv_99_39.csv ends with "Note 1 ..." lines in the first cell only: footnotes, not test rows.
@@ -47,6 +48,12 @@ def build_tests(snapshot=SNAPSHOT):
     return tests
 
 
+def load_summaries(path=SUMMARIES):
+    """Prepared AI summaries (written by the model, no API call). Missing file -> none."""
+    path = Path(path)
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
 def write_json(path, data):
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
         handle.write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
@@ -56,7 +63,7 @@ def main():
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     tests = build_tests()
     write_json(BUILD_DIR / "tests.json", tests)
-    experiments = build_experiments(SNAPSHOT, tests)
+    experiments = build_experiments(SNAPSHOT, tests, load_summaries())
     write_json(BUILD_DIR / "experiments.json", experiments)
     texts = build_psi_text(SNAPSHOT)
     write_json(BUILD_DIR / "psi-text.json", texts)

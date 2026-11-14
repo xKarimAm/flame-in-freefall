@@ -51,6 +51,7 @@ def _base(spec, row_number, fuel):
         "investigation": spec.investigation,
         "fuel": fuel if fuel else None,
         "fuel_class": spec.fuel_class,
+        # Every mapped PSI file is a microgravity dataset; the '1-g Burn Length' column in csv_99_39.csv is a comparison measurement, not a 1-g test row.
         "gravity": "micro-g",
         "o2_pct": None,
         "o2_pct_min": None,
