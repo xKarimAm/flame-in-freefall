@@ -7,7 +7,8 @@ Files W1 writes to `data/build/` and W2 reads. Units are fixed: **O2 in percent 
 - `golden/` -> real rows (not made up) in the final shape; W2 builds against these until W1 lands.
 
 - `psi-text.schema.json` -> `data/build/psi-text.json` (the only text AI-summary quotes may come from)
-- `story.schema.json` -> `stories/*.json`, `stories/library/*.json`
+- `story.schema.json` -> `stories/*.json`
+- `moments.schema.json` -> `data/build/moments.json` (facts computed from `tests.json` for the story library, T11; story text fills them in by id and never holds a typed number)
 
 **Test ids are unique** (decided 2026-11-15, build session). `id` = `<investigation>#<row>`, where `row` is `source.row`. When one investigation has several CSV files (PSI-10, PSI-159), the file with the lowest `k` in `csv_<N>_<k>.csv` keeps that form and every other file uses `<investigation>#<k>-<row>`, e.g. `PSI-159#51-1` for row 1 of `csv_159_51.csv`. The golden ids are unchanged.
 

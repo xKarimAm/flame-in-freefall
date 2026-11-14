@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "moments.schema.json",
+  "title": "Moments: one fact per entry, computed by the pipeline from tests.json, never typed by hand",
+  "description": "data/build/moments.json. A library story shows a moment by id and fills {value}, {value_max}, {unit} and {fuel} into its text, so story text never holds a typed number. Outcome groups are the same as web/src/contract.ts OUTCOME_GROUP: burned = burned, completion, flow-terminated; went-out = extinction, self-extinguished. A moment is written only when the fields it needs are recorded; nothing is estimated.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "investigation", "kind", "label", "value", "unit", "test_ids", "url", "method"],
+    "additionalProperties": false,
+    "properties": {
+      "id": { "type": "string", "pattern": "^PSI-[0-9]+\\.[a-z0-9-]+$", "description": "<investigation>.<kind>, with the outcome appended for outcome-count, e.g. PSI-69.outcome-count-extinction" },
+      "investigation": { "type": "string", "pattern": "^PSI-[0-9]+$" },
+      "kind": {
+        "enum": ["tests-count", "o2-range", "pressure-range", "flow-range", "longest-burn", "lowest-o2-burned", "highest-o2-went-out", "outcome-count"],
+        "description": "tests-count = rows in tests.json; *-range = min and max of the recorded values (value = min, value_max = max); longest-burn = max burn_time_s; lowest-o2-burned = min o2_pct among rows in the burned group; highest-o2-went-out = max o2_pct among rows in the went-out group; outcome-count = rows with that outcome"
+      },
+      "label": { "type": "string", "description": "what was computed, in plain English, without the number" },
+      "value": { "type": "number" },
+      "value_max": { "type": ["number", "null"], "description": "ranges only" },
+      "unit": { "enum": ["tests", "%", "kPa", "cm/s", "s"] },
+      "outcome": { "enum": ["extinction", "disruption", "completion", "self-extinguished", "flow-terminated", "burned", "no-ignition"], "description": "outcome-count only" },
+      "fuel": { "type": ["string", "null"], "description": "fuel of the row that holds the value, when it is one row" },
+      "n": { "type": "integer", "minimum": 1, "description": "how many rows had the field(s) this moment was computed from" },
+      "test_ids": { "type": "array", "items": { "type": "string" }, "description": "ids in tests.json of the row(s) that hold the value (min and max rows for a range); empty for counts" },
+      "url": { "type": "string", "pattern": "^https://", "description": "PSI page of the investigation (source.url of its rows)" },
+      "method": { "type": "string", "description": "how it was computed: field, filter, how many rows had the field" }
+    }
+  }
+}
