@@ -78,11 +78,25 @@
         "minimum": 0,
         "maximum": 400
       },
+      "pressure_note": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "raw cell text when the pressure cell could not be parsed (COVERAGE.md rule 2)"
+      },
       "flow_cm_s": {
         "type": [
           "number",
           "null"
         ]
+      },
+      "flow_note": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "raw cell text when the flow cell could not be parsed (COVERAGE.md rule 2)"
       },
       "outcome": {
         "enum": [
