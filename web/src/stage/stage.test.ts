@@ -227,6 +227,11 @@ describe("what is drawn", () => {
     expect(setup({ view: "micro-g", show_families: allFamilies }).host.querySelector(".caption")).toBeNull();
   });
 
+  it("a highlighted family with no placed test still gets its caption, with a count of 0", () => {
+    const { host } = setup({ view: "micro-g", show_families: ["large-scale solids"], highlight: { family: "large-scale solids" } }, null, { placed: [] });
+    expect(texts(host.querySelector('[data-layer="head"] .caption')!)).toBe(`${en["ui.family.large-scale solids"]}: 0 tests plotted`);
+  });
+
   it("reveal: growing show_families adds only the new family's dots (the others are kept, not redrawn)", () => {
     const { store, layer } = setup({ view: "micro-g", show_families: ["droplets"] });
     const first = layer("tests").querySelector('[data-id="PSI-69#2"]')!;

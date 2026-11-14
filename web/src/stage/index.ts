@@ -224,13 +224,14 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     drawLive();
   }
 
-  /** "Family name: N tests plotted" for what the highlight names; null when nothing highlighted is drawn */
+  /** "Family name: N tests plotted" for what the highlight names (N may be 0: a family with no placed test
+   *  still gets its name and "0 tests plotted"); null when the highlight names no family or investigation */
   function captionOf(wanted: PlacedTest[], h: AppState["stage"]["highlight"]): string | null {
     if (!h) return null;
     const name = h.family ? t(`ui.family.${h.family}`) : h.investigation ? (api.experiment(h.investigation)?.acronym ?? h.investigation) : null;
     if (!name) return null;
     const n = wanted.filter((w) => dotKind(w, h) !== "default").length;
-    return n > 0 ? t("ui.stage.caption", { name, n }) : null;
+    return t("ui.stage.caption", { name, n });
   }
   function drawRefs(annotations: NonNullable<AppState["stage"]["annotation"]>): void {
     const s = scales!;
