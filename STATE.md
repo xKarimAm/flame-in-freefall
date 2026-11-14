@@ -2,7 +2,7 @@
 
 ## Check-in (max 10 lines), build session 2, written 02:24 on Karim's go-ahead typed in that session
 - **Done and merged on `main`:** T1-T8, T12 (session 1); PR #11 `moments.json` (49 computed facts, session 2). `scripts/check.ps1` green: 45 pipeline tests, 65 web tests, build.
-- **Running, not merged (Sonnet coders + Sonnet QA, worktrees `E:if-wt\B-E`):** T10 acts 1-4 (`lane/stories/t10-acts`), storybook engine (`lane/engine/storybook`), logo + theme + rail + layout + investigation detail (`lane/ui/brand-theme`), chart follow-up (`lane/stage/followup`). Coder A: `library.json` drafted by Meta Spark (`lane/pipeline/library`).
+- **Running, not merged (Sonnet coders + Sonnet QA, worktrees `E:\fif-wt\B-E`):** T10 acts 1-4 (`lane/stories/t10-acts`), storybook engine (`lane/engine/storybook`), logo + theme + rail + layout + investigation detail (`lane/ui/brand-theme`), chart follow-up (`lane/stage/followup`). Coder A: `library.json` drafted by Meta Spark (`lane/pipeline/library`).
 - **Next, in order:** merge those PRs one at a time (a Sonnet agent rebases, runs `check.ps1`, merges); look at all four acts in the browser; then UX wave 3 from `docs/UX-BRIEF.md` (public picture book with the flame guide and the oxygen dial, analyst workspace, ending card); then library pages, T13 languages (`python scripts/translate.py es hi`, Spark API), T14.
 - **Not done:** T11 pages, T13, T14. T9 (three.js tilt) skipped: the labelled Moon-gravity band is the fallback.
 - **Roles (Karim, 02:17, final):** Sonnet codes, reviews and merges; Meta Spark builds text through the API; Fable plans, briefs and checks the browser.
