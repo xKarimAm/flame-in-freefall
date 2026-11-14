@@ -60,3 +60,8 @@ a { color: inherit; }
 @media (max-width: 767px) {
   #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: 55vh; }
 }
+
+/* narrow screens: the header wraps to two rows, so the stage offset grows with it */
+@media (max-width: 767px) {
+  :root { --chrome-h: 104px; }
+}
