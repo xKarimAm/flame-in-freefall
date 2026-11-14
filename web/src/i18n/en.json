@@ -16,6 +16,8 @@
   "ui.stage.legend.went-out": "Went out by itself",
   "ui.stage.legend.paper": "Published in a paper, not in PSI",
   "ui.stage.legend.open-band": "Open range: this much oxygen or more",
+  "ui.stage.dot-title": "{fuel}: {o2}% oxygen, {pressure} kPa, {outcome}",
+  "ui.stage.no-fuel": "Fuel not recorded",
   "ui.stage.incident.oxygen": "Oxygen",
   "ui.stage.incident.changed": "What changed",
   "story.moon-air.title": "Build your Moon-base air",
