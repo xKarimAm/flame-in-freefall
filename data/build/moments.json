@@ -13,7 +13,7 @@
       "PSI-10#56-4"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-10",
-    "method": "min and max of o2_pct, rows where o2_pct is recorded (316 of 327 rows)"
+    "method": "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct), rows where a bound or o2_pct is recorded (316 of 327 rows)"
   },
   {
     "id": "PSI-10.pressure-range",
@@ -209,7 +209,7 @@
       "PSI-159#51-17"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
-    "method": "min and max of o2_pct, rows where o2_pct is recorded (333 of 333 rows)"
+    "method": "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct), rows where a bound or o2_pct is recorded (333 of 333 rows)"
   },
   {
     "id": "PSI-159.outcome-count-flow-terminated",
@@ -288,7 +288,7 @@
       "PSI-25#1"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-25",
-    "method": "min and max of o2_pct, rows where o2_pct is recorded (129 of 129 rows)"
+    "method": "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct), rows where a bound or o2_pct is recorded (129 of 129 rows)"
   },
   {
     "id": "PSI-25.tests-count",
@@ -326,7 +326,7 @@
       "PSI-39#1"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-39",
-    "method": "min and max of o2_pct, rows where o2_pct is recorded (87 of 87 rows)"
+    "method": "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct), rows where a bound or o2_pct is recorded (87 of 87 rows)"
   },
   {
     "id": "PSI-39.pressure-range",
@@ -354,6 +354,22 @@
     "test_ids": [],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-39",
     "method": "count of rows in tests.json for PSI-39 (87 rows)"
+  },
+  {
+    "id": "PSI-68.o2-range",
+    "investigation": "PSI-68",
+    "kind": "o2-range",
+    "label": "Range of oxygen concentration across FLEX-2 tests",
+    "value": 17.0,
+    "value_max": 30.0,
+    "unit": "%",
+    "n": 8,
+    "test_ids": [
+      "PSI-68#1",
+      "PSI-68#1"
+    ],
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-68",
+    "method": "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct), rows where a bound or o2_pct is recorded (8 of 8 rows)"
   },
   {
     "id": "PSI-68.tests-count",
@@ -425,7 +441,7 @@
       "PSI-69#19"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
-    "method": "min and max of o2_pct, rows where o2_pct is recorded (274 of 274 rows)"
+    "method": "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct), rows where a bound or o2_pct is recorded (274 of 274 rows)"
   },
   {
     "id": "PSI-69.outcome-count-completion",
@@ -542,15 +558,15 @@
     "kind": "o2-range",
     "label": "Range of oxygen concentration across SAFFIRE-I tests",
     "value": 21.5,
-    "value_max": 21.6,
+    "value_max": 21.7,
     "unit": "%",
     "n": 2,
     "test_ids": [
-      "PSI-98#2",
+      "PSI-98#1",
       "PSI-98#1"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
-    "method": "min and max of o2_pct, rows where o2_pct is recorded (2 of 4 rows)"
+    "method": "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct), rows where a bound or o2_pct is recorded (2 of 4 rows)"
   },
   {
     "id": "PSI-98.outcome-count-burned",
@@ -633,7 +649,7 @@
       "PSI-99#2"
     ],
     "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
-    "method": "min and max of o2_pct, rows where o2_pct is recorded (9 of 11 rows)"
+    "method": "min of o2_pct_min (else o2_pct) and max of o2_pct_max (else o2_pct), rows where a bound or o2_pct is recorded (9 of 11 rows)"
   },
   {
     "id": "PSI-99.outcome-count-burned",

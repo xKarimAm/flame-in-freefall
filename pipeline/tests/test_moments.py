@@ -71,6 +71,13 @@ def test_no_outcome_rows_means_no_outcome_moments():
     assert not any(m["id"].endswith("-unknown") for m in MOMENTS)
 
 
+def test_ranges_match_experiments_json():
+    for e in EXPERIMENTS:
+        for kind, key in (("o2-range", "o2_pct_range"), ("pressure-range", "pressure_kpa_range")):
+            m = BY_ID.get(f"{e['id']}.{kind}")
+            assert (m and [m["value"], m["value_max"]]) == e[key], (e["id"], kind)
+
+
 def _row(n, **kw):
     row = {"id": f"PSI-1#{n}", "investigation": "PSI-1", "fuel": f"f{n}", "o2_pct": None, "pressure_kpa": None, "flow_cm_s": None,
            "outcome": "unknown", "burn_time_s": None, "source": {"url": "https://psi.example/PSI-1"}}
@@ -84,10 +91,11 @@ def test_synthetic_min_max_and_tie_rules():
         _row(3, o2_pct=40.0, outcome="extinction", burn_time_s=9.0),
         _row(4, o2_pct=25.0, outcome="self-extinguished"),
         _row(5, pressure_kpa=70.0),
+        _row(6, o2_pct=45.0, o2_pct_min=44.0, o2_pct_max=46.0),  # a source range: bounds win over the midpoint
     ]
     m = {x["id"]: x for x in build_moments(tests, [{"id": "PSI-1", "acronym": "TST"}])}
-    assert m["PSI-1.tests-count"]["value"] == 5 and m["PSI-1.tests-count"]["test_ids"] == []
-    assert (m["PSI-1.o2-range"]["value"], m["PSI-1.o2-range"]["value_max"], m["PSI-1.o2-range"]["test_ids"]) == (25.0, 40.0, ["PSI-1#4", "PSI-1#3"])
+    assert m["PSI-1.tests-count"]["value"] == 6 and m["PSI-1.tests-count"]["test_ids"] == []
+    assert (m["PSI-1.o2-range"]["value"], m["PSI-1.o2-range"]["value_max"], m["PSI-1.o2-range"]["test_ids"]) == (25.0, 46.0, ["PSI-1#4", "PSI-1#6"])
     assert m["PSI-1.lowest-o2-burned"]["test_ids"] == ["PSI-1#2"] and m["PSI-1.lowest-o2-burned"]["fuel"] == "f2"
     assert m["PSI-1.highest-o2-went-out"]["value"] == 40.0 and m["PSI-1.highest-o2-went-out"]["test_ids"] == ["PSI-1#3"]
     assert m["PSI-1.longest-burn"]["test_ids"] == ["PSI-1#2"]
