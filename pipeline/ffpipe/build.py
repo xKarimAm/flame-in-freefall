@@ -6,6 +6,7 @@ import json
 import re
 from pathlib import Path
 
+from .coverage import update_doc
 from .experiments import build_experiments, build_psi_text
 from .parsers import PARSERS
 from .sources import SOURCES
@@ -13,6 +14,7 @@ from .sources import SOURCES
 ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOT = ROOT / "data" / "psi-snapshot"
 BUILD_DIR = ROOT / "data" / "build"
+COVERAGE_MD = ROOT / "contracts" / "COVERAGE.md"
 
 # csv_99_39.csv ends with "Note 1 ..." lines in the first cell only: footnotes, not test rows.
 _FOOTNOTE = re.compile(r"^Note \d+\b")
@@ -58,7 +60,8 @@ def main():
     write_json(BUILD_DIR / "experiments.json", experiments)
     texts = build_psi_text(SNAPSHOT)
     write_json(BUILD_DIR / "psi-text.json", texts)
-    print(f"wrote tests.json ({len(tests)} rows), experiments.json ({len(experiments)}), psi-text.json ({len(texts)})")
+    update_doc(COVERAGE_MD, SNAPSHOT, tests)
+    print(f"wrote tests.json ({len(tests)} rows), experiments.json ({len(experiments)}), psi-text.json ({len(texts)}), COVERAGE.md table")
 
 
 if __name__ == "__main__":

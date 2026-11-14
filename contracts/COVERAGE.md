@@ -20,3 +20,28 @@ Not every investigation records O2 and pressure. Round-1 review found, among oth
 ## Table (filled by the pipeline)
 | file | investigation | rows | o2 non-null | pressure non-null | outcome non-null | plottable |
 |---|---|---|---|---|---|---|
+| csv_10_55.csv | PSI-10 | 207 | 207 | 187 | 0 | 187 |
+| csv_10_56.csv | PSI-10 | 120 | 109 | 120 | 0 | 109 |
+| bre.csv (not test rows) | PSI-20 | 18 | 0 | 0 | 0 | 0 |
+| csv_20_38.csv (not test rows) | PSI-20 | 18 | 0 | 0 | 0 | 0 |
+| csv_21_39.csv (not test rows) | PSI-21 | 32 | 0 | 0 | 0 | 0 |
+| csv_22_49.csv (not test rows) | PSI-22 | 32 | 0 | 0 | 0 | 0 |
+| csv_23_42.csv (not test rows) | PSI-23 | 18 | 0 | 0 | 0 | 0 |
+| csv_25_37.csv | PSI-25 | 129 | 129 | 0 | 0 | 0 |
+| csv_26_34.csv | PSI-26 | 122 | 0 | 0 | 0 | 0 |
+| csv_39_33.csv | PSI-39 | 87 | 87 | 84 | 0 | 84 |
+| csv_68_35.csv | PSI-68 | 8 | 0 | 0 | 0 | 0 |
+| csv_69_34.csv | PSI-69 | 274 | 274 | 273 | 274 | 273 |
+| csv_98_39.csv | PSI-98 | 4 | 2 | 0 | 2 | 0 |
+| csv_99_39.csv | PSI-99 | 11 | 9 | 0 | 5 | 0 |
+| csv_100_40.csv | PSI-100 | 2 | 0 | 0 | 0 | 0 |
+| csv_101_37.csv | PSI-101 | 109 | 0 | 0 | 0 | 0 |
+| csv_102_35.csv | PSI-102 | 8 | 0 | 0 | 0 | 0 |
+| csv_106_36.csv (not test rows) | PSI-106 | 12 | 0 | 0 | 0 | 0 |
+| csv_107_36.csv | PSI-107 | 469 | 0 | 0 | 0 | 0 |
+| csv_142_49.csv (not test rows) | PSI-142 | 8 | 0 | 0 | 0 | 0 |
+| csv_159_50.csv | PSI-159 | 179 | 179 | 179 | 134 | 179 |
+| csv_159_51.csv | PSI-159 | 154 | 154 | 154 | 148 | 154 |
+| TOTAL | | 2021 | 1150 | 997 | 563 | 986 |
+
+Plotted 986 of 1883 tests.
