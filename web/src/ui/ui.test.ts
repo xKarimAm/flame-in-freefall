@@ -145,7 +145,7 @@ describe("ui", () => {
     const t = roots().panel.textContent!;
     expect(t).toContain("SIBAL Fabric");
     expect(t).toContain("no pressure recorded");
-    expect(t).toContain("Nearest test that burned to the end: none recorded");
+    expect(t).toContain("Nearest test that kept burning: none recorded");
     expect(t).toContain("Nearest test that went out by itself");
   });
 

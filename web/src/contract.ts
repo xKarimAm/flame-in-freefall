@@ -31,7 +31,7 @@ export type Outcome =
   | "unknown";
 
 /** How the stage colours a recorded outcome. Words, not a prediction:
- *  "burned"   = the test record says it burned to the end of the test
+ *  "burned"   = the test record says it kept burning
  *               (burned, completion, flow-terminated = still burning when the flow was shut off);
  *  "went-out" = the record says the flame went out by itself (extinction, self-extinguished);
  *  "other"    = disruption, no-ignition, unknown. */
