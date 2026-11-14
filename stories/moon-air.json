@@ -9,22 +9,103 @@
         {
           "id": "hook",
           "kind": "hook",
-          "stage": { "view": "empty" },
-          "text": { "public": "story.moon-air.moon-air-main.hook.public" },
+          "stage": {
+            "view": "empty"
+          },
+          "text": {
+            "public": "story.moon-air.moon-air-main.hook.public"
+          },
           "sources": []
+        },
+        {
+          "id": "reveal",
+          "kind": "reveal",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "large-scale solids",
+              "solids in flow duct",
+              "gas jets",
+              "droplets",
+              "smoke detection"
+            ],
+            "reference": [
+              "iss-air",
+              "heo-dm-1006"
+            ]
+          },
+          "text": {
+            "public": "story.moon-air.moon-air-main.reveal.public",
+            "analyst": "story.moon-air.moon-air-main.reveal.analyst"
+          },
+          "sources": [
+            {
+              "label": "Challenge #7 brief",
+              "url": "https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/"
+            },
+            {
+              "label": "ICES-2022-45, NTRS 20220006612 (8.2 psia exploration atmosphere)",
+              "url": "https://ntrs.nasa.gov/citations/20220006612"
+            }
+          ]
+        },
+        {
+          "id": "focus",
+          "kind": "focus",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "large-scale solids",
+              "solids in flow duct",
+              "gas jets",
+              "droplets",
+              "smoke detection"
+            ],
+            "reference": [
+              "iss-air",
+              "heo-dm-1006",
+              "saffire-vi",
+              "exp-10-2"
+            ]
+          },
+          "text": {
+            "public": "story.moon-air.moon-air-main.focus.public",
+            "analyst": "story.moon-air.moon-air-main.focus.analyst"
+          },
+          "sources": [
+            {
+              "label": "Niehaus et al., ICES-2025, NTRS 20250002675",
+              "url": "https://ntrs.nasa.gov/citations/20250002675"
+            },
+            {
+              "label": "ICES-2022-45, NTRS 20220006612 (10.2 psia exploration atmosphere)",
+              "url": "https://ntrs.nasa.gov/citations/20220006612"
+            }
+          ]
         },
         {
           "id": "compare",
           "kind": "compare",
           "stage": {
-            "view": "tilt-lunar",
-            "show_families": ["large-scale solids", "solids in flow duct", "gas jets", "droplets", "smoke detection"],
-            "highlight": { "nearest_to": "heo-dm-1006" },
-            "reference": ["iss-air", "heo-dm-1006", "saffire-vi"],
-            "annotation": [{ "id": "no-lunar-tests", "text_key": "story.moon-air.moon-air-main.compare.annotation", "at": "lunar-plane" }],
+            "view": "micro-g",
+            "show_families": [
+              "large-scale solids",
+              "solids in flow duct",
+              "gas jets",
+              "droplets",
+              "smoke detection"
+            ],
+            "reference": [
+              "iss-air",
+              "heo-dm-1006",
+              "saffire-vi",
+              "exp-10-2"
+            ],
+            "highlight": {
+              "nearest_to": "heo-dm-1006"
+            },
             "coverage": true,
-            "analyst_sheet": "failing-materials",
-            "sliders": { "pressure_kpa": 56.5, "o2_pct": 34 }
+            "analyst_sheet": "lunar-margins"
           },
           "text": {
             "public": "story.moon-air.moon-air-main.compare.public",
@@ -32,7 +113,61 @@
             "analyst": "story.moon-air.moon-air-main.compare.analyst"
           },
           "sources": [
-            { "label": "ICES-2022-45, NTRS 20220006612 (8.2 psia exploration atmosphere)", "url": "https://ntrs.nasa.gov/citations/20220006612" }
+            {
+              "label": "ICES-2025-392 Table 2, NTRS 20250002114",
+              "url": "https://ntrs.nasa.gov/citations/20250002114"
+            },
+            {
+              "label": "ICES-2022-45, NTRS 20220006612 (8.2 psia exploration atmosphere)",
+              "url": "https://ntrs.nasa.gov/citations/20220006612"
+            }
+          ]
+        },
+        {
+          "id": "interactive",
+          "kind": "interactive",
+          "stage": {
+            "view": "tilt-lunar",
+            "show_families": [
+              "large-scale solids",
+              "solids in flow duct",
+              "gas jets",
+              "droplets",
+              "smoke detection"
+            ],
+            "reference": [
+              "iss-air",
+              "heo-dm-1006",
+              "saffire-vi",
+              "exp-10-2"
+            ],
+            "sliders": {
+              "pressure_kpa": 56.5,
+              "o2_pct": 34
+            },
+            "highlight": {
+              "nearest_to": "slider"
+            },
+            "coverage": true,
+            "analyst_sheet": "failing-materials",
+            "annotation": [
+              {
+                "id": "no-lunar-tests",
+                "text_key": "story.moon-air.moon-air-main.interactive.annotation",
+                "at": "lunar-plane"
+              }
+            ]
+          },
+          "text": {
+            "public": "story.moon-air.moon-air-main.interactive.public",
+            "astronaut": "story.moon-air.moon-air-main.interactive.astronaut",
+            "analyst": "story.moon-air.moon-air-main.interactive.analyst"
+          },
+          "sources": [
+            {
+              "label": "ICES-2022-45, NTRS 20220006612 (8.2 psia exploration atmosphere)",
+              "url": "https://ntrs.nasa.gov/citations/20220006612"
+            }
           ]
         }
       ]

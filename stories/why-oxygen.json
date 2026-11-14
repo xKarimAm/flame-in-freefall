@@ -1,0 +1,78 @@
+{
+  "id": "why-oxygen",
+  "act": 1,
+  "title_key": "story.why-oxygen.title",
+  "scenes": [
+    {
+      "id": "why-oxygen-main",
+      "beats": [
+        {
+          "id": "hook",
+          "kind": "hook",
+          "stage": {
+            "view": "incident",
+            "incident_ids": [
+              "apollo-1"
+            ]
+          },
+          "text": {
+            "public": "story.why-oxygen.why-oxygen-main.hook.public",
+            "astronaut": "story.why-oxygen.why-oxygen-main.hook.astronaut"
+          },
+          "sources": [
+            {
+              "label": "NASA Safety and Mission Assurance, Apollo 1 lessons",
+              "url": "https://sma.nasa.gov/sma-disciplines/accllp/apollo-1"
+            }
+          ]
+        },
+        {
+          "id": "reveal",
+          "kind": "reveal",
+          "stage": {
+            "view": "incident",
+            "incident_ids": [
+              "apollo-1",
+              "mir-1997"
+            ]
+          },
+          "text": {
+            "public": "story.why-oxygen.why-oxygen-main.reveal.public",
+            "astronaut": "story.why-oxygen.why-oxygen-main.reveal.astronaut"
+          },
+          "sources": [
+            {
+              "label": "NASA Safety and Mission Assurance, Apollo 1 lessons",
+              "url": "https://sma.nasa.gov/sma-disciplines/accllp/apollo-1"
+            },
+            {
+              "label": "NASA History, 25 years ago: fire aboard Mir",
+              "url": "https://www.nasa.gov/history/25-years-ago-fire-aboard-space-station-mir/"
+            }
+          ]
+        },
+        {
+          "id": "takeaway",
+          "kind": "takeaway",
+          "stage": {
+            "view": "incident",
+            "incident_ids": [
+              "apollo-1",
+              "mir-1997"
+            ]
+          },
+          "text": {
+            "public": "story.why-oxygen.why-oxygen-main.takeaway.public",
+            "analyst": "story.why-oxygen.why-oxygen-main.takeaway.analyst"
+          },
+          "sources": [
+            {
+              "label": "ICES-2020-173, NTRS 20205000063",
+              "url": "https://ntrs.nasa.gov/citations/20205000063"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
