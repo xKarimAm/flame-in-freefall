@@ -196,6 +196,10 @@ describe("live layer", () => {
 describe("motion", () => {
   it("the stylesheet switches transitions and animations off under prefers-reduced-motion", () => {
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "stage.css"), "utf8");
+    // nearest dots are rebuilt on every slider input: they must not replay an entrance animation
+    expect(css).toMatch(/\.dot\.nearest\s*\{[^}]*animation:\s*none/);
+    expect(css).not.toMatch(/^\.dot\s*\{[^}]*animation:\s*stage-in/m);
+    expect(css).toMatch(/\[data-layer="tests"\] \.dot\s*\{[^}]*animation:\s*stage-in/);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*transition:\s*none/);
   });
 });
