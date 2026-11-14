@@ -8,7 +8,7 @@ Karim switches between three Claude accounts. Every session, on every account, *
 Times are local (UTC+3).
 
 ## Last action
-2026-11-15 01:58, build session 1 (Fable orchestrator): **milestone T8 reached.** Merged on `main`: T1-T8 and T12 (PRs #1-#8). The demo slice works on real data in a local build (`cd web; npm run build; npm run preview`); `scripts/check.ps1` is green (37 pipeline tests, 65 web tests). The session stopped because this Claude account is near its 5-hour limit. **Next: open the next build account in `E:\flame-in-freefall`, type the go-ahead, paste `KICKOFF.md`; it continues from `STATE.md` section "Next session: start here" (T10 acts, stage and UI follow-ups, T11, T13, T14).**
+2026-11-15 02:13, build session 2 (Fable orchestrator, on Karim's go-ahead typed in this session): **wave 2 running.** Five Sonnet coders, each in its own worktree, each followed by a Sonnet QA pass: C `stories/` (T10, acts 1-4 in a picture-book voice), B `web/src/engine/` (cover, chapter pages, book-sized pages), E `web/src/ui/` + `styles/` (Firebreak logo in the header, theme colours, chapter rail, layout, investigation detail), D `web/src/stage/` (chart follow-up), A `pipeline/` (`moments.json` for T11). Contract added: `contracts/moments.schema.json`. Meta API checked (HTTP 200 for both Spark model names with the key in `.env`). **Next: merge the five PRs one at a time with `scripts/check.ps1` green, check all four acts in the browser, then T11 library, T13 languages (Spark API drafts), T14.**
 
 ## Action table (the plan)
 | # | Action | Who | Status | Done when |
@@ -22,7 +22,7 @@ Times are local (UTC+3).
 | 5b | Hosting | Karim | decided 01:17: repo stays private; public host chosen later | `E:\spaceapps-2026-plan\docs\HOSTING.md` plan done |
 | 6 | Commit the planning docs + contracts to `main` | planning | done 01:30 | pushed |
 | 6b | Open the build account, type the go-ahead, paste `KICKOFF.md` | Karim | done 01:25 | build session running |
-| 7 | Development: Fable orchestrator + Sonnet coders work through `docs/plan.xml` | development session | **running**: T1-T8 and T12 merged; T9-T11, T13, T14 left | T1-T14 done, `scripts/check.ps1` green |
+| 7 | Development: Fable orchestrator + Sonnet coders work through `docs/plan.xml` | development session | **running**: T1-T8 and T12 merged; T10 + storybook look in progress (session 2); T11, T13, T14 left; T9 skipped | T1-T14 done, `scripts/check.ps1` green |
 | 8 | Wireframes, then the look and feel (Fable proposes; Karim picks) | design session with Karim | pending | Karim picks a direction |
 | 9 | Milestone T8: DEMO-SLICE works in a local build | development | **done 01:56** | STATE.md checklist |
 | 10 | Story library content (22 stories from specs) | backend coders | pending | each story validates; every number has a link |
@@ -50,3 +50,9 @@ Times are local (UTC+3).
 | 01:54 | build | T4, T5, T7, T6 merged in that order (PRs #4, #5, #8, #7), each rebased with check.ps1 green | 65 web tests |
 | 01:56 | build | T8: built, previewed locally, checked the 6 DEMO-SLICE items in the browser | all 6 pass; rough edges listed in STATE.md |
 | 01:58 | build | Handover written in STATE.md (near the 5-hour limit) | next account continues at T10 |
+| 02:03 | build 2 | Read the handover, saw the current build in the browser (opens on act 3 over an empty chart; panel covers the chart) | plan for one wave |
+| 02:08 | build 2 | Launched wave 2: coders C (T10 stories), B (storybook engine), E (logo, theme, rail, layout, detail), D (stage), each with Sonnet QA | running |
+| 02:10 | build 2 | Checked the Meta API with the `.env` key (name and length only): HTTP 200 for `muse-spark-1.3-contributor` and `muse-spark-1.3` | usable for T13 and T11 text |
+| 02:12 | build 2 | Contract: `contracts/moments.schema.json` (pushed); launched coder A on `moments.json` | running |
+| 02:19 | build 2 | Merged PR #11 (`moments.json`: 49 computed facts, 13 investigations) after Sonnet QA and two fix rounds; `check.ps1` green (45 pipeline, 65 web tests) | T11 data ready |
+| 02:17 | Karim | "Have the coding and review agents be Sonnet. Have the building agents be Meta Spark. This is the final decision." | applied: Sonnet codes, reviews and merges; Spark API builds text |
