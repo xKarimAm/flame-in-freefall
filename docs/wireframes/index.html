@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframes: pick one</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2330; --mute:#6b7280; --line:#d7dbe2; --hot:#e4572e; --moon:#7c6cf0; --ok:#2f9e6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 system-ui, sans-serif; color:var(--ink); background:var(--bg); padding:16px; }
+  h1 { font-size:20px; margin:0 0 4px; } p.lead { color:var(--mute); margin:0 0 16px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(520px,1fr)); gap:16px; }
+  .wf { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .wf h2 { font-size:16px; margin:0 0 2px; } .wf .why { color:var(--mute); margin:0 0 10px; font-size:13px; }
+  .box { border:1.5px dashed var(--line); border-radius:6px; padding:8px; margin:6px 0; background:#fbfcfd; font-size:12px; }
+  .row { display:flex; gap:6px; } .row > * { flex:1; }
+  .tag { display:inline-block; font-size:11px; padding:1px 6px; border-radius:9px; background:#eef0f4; margin-right:4px; }
+  .hot { border-color:var(--hot); } .moon { border-color:var(--moon); }
+  .chart { height:120px; position:relative; border:1px solid var(--line); border-radius:4px; background:#fff; }
+  .chart .mbox { position:absolute; left:42%; top:12%; width:16%; height:30%; border:2px solid var(--moon); background:rgba(124,108,240,.12); font-size:10px; padding:2px; }
+  .chart .gap { position:absolute; left:0; right:0; bottom:0; height:16%; background:repeating-linear-gradient(45deg,#fde7e1,#fde7e1 6px,#fff 6px,#fff 12px); font-size:10px; padding:2px 4px; color:var(--hot); }
+  .dot { position:absolute; width:6px; height:6px; border-radius:50%; background:#5b8def; }
+  table { width:100%; border-collapse:collapse; font-size:11px; } td,th { border-bottom:1px solid var(--line); padding:2px 4px; text-align:left; }
+  .side { width:28%; flex:none; } .mute { color:var(--mute); }
+  .tabs span { display:inline-block; padding:3px 8px; border:1px solid var(--line); border-bottom:none; border-radius:6px 6px 0 0; font-size:12px; margin-right:2px; }
+  .tabs span.on { background:var(--ink); color:#fff; }
+  @media (max-width:600px){ .grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<h1>Pick a layout (or mix: "A's opener + C's chart")</h1>
+<p class="lead">Low-fi. Field names and numbers are real: PSI acronyms, Moon box 56.5 kPa with 33.7–40% O2 (ICES-2022-45), and lunar-gravity margins of 0.32–2.3 points (ICES-2025-392). Every number on the real site links to its source.</p>
+<div class="grid">
+
+<!-- A -->
+<section class="wf">
+  <h2>A · Story scroll</h2>
+  <p class="why">One page you scroll top to bottom: incident, then the data, then the Moon. Easiest to film for the 30 s video and the 5-minute pitch.</p>
+  <div class="box hot"><b>1967 · Apollo 1</b>: cabin fire, crew of 3, 100% oxygen at pressure. <span class="mute">"All of the most serious events were in enhanced oxygen" (ICES-2020-173)</span> ↓</div>
+  <div class="box"><b>NASA ran 22 fire investigations in space.</b> Here they are on one scale.
+    <table><tr><th>Investigation</th><th>Family</th><th>O2 %</th><th>kPa</th><th>Tests</th></tr>
+      <tr><td>FLEX</td><td>droplets</td><td>12–34</td><td>~70–101</td><td>274</td></tr>
+      <tr><td>ACME CFI-G</td><td>gas jets</td><td>18–40</td><td>50–330</td><td>179</td></tr>
+      <tr><td>SAFFIRE-II</td><td>large solids</td><td>~21.5</td><td class="mute">n/a</td><td>9</td></tr></table></div>
+  <div class="box moon"><b>Where would a Moon base sit?</b><div class="chart"><div class="mbox">Moon base 56.5 kPa · 33.7–40%</div><div class="dot" style="left:70%;top:60%"></div><div class="dot" style="left:30%;top:40%"></div><div class="gap">no lunar-gravity data in PSI</div></div></div>
+</section>
+
+<!-- B -->
+<section class="wf">
+  <h2>B · Analyst dashboard</h2>
+  <p class="why">Filters on the left; the table and the chart side by side. Feels like a tool researchers would keep open.</p>
+  <div class="row">
+    <div class="box side"><b>Filters</b><br>Family ☐ droplets ☐ gas jets ☐ solids ☐ smoke<br><br><b>Rank for</b><br>(•) Moon base 8.2 psia<br>( ) ISS cabin<br>( ) 10.2 psia / 26.5%<br><br><span class="mute">Ranking criteria: O2 distance, pressure distance, has outcomes</span></div>
+    <div>
+      <div class="row"><div class="box"><b>22</b><br>investigations</div><div class="box"><b>~1,780</b><br>test runs</div><div class="box"><b>298</b><br>papers</div></div>
+      <div class="box"><table><tr><th>#</th><th>Investigation</th><th>Closest O2/kPa</th><th>Outcomes</th></tr>
+        <tr><td>1</td><td>ACME CFI-G</td><td>39.4% · 94 kPa</td><td>yes</td></tr>
+        <tr><td>2</td><td>FLEX</td><td>≥28% · ≤75 kPa</td><td>yes</td></tr></table></div>
+      <div class="box moon"><div class="chart"><div class="mbox">Moon box</div><div class="dot" style="left:60%;top:30%"></div><div class="gap">no partial-g data</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- C -->
+<section class="wf">
+  <h2>C · Moon-first</h2>
+  <p class="why">The Moon chart is the hero, and everything else hangs off it. Strongest "wow" for judges, but the comparison table is one step further away.</p>
+  <div class="box moon"><b>Choose an atmosphere:</b> <span class="tag">Moon base 8.2 psia</span><span class="tag">10.2 psia</span><span class="tag">ISS</span>
+    <div class="chart" style="height:150px"><div class="mbox">33.7–40% · 56.5 kPa</div><div class="dot" style="left:48%;top:28%"></div><div class="dot" style="left:66%;top:62%"></div><div class="dot" style="left:20%;top:70%"></div><div class="gap">no lunar-gravity tests · FM2 flies late 2026</div></div></div>
+  <div class="row">
+    <div class="box"><b>10 nearest real tests</b><br>PSI-159 #1 · ethane · 39.4% · 94 kPa · self-extinguished ↗<br>PSI-69 … ↗</div>
+    <div class="box"><b>Lunar margin</b> (ICES-2025-392)<br>Polycarbonate 2.3 · PMMA 1.9 · Nomex Velcro 0.32 pts</div>
+  </div>
+  <div class="box"><span class="mute">Below: compare table · incident note</span></div>
+</section>
+
+<!-- D -->
+<section class="wf">
+  <h2>D · Explorer tabs</h2>
+  <p class="why">Four tabs, each a clean page. Simplest to build and to navigate, but less of a story.</p>
+  <div class="tabs"><span>Incident</span><span class="on">Compare</span><span>Moon</span><span>Experiments</span></div>
+  <div class="box" style="margin-top:0"><table><tr><th>Investigation</th><th>Family</th><th>O2 range</th><th>kPa range</th><th>Tests</th><th>Papers</th></tr>
+    <tr><td>BASS-II</td><td>solids in duct</td><td>13.6–22.2</td><td class="mute">n/a</td><td>129</td><td>…</td></tr>
+    <tr><td>SAME-R</td><td>smoke</td><td class="mute">n/a</td><td class="mute">n/a</td><td>109</td><td>…</td></tr></table></div>
+  <div class="box"><b>Experiment page</b>: objective (verbatim) · <span class="tag">AI summary</span> 2–3 sentences + quotes · tests · papers (DOI) · PSI link</div>
+</section>
+
+</div>
+</body>
+</html>
