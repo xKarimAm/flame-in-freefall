@@ -1,8 +1,9 @@
 // Pure "what to draw" decisions for the stage (no DOM). Generated with Claude, SI-assisted.
 import { OUTCOME_GROUP } from "../contract";
-import type { Atmosphere, DataApi, PlacedTest, StageState } from "../contract";
+import type { Atmosphere, DataApi, Family, NotPlacedRow, Outcome, PlacedTest, StageState } from "../contract";
 
-/** default = quiet grey; burned/went-out colour by recorded outcome; other = grey at full opacity */
+/** default = quiet grey (not highlighted). Highlighted tests: burned = orange, went-out = hollow blue,
+ *  other = filled blue (the record says neither burned nor went out). */
 export type DotKind = "default" | "burned" | "went-out" | "other";
 
 /** Tests drawn on the grey layer: only the families the beat has revealed (omitted/empty = none). */
@@ -14,7 +15,7 @@ export function drawnTests(stage: StageState, placed: PlacedTest[]): PlacedTest[
 
 /** Highlight criteria that are given must all match (family AND investigation AND test_ids).
  *  A test that matches is coloured by what its record says; every other test stays "default". */
-export function dotKind(t: PlacedTest, h: StageState["highlight"]): DotKind {
+export function dotKind(t: { id: string; investigation: string; family: Family | null; outcome: Outcome }, h: StageState["highlight"]): DotKind {
   if (!h || !(h.family || h.investigation || h.test_ids)) return "default";
   if (h.family && t.family !== h.family) return "default";
   if (h.investigation && t.investigation !== h.investigation) return "default";
@@ -53,30 +54,43 @@ export function planReferences(stage: StageState, api: DataApi): RefPlan {
   return { bands, paper };
 }
 
-/** Pressures the x axis must reach: every placed test (so the axis does not jump as families
- *  appear), every drawn reference, and the slider maximum while the sliders are live. */
-export function pressuresForDomain(placed: PlacedTest[], refs: RefPlan, sliderMax: number | null): number[] {
+/** Pressures the x axis must reach: the tests drawn now, every drawn reference and, while the sliders
+ *  are live, the slider range. With no test drawn yet it frames every placed test instead, so a beat that
+ *  shows only a reference does not get a one-point axis and the first reveal does not rescale it.
+ *  extra = pressures that must also fit (nearest tests found outside the range). */
+export function pressuresForDomain(drawn: PlacedTest[], placed: PlacedTest[], refs: RefPlan, sliders: [number, number] | null, extra: number[] = []): number[] {
   return [
-    ...placed.map((t) => t.pressure_kpa),
+    ...(drawn.length ? drawn : placed).map((t) => t.pressure_kpa),
     ...refs.bands.map((b) => b.atm.pressure_kpa),
     ...refs.paper.map((p) => p.pressure_kpa),
-    ...(sliderMax === null ? [] : [sliderMax]),
+    ...(sliders ?? []),
+    ...extra,
   ];
 }
 
-export type Swatch = DotKind | "nearest" | "paper" | "moon" | "ref" | "open" | "you";
+/** Tests with oxygen recorded but no pressure, in the families the beat has revealed.
+ *  They are never given an x position. */
+export function noPressureRows(stage: StageState, rows: NotPlacedRow[]): (NotPlacedRow & { o2_pct: number })[] {
+  if (!stage.show_families?.length) return [];
+  const families = new Set<Family>(stage.show_families);
+  return rows.filter((r): r is NotPlacedRow & { o2_pct: number } => r.reason === "no pressure recorded" && r.o2_pct !== null && r.family !== null && families.has(r.family));
+}
+
+export type Swatch = DotKind | "nearest" | "tick" | "paper" | "moon" | "ref" | "open" | "you";
 export interface LegendItem { swatch: Swatch; text: string }
 
 /** Legend in words, only for what is on screen right now. */
 export function legendItems(
   t: (key: string) => string,
-  drawn: { kinds: ReadonlySet<DotKind>; nearest: boolean; refs: RefPlan; you: boolean },
+  drawn: { kinds: ReadonlySet<DotKind>; nearest: boolean; refs: RefPlan; you: boolean; noPressure: number },
 ): LegendItem[] {
   const items: LegendItem[] = [];
-  if (drawn.kinds.has("default") || drawn.kinds.has("other")) items.push({ swatch: "default", text: t("ui.stage.legend.other") });
+  if (drawn.kinds.has("default")) items.push({ swatch: "default", text: t("ui.stage.legend.other") });
   if (drawn.nearest) items.push({ swatch: "nearest", text: t("ui.stage.legend.nearest") });
+  if (drawn.kinds.has("other")) items.push({ swatch: "other", text: t("ui.stage.legend.highlight") });
   if (drawn.kinds.has("burned")) items.push({ swatch: "burned", text: t("ui.stage.legend.burned") });
   if (drawn.kinds.has("went-out")) items.push({ swatch: "went-out", text: t("ui.stage.legend.went-out") });
+  if (drawn.noPressure > 0) items.push({ swatch: "tick", text: `${t("ui.stage.no-pressure")}: ${drawn.noPressure}` });
   if (drawn.refs.paper.length) items.push({ swatch: "paper", text: t("ui.stage.legend.paper") });
   for (const b of drawn.refs.bands) {
     const swatch: Swatch = b.shape === "moon-box" ? "moon" : b.shape === "open" ? "open" : "ref";
