@@ -56,3 +56,4 @@ Times are local (UTC+3).
 | 02:12 | build 2 | Contract: `contracts/moments.schema.json` (pushed); launched coder A on `moments.json` | running |
 | 02:19 | build 2 | Merged PR #11 (`moments.json`: 49 computed facts, 13 investigations) after Sonnet QA and two fix rounds; `check.ps1` green (45 pipeline, 65 web tests) | T11 data ready |
 | 02:17 | Karim | "Have the coding and review agents be Sonnet. Have the building agents be Meta Spark. This is the final decision." | applied: Sonnet codes, reviews and merges; Spark API builds text |
+| 02:24 | build 2 | Wrote `docs/UX-BRIEF.md` (three audiences, story spine, public picture book, analyst workspace, AI text safety) from Karim's 02:22 direction; `contracts/library.schema.json`; coder A drafting `library.json` with Meta Spark; STATE.md check-in | wave 3 brief ready |

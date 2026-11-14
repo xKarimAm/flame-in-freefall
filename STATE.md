@@ -1,13 +1,13 @@
 # STATE (build session 1: 2026-11-15 01:25 to 02:00, on Karim's go-ahead: "Go ahead and build Firebreak. This is my approval to start coding now.")
 
-## Check-in (max 10 lines)
-- **Done and merged on `main`:** T1 `check.ps1`, T2 skeleton, T3 pipeline, T4 data layer, T5 scroll engine, T6 SVG stage, T7 UI, T12 AI summaries. **T8 milestone reached at 01:56:** the demo slice works on real data in a local build.
-- `scripts/check.ps1` is green on `main`: 37 pipeline tests, 65 web tests, build.
-- Real data: 1,883 test rows from 13 investigations, 986 on the chart, 22 investigations with AI summaries (every quote checked word for word).
-- **Not done:** T9 tilt, T10 acts 1, 2, 4, T11 story library, T13 languages, T14 taste check and README final pass.
-- **Rough edges seen in the browser:** labels overlap around the Moon box; the Moon-gravity band is cut off at the top at 1440x900; the look is untuned.
-- **Needs your call:** the list at the bottom (5 items). None blocks the next tasks.
-- **Stopped because** this account is near its 5-hour limit. The next session starts at "Next session: start here".
+## Check-in (max 10 lines), build session 2, written 02:24 on Karim's go-ahead typed in that session
+- **Done and merged on `main`:** T1-T8, T12 (session 1); PR #11 `moments.json` (49 computed facts, session 2). `scripts/check.ps1` green: 45 pipeline tests, 65 web tests, build.
+- **Running, not merged (Sonnet coders + Sonnet QA, worktrees `E:if-wt\B-E`):** T10 acts 1-4 (`lane/stories/t10-acts`), storybook engine (`lane/engine/storybook`), logo + theme + rail + layout + investigation detail (`lane/ui/brand-theme`), chart follow-up (`lane/stage/followup`). Coder A: `library.json` drafted by Meta Spark (`lane/pipeline/library`).
+- **Next, in order:** merge those PRs one at a time (a Sonnet agent rebases, runs `check.ps1`, merges); look at all four acts in the browser; then UX wave 3 from `docs/UX-BRIEF.md` (public picture book with the flame guide and the oxygen dial, analyst workspace, ending card); then library pages, T13 languages (`python scripts/translate.py es hi`, Spark API), T14.
+- **Not done:** T11 pages, T13, T14. T9 (three.js tilt) skipped: the labelled Moon-gravity band is the fallback.
+- **Roles (Karim, 02:17, final):** Sonnet codes, reviews and merges; Meta Spark builds text through the API; Fable plans, briefs and checks the browser.
+- **Decisions this session:** the Firebreak mark is allowed (DESIGN.md "No logos" is about NASA and Space Apps marks); coders may add `en.json` keys under their own prefix this wave; new contracts `moments.schema.json`, `library.schema.json`; "burned to the end of the test" is an overclaim and is being reworded to "sustained burn".
+- **Needs your call:** the 5 items at the bottom (unchanged); Azure and Google Cloud credits are not needed for a static site, so they are unused unless you want a public host.
 
 ## DEMO-SLICE checklist (T8), checked by me in the browser at 1440x900 on `npm run build` + `vite preview`
 - [x] 1. Local build + preview works; no public deploy (the repo stays private)
