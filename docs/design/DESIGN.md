@@ -1,48 +1,53 @@
-# Design spec (orchestrator-owned; W2 applies it)
+# Design language: Space Apps x NASA (orchestrator-owned)
 
-Dealt with the taste skill (app-screen run): **Achromatic ledger**, light, seed 240444418, kind analytics. Full sheet: `.taste-skill/direction.json` (reprint: `node C:\Users\Admin\.claude\skills\taste-skill\scripts\draw.mjs --show`).
-Why this style: an evidence tool read by researchers and judges, where colour must mean data. The chrome stays ink; one hue marks the data that answers the question.
+Karim's direction (2026-11-14, 10:22 PM): take the Space Apps 2026 hackathon's own look and NASA's app/web design language and combine them, so judges and NASA people feel at home. This replaces the earlier "achromatic ledger" draw. The taste-skill house rules still apply (flat colour, no gradients, no glows, no emoji, real data only).
 
-## The move (keep it intact)
-- No colour in the chrome. The one primary action is near-black `#141414`; secondary is a grey pill `#e5e5e5`.
-- **One chart hue `#1d5fbf`** goes only on the main data element of each screen (below). Everything else is ink `#141414` or grey `#8a8a8a`.
-- The only other hue is a small signal: `--warning #92400e` for the "no partial-gravity data" band label and bad-cell notes.
-- Under 1% coloured pixels. No shadows at rest, no gradients, no tinted cards, no icons in tinted squares, no sparklines, no emoji, no rainbow charts.
+## Where the values come from (measured 2026-11-14, ~10:25 PM local)
+- **Space Apps 2026**: CSS custom properties on spaceappschallenge.org/2026 (`--brand-*`), body `#1b1b1b` with white text, Fira Sans everywhere (headings 700, 64px on the hero). The opening-slide colours (sampled from the PDF: deep blues #001038-#184098 on near-white) match these tokens.
+- **NASA** (nasa.gov, Horizon design system on USWDS): body Public Sans 16px `#1b1b1b` on white; headings Inter 700; header and footer black `#000`; square corners (0px), buttons `#005ea2` (USWDS primary blue) with 0/4px radius; uppercase DM Mono micro-labels.
+- Both palettes are USWDS-family colours (`#0050d8`, `#e52207`, `#3d4551`, `#8d9297`, `#dfe1e2`), which is why they combine cleanly.
 
-## Face (what makes it ours, not a kit)
-- **Ground:** blue-grey `#f2f4f7` instead of `#f8f8f8` (a lab ledger). Cards stay white `#ffffff`, 1px `#e6e6e6` edge, 8px radius; controls 6px.
-- **Signature element: the Moon box.** On the evidence chart, the selected atmosphere is a box drawn in the hue (outline + 6% fill) at its real pressure/O2 (e.g. 56.5 kPa, 33.7-40%). The nearest real tests are the only other hued marks. All other tests are grey dots; micro-g filled, 1-g hollow.
-- Figures: Geist, `font-variant-numeric: tabular-nums`, units as smaller grey suffixes (`56.5 kPa`, `33.7-40 %`).
-
-## Tokens (paste into `web/src/styles.css` `:root`)
+## Tokens (`web/src/styles.css`, `:root`)
 ```css
 :root {
-  --ground:#f2f4f7; --surface:#ffffff; --raised:#eeeeee; --border:#e6e6e6; --rule:#f0f0f0; --control:#d4d4d4;
-  --text:#0a0a0a; --muted:#6b6b6b; --accent:#141414;
-  --positive:#2e7d32; --negative:#c4242a; --warning:#92400e;
-  --chart-1:#141414; --chart-2:#8a8a8a; --chart-3:#1d5fbf;
-  --pill-positive-bg:#dcfae5; --pill-positive-ink:#04250e; --pill-negative-bg:#ffedea; --pill-negative-ink:#831c1e;
-  --pill-warning-bg:#fffbeb; --pill-warning-ink:#92400e; --pill-neutral-bg:#eeeeee; --pill-neutral-ink:#3d3d3d;
-  --radius-card:8px; --radius-control:6px; --row-height:44px; --gap:12px; --pad:24px; --control-height:36px;
-  --fs-title:24px; --fs-section:16px; --fs-kpi:30px; --fs-body:14px; --fs-small:12px;
+  /* story (dark, Space Apps) */
+  --space-deep:    #151622;  /* story ground (Space Apps --brand-deepblue) */
+  --space-black:   #1b1b1b;  /* near-black panels, footer (both brands) */
+  --electric-blue: #1b2b85;  /* full-width chapter fields (Space Apps) */
+  --ink-dark:      #ffffff;  /* text on dark */
+  --muted-dark:    #dfe1e2;  /* secondary text on dark (cloud gray) */
+  /* data highlight */
+  --data-on-dark:  #2491ff;  /* nearest tests, selected series on dark (blue yonder) */
+  --data-on-light: #0050d8;  /* same role on light panels (neon blue) */
+  --moon:          #e7f434;  /* THE accent: the Moon box + the one primary action (Space Apps neon yellow) */
+  --flame:         #ff5804;  /* fire marks, burning outcomes (oxide orange) */
+  --danger:        #e52207;  /* incidents, "fails at this air" (NASA red) */
+  /* analyst panels (light, NASA Horizon) */
+  --sheet:         #ffffff;
+  --sheet-ground:  #dfe1e2;  /* cloud gray */
+  --ink:           #1b1b1b;
+  --muted:         #3d4551;  /* slate gray */
+  --rule:          #8d9297;  /* clay gray, table rules only */
+  --link:          #005ea2;  /* NASA/USWDS primary blue on light */
+  /* shape and type */
+  --radius: 0px;             /* square, like both sites */
+  --font: "Fira Sans", "Public Sans", system-ui, sans-serif;
+  --font-id: "Fira Code", ui-monospace, monospace; /* PSI IDs and code only */
 }
 ```
-Type: Geist 400/500/700 (Google Fonts link in the sheet). 700 only on the headline figure. Sentence case everywhere, no tracked capitals, no monospace except PSI IDs.
+Fonts: `https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&family=Fira+Code:wght@400&display=swap`.
 
-## Shell
-Icon rail 55px on the ground with a 1px edge (four destinations: Incident, Compare, Moon, Experiments; outline icons with tooltips and accessible names). Phone: bottom bar with the same four, short labels. Canvas: 24px gutters, one gap value (12px) everywhere.
+## Rules of use
+- **Story chapters run dark** (`--space-deep`, full-width `--electric-blue` fields between acts). **Analyst panels are light sheets** (`--sheet` on `--sheet-ground`, black text). Switching to the Analyst lens slides a light sheet in over the dark story, the way NASA pages sit white content under a black header.
+- **One accent:** neon yellow `--moon` goes on the Moon box and the one primary button (square, yellow fill, near-black text, the Space Apps button style). Nothing else is yellow.
+- **Colour means something:** blue = real NASA data selected/nearest; orange = burned/fire; red = danger/incident/"unlikely to pass"; grey = all other tests. Every legend says so in words too.
+- Type: Fira Sans 400/500/700; display sizes large (hero 64px desktop, as on the Space Apps site), body 16-18px; sentence case. NASA's tracked uppercase mono labels are **not** used (taste rule); PSI IDs may use Fira Code.
+- Flat fields only: the brand's blue gradients are replaced by flat `--electric-blue`.
+- **No logos.** Do not place the NASA insignia, the Space Apps logo or mission patches anywhere in the app (Space Apps rule: no NASA branding in SI-made content). Name them in text if needed.
+- Every number has a source link; AI text carries an "AI summary" tag.
 
-## Each screen: one question, one finding (the finding is computed from the data, never typed)
-| Screen | Question (title-row line) | Biggest thing | Finding line under the title |
-|---|---|---|---|
-| Moon (main) | "Has NASA tested fire at Moon-base air?" | The O2 vs kPa chart, ~360px tall, two-thirds width; rail on the right = 10 nearest tests list | Built from data: e.g. "`{n}` of `{N}` PSI tests fall inside the Moon box; the nearest is `{id}` at `{o2}` % and `{kPa}` kPa (`{outcome}`)." If n = 0, say so plainly |
-| Compare | "Which experiments speak to this environment?" | The ranked table | "Ranked for `{atmosphere}` by O2 and pressure distance; `{k}` of `{N}` have recorded outcomes." |
-| Opener | "Why oxygen matters" | The incident statement (date, oxygen, what changed) | The pattern quote with its source (ICES-2020-173) |
-| Experiment | the investigation's name | Objective (verbatim) + AI summary tagged "AI summary" | Test count, O2 and kPa range, papers count, PSI link |
-
-Charts: y-scale always shown; 3-5 faint gridlines; no legend for one series; label the Moon box and the no-data band on the chart itself. Use Observable Plot styled to these tokens, or `docs/design/charts.js` patterns. Tables: rules only, no zebra, numbers right-aligned, `—` for missing values, never `0` for missing.
-
-States: every block has empty / loading / error; every row and control has hover, focus (visible), selected.
-
-## Checks
-`node C:\Users\Admin\.claude\skills\taste-skill\scripts\lint.mjs --app web/src` and `node ...\inspect.mjs --app <built index.html>`; fix every FAIL. The orchestrator runs these on each web PR.
+## three.js stage (the signature)
+One full-screen canvas behind the story (HTML text and CSS panels on top). It draws the **evidence space** from real data:
+- x = pressure (kPa), y = oxygen (%), z = gravity, with three planes: micro-g (all PSI tests sit here), lunar 1/6 g, and 1 g (Earth / ISS cabin reference).
+- Each scroll act moves the camera: act 1 shows the one incident line; act 2 fills the micro-g plane family by family; act 3 flies to the Moon box (56.5 kPa, 33.7-40 % O2) on the **empty lunar plane** and lights the nearest tests; act 4 holds on the empty plane and the FM2 note.
+- Points are data, never decoration. A plain 2D fallback (the same chart in SVG) shows when WebGL is missing or `prefers-reduced-motion` is set.

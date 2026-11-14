@@ -1,6 +1,6 @@
 # Agent rules: Flame in Freefall (NASA Space Apps 2026, challenge #7)
 
-Read in order: this file, `PLAN.md`, your lane's `PLAN.md`, `contracts/README.md`.
+Read in order: `HANDOVER.md`, this file, `PLAN.md`, your lane's `PLAN.md`, `contracts/README.md`.
 
 ## The product in one line
 A dashboard that puts every NASA microgravity fire experiment (PSI) on one comparable footing, every number traceable to its PSI row, and shows where the evidence for a Moon base runs out.
@@ -15,3 +15,5 @@ A dashboard that puts every NASA microgravity fire experiment (PSI) on one compa
 7. **Git:** branch `lane/<name>/<task>`, Conventional Commits, one PR per task, never merge your own PR. Inside the Muse sandbox run git as `git -c safe.directory=* ...`.
 8. **Stuck rule:** the same command failing the same way three times: stop, write it under Open questions in your lane `STATE.md`, report.
 9. Keep everything on E:. Never write to C:.
+10. **Agents:** the orchestrator (Fable) plans and reviews; Sonnet subagents code (parallel only on separate files); Muse Spark (`muse-spark-1.3-contributor`) for quick tasks and summary API calls. Never Muse Wonder, no other coding agents.
+11. Story, lenses and design: `docs/STORY.md`, `docs/design/DESIGN.md`. Stack: HTML + CSS + three.js (Vite + TypeScript), static site.

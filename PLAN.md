@@ -6,20 +6,18 @@ Times are Karim's local time (UTC+3). Boston = local - 8 h.
 NASA has run about 25 microgravity combustion investigations (PSI), ~1,780 test runs. Each records conditions differently (oxygen as %, as a mole fraction, as "21; 26.5; 34"; pressure in mmHg, atm, bar), so nobody can compare them. The brief asks for an SI-powered dashboard that summarizes, ranks and interprets them for fire safety in spacecraft and Moon/Mars bases.
 Sharpest point: NASA's planned Moon-base air is 8.2 psia with 33.7-40% O2 (ICES-2022-45); PSI has no partial-gravity tests; NASA's own lunar-g margins say some materials burn at up to 2.3 points less O2 in lunar gravity (ICES-2025-392).
 
-## Goals (Karim's picks; at most 3)
-| # | True when we submit | Test that proves it (no Karim needed) | Approach |
-|---|---|---|---|
-| 1 | **Compare all experiments**: every PSI fire investigation in one unit-clean table with summaries and linked papers; every number links to its PSI row | `pipeline` tests: no O2 outside 0-100%, pressure in kPa, every test row has `source.file`+`source.row`; schema validation of `experiments.json` and `tests.json`; `web` test: table renders N rows from golden data | Partly existing: PSI data + our normalization |
-| 2 | **Moon evidence chart**: O2 vs pressure plot of where NASA tested, the Moon-base box, nearest real tests and outcomes, lunar-g margins, a labelled no-partial-gravity-data band | `web` unit tests for `nearestTests()` and the chart spec (Moon box at 56.5 kPa / 33.7-40%); every plotted point has a source | Invented: the combination |
-| 3 | **One-incident opening**: one real fire (enriched oxygen) that hands off to goals 1 and 2 | `web` test: opener renders the incident from `data/curated/incidents.json` with its source link | Existing: NASA accident records |
+## Goals (Karim agreed 2026-11-14 10:22 PM; details in HANDOVER.md §2, docs/STORY.md)
+1. **The story**: 4 acts (act 2 = 6 family scenes covering all 22 investigations), 3 lenses each (Astronaut / Analyst / Public), every claim with a source link.
+2. **Build your Moon-base air**: sliders over real PSI tests; nearest tests, failing materials, lunar margins; the lunar-gravity gap shown, never predicted.
+3. **The comparison table** for analysts: every investigation unit-clean, every number traced to its PSI row.
 
-Out of scope: prediction models, raw sensor/video data, voice, non-NASA agencies, fine-tuning.
+Out of scope: fine-tuning, prediction models, raw sensor/video data, voice, non-NASA agencies.
 
 ## Lanes
 | Lane | Window | Folder | Builds |
 |---|---|---|---|
-| W1 data | Muse | `pipeline/` | PSI snapshot -> `data/build/experiments.json`, `tests.json` (+ AI summaries via Meta key, prepared ahead) |
-| W2 web | Muse | `web/` | Static site: opener, compare table, Moon chart, experiment page. Reads `data/build/` (golden samples until W1 lands) |
+| W1 data | Sonnet subagent (or Muse Spark) | `pipeline/` | PSI snapshot -> `data/build/experiments.json`, `tests.json` (+ AI summaries via Meta key, prepared ahead) |
+| W2 web | Sonnet subagent (or Muse Spark) | `web/` | Static story-scroll site (HTML + CSS + three.js): acts, lenses, Moon-air sliders, experiment pages. Reads `data/build/` (golden samples until W1 lands) |
 | Orchestrator | Claude | `contracts/`, `data/curated/`, `PLAN.md` | Contracts, curated facts, reviews every PR |
 
 ## Checkpoints
