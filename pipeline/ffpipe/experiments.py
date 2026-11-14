@@ -26,13 +26,16 @@ def _range(values):
     return [min(values), max(values)] if values else None
 
 
-def build_experiments(snapshot, tests):
+def build_experiments(snapshot, tests, summaries=None):
+    """summaries: {id: {text, quotes, tags, model, made_at}} from pipeline/summaries.json; missing id -> summary null, tags []."""
+    summaries = summaries or {}
     pubs = load_pubs(snapshot)
     out = []
     for inv in FIRE_IDS:
         psi = load_psi(snapshot, inv)
         rows = [t for t in tests if t["investigation"] == inv]
         # O2 range uses the point value and the min/max of a source range ("21.5 - 21.7" counts as 21.5..21.7).
+        written = summaries.get(inv)
         o2 = [r.get(k) for r in rows for k in ("o2_pct", "o2_pct_min", "o2_pct_max")]
         out.append({
             "id": inv,
@@ -45,8 +48,8 @@ def build_experiments(snapshot, tests):
             "psi_url": PSI_URL.format(investigation=inv),
             "license": psi.get("licenseIdentifier") or "",
             "objective": psi["objective"],
-            "summary": None,
-            "tags": [],
+            "summary": {k: written[k] for k in ("text", "quotes", "model", "made_at")} if written else None,
+            "tags": list(written["tags"]) if written else [],
             "test_count": len(rows),
             "o2_pct_range": _range(o2),
             "pressure_kpa_range": _range([r["pressure_kpa"] for r in rows]),

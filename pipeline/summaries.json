@@ -1,0 +1,238 @@
+{
+  "PSI-98": {
+    "text": "This investigation burned a large sample of Sibal, a composite fabric of cotton on a fiberglass substrate, in a flow duct on a Cygnus resupply vehicle after it left the ISS. It set out to learn how rapidly a large-scale fire grows in low gravity and how the low-gravity flammability limits compare with those from NASA's normal-gravity material flammability screening test.",
+    "quotes": [
+      "determine how rapidly a large scale fire grows in low-gravity",
+      "The sample material for Saffire-I is a composite fabric called Sibal consisting of cotton on a fiberglass substrate",
+      "investigate the low-g flammability limits compared to those obtained in NASA"
+    ],
+    "tags": ["fire growth", "material flammability"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-99": {
+    "text": "Saffire-II followed Saffire-I and added more sample materials, including Sibal, silicone and several PMMA variants, in a large flow duct on a Cygnus resupply vehicle after it left the ISS. Like Saffire-I, it set out to learn how rapidly a large-scale fire grows in low gravity and how the low-gravity flammability limits compare with NASA's normal-gravity screening test.",
+    "quotes": [
+      "determine how rapidly a large scale fire grows in low-gravity",
+      "the Saffire-II investigation added more samples including SIBAL, silicone, structure PMMA, flat PMMA, and PMMA with Nomex"
+    ],
+    "tags": ["fire growth", "material flammability"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-100": {
+    "text": "Saffire-III repeated the large-scale fabric burn of Saffire-I with Sibal as the sample material, but at a higher air flow velocity, with the flow either concurrent or opposed. It set out to learn how rapidly a large-scale fire grows in low gravity and how the low-gravity flammability limits compare with NASA's normal-gravity screening test.",
+    "quotes": [
+      "determine how rapidly a large scale fire grows in low-gravity",
+      "the Saffire III investigation also used SIBAL as the sample material"
+    ],
+    "tags": ["fire growth", "material flammability"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-26": {
+    "text": "BASS burned fabric samples made of cotton and fiberglass, as well as Nomex fabric and Ultem, in airflow aboard the ISS, with the air moving either with or against the direction of flame spread. It aimed to bridge the gap between the normal-gravity NASA-STD-6001 Test#1 method, ground-based microgravity tests and actual material flammability in microgravity, and to assess how well an inert gaseous extinguishing agent puts out flames.",
+    "quotes": [
+      "Begin to bridge the gap between the normal gravity NASA-STD-6001 Test#1 method, ground-based microgravity tests, and actual material flammability in microgravity.",
+      "Assess the effectiveness of an inert, gaseous extinguishing agent (similar to that used on ISS) in putting out flames over different materials, geometries, preheating, and flow."
+    ],
+    "tags": ["material flammability", "suppression"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-25": {
+    "text": "BASS-II burned solid fuel samples, including rods, slabs, films and fabric sheets, in a small wind tunnel in the Microgravity Science Glovebox on the ISS. It studied ignition, flame growth, flame spread and extinction limits in low-velocity forced flows, and its results feed combustion models used in the design of fire detection and suppression systems.",
+    "quotes": [
+      "Study the ignition, flame growth, flame spread, and extinction limits for solid fuels burning in low-velocity forced flows in microgravity.",
+      "BASS-II results contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth."
+    ],
+    "tags": ["detection", "suppression", "fire growth", "material flammability"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-69": {
+    "text": "FLEX ignited and observed relatively large burning fuel droplets in microgravity. It aimed to map the flammability limits of liquid fuels, measure how well gaseous fire suppressants such as CO2, He and SF6 work, and determine the Limiting Oxygen Index as a function of ambient pressure. The objective says this work helps enhance fire safety protocols for future space missions.",
+    "quotes": [
+      "map the flammability limits of liquid fuels in microgravity environments, measure the effectiveness of various gaseous fire suppressants such as CO2, He, and SF6",
+      "The FLEX experiments involve igniting and observing the burning behavior of relatively large droplets.",
+      "enhancing fire safety protocols for future space missions"
+    ],
+    "tags": ["suppression"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-68": {
+    "text": "FLEX-2 burned fuel droplets in microgravity, including bi-component fuel droplets, in a chamber whose atmosphere was varied in pressure and oxygen concentration. It set out to extend the FLEX-1 results to fuels and conditions that mimic real combustor conditions, and to study flame extinction mechanisms and their boundaries. The data are meant to validate numerical simulations and new theoretical models.",
+    "quotes": [
+      "The primary goal of the FLEX-2 flight experiments is to extend the results of FLEX-1 to fuels and environmental conditions that mimic real combustor conditions",
+      "Investigate the role of liquid-phase mixing on the burning characteristics of bi-component fuel droplets.",
+      "Study flame extinction mechanisms and their boundaries."
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-39": {
+    "text": "This investigation burned fuel droplets, including n-dodecane, farnesane and n-dodecane/iso-dodecane mixtures, in the Multi-User Droplet Combustion Apparatus inside the Combustion Integrated Rack. It set out to examine combustion behavior across a range of pressures, the effect of helium dilution on cool flame behavior, and the relationship between droplet size, pressure and flame extinction.",
+    "quotes": [
+      "Examine the combustion behavior of n-dodecane and mixtures of n-dodecane/iso-dodecane at pressures ranging from 0.25 atm to 5 atm.",
+      "Analyze the effects of helium dilution on cool flame behavior.",
+      "The Combustion Integrated Rack (CIR) contains the Multi-User Droplet Combustion Apparatus (MDCA) which facilitates the controlled combustion of fuel droplets."
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-159": {
+    "text": "This investigation planned spherical diffusion flame tests aboard the International Space Station with several fuels, a range of reactant dilutions, flow rates and pressures, and normal and inverse convection directions. It set out to determine the conditions under which cool diffusion flames occur for propane, n-butane and n-pentane, supported by CFD simulations and a chemical kinetics mechanism that agrees with the ISS measurements.",
+    "quotes": [
+      "Determine the conditions for which cool diffusion flames occur for propane, n-butane, and n-pentane",
+      "Perform spherical diffusion flame tests aboard the International Space Station."
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-10": {
+    "text": "This flight experiment burned normal and inverse spherical diffusion flames of C2H4 and CH4 in drop towers and aboard the International Space Station. It set out to obtain soot-inception limits and extinction limits as functions of flow rate, Zst, amount of inert and pressure, and to measure flame temperature, size, color and soot volume fraction.",
+    "quotes": [
+      "Obtain soot-inception limits of quasi-steady normal and inverse spherical diffusion flames as functions of flow rate, Zst, amount of inert (N2 or CO2), and pressure for C2H4 and CH4 flames.",
+      "Obtain extinction limits as functions of Zst, amount of N2, and pressure for normal and inverse spherical C2H4 and CH4 flames.",
+      "Perform spherical diffusion flame tests in drop towers and aboard the International Space Station."
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-20": {
+    "text": "The BRE flight program planned to observe burning behavior of CH4/N2 and C2H4/N2 mixtures on porous circular burners in long-duration microgravity, at various pressures and oxygen concentrations. It sought to establish burning conditions in a quiescent microgravity ambient in terms of material properties, and to find extinction limits, producing data for a flammability map.",
+    "quotes": [
+      "The BRE flight program seeks to establish the burning conditions in a quiescent microgravity ambient in terms of material properties.",
+      "Observe burning behavior in long-duration microgravity for CH4/N2 and C2H4/N2mixtures on porous circular burners",
+      "a continuous set of data is produced for the flammability map"
+    ],
+    "tags": ["material flammability"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-21": {
+    "text": "This investigation planned to study weak coflow diffusion flames of methane and ethylene over a wide range of test conditions. It aimed to characterize flame shape, lift-off heights, temperatures and extinction limits as a function of velocity and fuel dilution, and the sooting tendencies of the flames, to give experimental data for testing computational models.",
+    "quotes": [
+      "Characterize the behavior of weak coflow diffusion flames of methane and ethylene, as a function of velocity and fuel dilution",
+      "Characterize the sooting tendencies of diffusion flames with long residence times",
+      "we plan to study methane and ethylene diffusion flames over a wide range of test conditions"
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-22": {
+    "text": "E-FIELD burned gas-fueled laminar diffusion flames of methane and ethylene diluted with nitrogen in microgravity, with and without a coflow of air, while applying an electric field of up to 10 kV between the burner and a mesh electrode. It set out to understand the relationship between electric field voltage and chemi-ion current, analyze how flames respond to electric field changes, evaluate soot formation, and characterize stabilized near-limit lifted flames.",
+    "quotes": [
+      "better understand the relationship between electric field voltage and chemi-ion current",
+      "The E-FIELD flames experiment investigates how electric fields influence the behavior of laminar diffusion flames in microgravity."
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-23": {
+    "text": "This investigation proposed experiments in which mixtures of gaseous fuels (hydrogen, methane and ethylene) and diluents were issued through a spherical porous burner and ignited to give a nominally spherical, one-dimensional flame. It aimed to measure the transient structure of these flames, determine their extinction limits, and look for pulsating instabilities, for comparison with detailed computational simulation.",
+    "quotes": [
+      "Measure and characterize the transient structure (such as temperature and species distribution) of diffusion flames established at initially non-steady, spherical flame structures",
+      "Determine the quasi-steady convective/chemical-kinetic extinction limits",
+      "mixtures of various gaseous fuels and diluents will be issued into an oxidizing environment through a spherical porous burner and ignited"
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-106": {
+    "text": "The SLICE apparatus, a fan-driven flow duct with exchangeable burner tubes and sensors, was used to burn fuels such as methane, ethylene and nitrogen-diluted mixtures in controlled coflow air, with a camera capturing images of the flames. It aimed to understand the structure and stability of laminar diffusion flames in microgravity, including liftoff velocity limits, the effect of nitrogen dilution on soot formation, and flame length and radiative heat loss compared with normal gravity.",
+    "quotes": [
+      "The objective of this investigation is to better understand the structure and stability of laminar diffusion flames in microgravity.",
+      "Determine the liftoff velocity limits for different fuels and burner diameters.",
+      "Quantify the effects of microgravity on flame length and radiative heat loss compared to normal gravity conditions."
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-107": {
+    "text": "SPICE burned flames of methane, ethylene, propane and propylene mixtures in controlled co-flow air in the microgravity science glovebox aboard the ISS, adjusting fuel flow rates to find the smoke point, where the flame starts emitting soot. It aimed to identify the laminar smoke-point properties of non-buoyant jet diffusion flames and to quantify the sooting propensity of different fuels.",
+    "quotes": [
+      "Identify the laminar smoke-point properties of non-buoyant jet diffusion flames under various co-flow conditions in microgravity.",
+      "Fuel flow rates were adjusted to identify the smoke point",
+      "Quantify the sooting propensity of different fuels"
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-102": {
+    "text": "In this investigation, smoke was generated from overheated spacecraft materials in the Glovebox, collected on thermophoretic probes, and used to record how two smoke detectors responded. One major goal was to quantify the sizes that liquid smoke particles reach in low gravity and to relate the droplet size distribution to smoke generation and transport conditions, with a numerical code to predict smoke droplet growth.",
+    "quotes": [
+      "quantify the sizes that the liquid smoke particulate achieves in low gravity",
+      "The measurements were made using smoke generated by overheated spacecraft materials",
+      "ran the self diagnostic procedures on the two smoke detectors"
+    ],
+    "tags": ["detection"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-101": {
+    "text": "SAME-R repeated an earlier smoke investigation with the SAME hardware used on-orbit, adding a new test material (an intumescent fire-retardant foam), broader test conditions and a new instrument. Its primary objective was to quantify the sizes that liquid smoke particles reach in low gravity and to relate the droplet size distribution to smoke generation and transport conditions.",
+    "quotes": [
+      "the primary objective of the SAME-R investigation was to quantify the sizes that the liquid smoke particulate achieves in low gravity",
+      "SAME-R utilized the SAME hardware used on-orbit.",
+      "an intumescent fire-retardant foam by Foamex"
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-60": {
+    "text": "This ground investigation used raw camera images from the SPICE smoke-point experiment, available in PSI, together with computational soot models to derive temperature distributions and soot volume fractions. It aimed to improve understanding of soot formation and oxidation in heavily sooting flames and to reconcile microgravity and normal-gravity flame behavior.",
+    "quotes": [
+      "This ground investigation sought to increase understanding of the issues that control the large discrepancy between soot formation in 1g and in 0g flames.",
+      "integrate computational and experimental methods to derive temperature distributions and soot volume fractions from the Smoke Point in Coflow Experiment (SPICE) data available in PSI",
+      "reconcile microgravity and normal gravity flame behavior"
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-62": {
+    "text": "This research developed and validated flamelet generated manifold models for concurrent flame spread in microgravity, using the NASA BASS and BASS-II experiments as benchmarks. Its long-term goal was accurate prediction of flammability limits for spacecraft materials, in support of spacecraft safety and hazard mitigation.",
+    "quotes": [
+      "develop and validate new flamelet generated manifold (FGM) modeling techniques for concurrent flame spread in microgravity",
+      "using the NASA Burning and Suppression of Solids (BASS and BASS-II) experiments as benchmarks",
+      "enable accurate prediction of flammability limits for spacecraft materials"
+    ],
+    "tags": ["material flammability"],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-117": {
+    "text": "This ground investigation used flight data from NASA's Flame Extinguishment Experiment (FLEX), available through PSI, with a 3-D CFD model of n-alkane droplet cool flames in microgravity. It aimed to quantify how imposed thermal and convective perturbations affect the dynamics and fate of already established droplet cool flames, and to explain run-to-run variability.",
+    "quotes": [
+      "to quantify how externally imposed thermal and convective perturbations regulated the dynamics and ultimate fate of already established droplet cool flames",
+      "OpenFOAM was used to develop a 3-D CFD model of n-alkane droplet cool flames in microgravity",
+      "to explain run-to-run variability by isolating the roles of deliberate heating and unintentional drift-induced convection"
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  },
+  "PSI-142": {
+    "text": "This grant used FLEX data from PSI to run new simulations and ground-based experiments with ozone-sensitized counterflow flames. Its aims included a new diagram of the flammability limits of diffusional cool flames and bridging the knowledge gap between the flammability limits and extinction limits of hot flames and cool flames.",
+    "quotes": [
+      "purpose of this grant was to conduct new simulations and ground-based experiments using ozone-sensitized counterflow flames",
+      "Develop a new diagram of the flammability limits of diffusional cool flames affected by radiation, diffusion, and convection.",
+      "Bridge the knowledge gap between the flammability limits and extinction limits of hot flames and cool flames."
+    ],
+    "tags": [],
+    "model": "claude-sonnet-5-5",
+    "made_at": "2026-11-15T01:46:47.3360935+03:00"
+  }
+}
