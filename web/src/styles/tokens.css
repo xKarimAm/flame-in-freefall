@@ -27,4 +27,9 @@
   --chrome-h: 56px;
   --panel-w: 380px;
   --gap: 16px;
+  /* brand fills measured in docs/brand/logo.svg: for fire marks and the Firebreak brand only */
+  --flame-amber: #ffa630;
+  --flame-core: #ffe3a3;
+  --logo-ground: #1c1412;
+  --paper: #fff1df;
 }

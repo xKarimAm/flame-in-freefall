@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppData, Ctx, DataApi, Experiment, NearestRow, PlacedTest, TestRun } from "../contract";
 import { createDataApi } from "../data/index";
+import { stories } from "../engine/stories";
 import { makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { mount } from "./index";
@@ -189,6 +190,105 @@ describe("ui", () => {
     expect(selected()).toBe("All investigations");
     store.set({ beat: { story: "s", scene: "a", beat: "c", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "table" } });
     expect(selected()).toBe("All investigations");
+  });
+
+  it("the brand is the Firebreak mark, the name and a blue ug; it scrolls to the top", () => {
+    setup();
+    const brand = roots().chrome.querySelector<HTMLButtonElement>("button.brand")!;
+    expect(brand.querySelector(".brand-mark svg")).not.toBeNull();
+    expect(brand.querySelector(".brand-mark")!.getAttribute("aria-hidden")).toBe("true");
+    expect(brand.querySelector(".brand-name")!.textContent).toBe("Firebreak");
+    expect(brand.querySelector("sup")!.textContent).toBe("μg");
+    expect(brand.querySelector("text")).toBeNull(); // the mark carries no lettering
+    const scrollTo = vi.fn();
+    window.scrollTo = scrollTo as unknown as typeof window.scrollTo;
+    brand.click();
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
+  });
+
+  it("the chapter rail has one chip per story, marks the one in view and scrolls to it", () => {
+    const { store } = setup();
+    const nav = roots().chrome.querySelector("nav.rail")!;
+    expect(nav.getAttribute("aria-label")).toBe("Chapters");
+    const chips = [...nav.querySelectorAll<HTMLButtonElement>("button.chip")];
+    expect(stories.length).toBeGreaterThan(0);
+    expect(chips.length).toBe(stories.length);
+    expect(chips[0].textContent).toContain(String(stories[0].act));
+    expect(chips[0].textContent).toContain("Build your Moon-base air");
+    expect(chips.some((c) => c.getAttribute("aria-current") === "true")).toBe(false);
+    store.set({ beat: { story: stories[0].id, scene: "s", beat: "b", kind: "focus" } });
+    expect(chips.map((c) => c.getAttribute("aria-current"))).toEqual(stories.map((st, i) => (i === 0 ? "true" : null)));
+    store.set({ beat: { story: "elsewhere", scene: "s", beat: "b", kind: "focus" } });
+    expect(chips[0].hasAttribute("aria-current")).toBe(false);
+    document.getElementById("story")!.innerHTML = `<section id="story-${stories[0].id}"></section>`;
+    chips[0].click();
+    expect((Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>).mock.contexts.at(-1)).toBe(document.getElementById(`story-${stories[0].id}`));
+  });
+
+  it("with no stories there is no rail", () => {
+    const saved = stories.splice(0);
+    try {
+      setup();
+      expect(roots().chrome.querySelector("nav.rail")).toBeNull();
+    } finally {
+      stories.push(...saved);
+    }
+  });
+
+  describe("investigation detail", () => {
+    const summary = {
+      text: "SAFFIRE-I burned a 0.4 m wide fabric in a cargo vehicle.",
+      quotes: ["determine how rapidly a large scale fire grows in low-gravity"],
+      model: "muse-spark-1.3-contributor",
+      made_at: "2026-11-15T01:00:00Z",
+    };
+    const saffire = () => experiments.find((e) => e.id === "PSI-98")!;
+    const open = () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const btn = [...roots().sheet.querySelectorAll<HTMLButtonElement>("button.row-open")].find((b) => b.textContent === saffire().acronym)!;
+      btn.click();
+      return { btn, detail: roots().sheet.querySelector("tr.detail")! };
+    };
+
+    it("opens from the acronym and shows the objective word for word, the AI summary with its tag, quotes, DOI links and the PSI link", () => {
+      const before = { summary: saffire().summary, publications: saffire().publications };
+      saffire().summary = summary;
+      saffire().publications = [{ title: "A paper", authors: "A Writer", doi: "10.1234/abc", year: "2020" }, { title: "No DOI paper", authors: null, doi: null, year: null }];
+      try {
+        const { btn, detail } = open();
+        expect(btn.getAttribute("aria-expanded")).toBe("true");
+        expect(detail.textContent).toContain(saffire().objective);
+        const tag = detail.querySelector(".ai-tag")!;
+        expect(tag.textContent).toBe("AI summary");
+        expect(detail.textContent).toContain(summary.text);
+        expect(detail.textContent).toContain(`Written by ${summary.model} on ${summary.made_at}`);
+        expect([...detail.querySelectorAll("ul.quotes li q")].map((q) => q.textContent)).toEqual(summary.quotes);
+        const hrefs = [...detail.querySelectorAll("a")].map((a) => a.getAttribute("href"));
+        expect(hrefs).toContain("https://doi.org/10.1234/abc");
+        expect(hrefs).toContain(saffire().psi_url);
+        expect(detail.querySelectorAll("ul.papers li")[1].textContent).toMatch(/DOI:\s*not recorded/);
+        expect(unlinkedNumbers(roots().sheet)).toEqual([]);
+        btn.click(); // the same button closes it
+        expect(roots().sheet.querySelector("tr.detail")).toBeNull();
+        expect(btn.getAttribute("aria-expanded")).toBe("false");
+      } finally {
+        Object.assign(saffire(), before);
+      }
+    });
+
+    it("a missing summary or DOI says 'not recorded' and nothing is guessed", () => {
+      const { detail } = open();
+      expect(saffire().summary ?? null).toBeNull();
+      expect(detail.querySelector(".ai-tag")!.textContent).toBe("AI summary");
+      expect(detail.querySelector(".ai-summary")).toBeNull();
+      expect(detail.textContent).toContain("not recorded");
+      const withDoi = saffire().publications.filter((p) => p.doi);
+      expect([...detail.querySelectorAll('a[href^="https://doi.org/"]')].length).toBe(withDoi.length);
+      expect(detail.querySelectorAll("ul.papers li").length).toBe(saffire().publications.length);
+      expect(detail.querySelectorAll("ul.papers li .missing").length).toBe(saffire().publications.length - withDoi.length);
+      expect(unlinkedNumbers(roots().sheet)).toEqual([]);
+    });
   });
 
   it("Skip scrolls to the first slider step; Stories opens, cards scroll, Escape closes and returns focus", () => {

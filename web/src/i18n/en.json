@@ -38,6 +38,8 @@
   "ui.chrome.lens.analyst": "Analyst",
   "ui.chrome.stories": "Stories",
   "ui.chrome.skip": "Skip to Moon air",
+  "ui.rail.label": "Chapters",
+  "ui.rail.chapter": "Chapter {n}",
   "ui.overlay.title": "Stories",
   "ui.overlay.close": "Close",
   "ui.overlay.empty": "No stories are loaded yet.",
@@ -102,5 +104,12 @@
   "ui.sheet.yes": "yes",
   "ui.sheet.no": "no",
   "ui.sheet.source": "Source:",
-  "ui.sheet.air-title": "Planned Moon-base air"
+  "ui.sheet.air-title": "Planned Moon-base air",
+  "ui.sheet.detail.objective": "PSI objective",
+  "ui.sheet.detail.summary": "AI summary",
+  "ui.sheet.detail.summary-by": "Written by {model} on {made_at}",
+  "ui.sheet.detail.quotes": "Quoted from the PSI text",
+  "ui.sheet.detail.papers": "Publications",
+  "ui.sheet.detail.doi": "DOI",
+  "ui.sheet.detail.psi-link": "Open this investigation on the PSI site"
 }

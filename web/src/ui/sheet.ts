@@ -1,6 +1,6 @@
 // Analyst sheet: all investigations, and the Moon-gravity margins from moon.json.
 // Generated with Claude, SI-assisted.
-import type { Ctx, Experiment, StageState } from "../contract";
+import type { Ctx, Experiment, Publication, StageState } from "../contract";
 import { cite, h, num } from "./dom";
 
 type Tab = "investigations" | "margins";
@@ -25,6 +25,57 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     return cite(t("ui.sheet.range", { lo: f(r[0]), hi: f(r[1]), unit }), href);
   }
 
+  const doiUrl = (doi: string): string => `https://doi.org/${doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "")}`;
+  const missing = (): HTMLElement => h("span", { class: "missing" }, t("ui.sheet.not-recorded"));
+
+  function paper(p: Publication, psiUrl: string): HTMLElement {
+    const text = [p.authors, p.title, p.year].filter(Boolean).join(". ");
+    return h("li", {}, cite(text, psiUrl, "plain"), ` ${t("ui.sheet.detail.doi")}: `,
+      p.doi ? cite(p.doi, doiUrl(p.doi), "num") : missing());
+  }
+
+  /** Objective word for word, the AI summary under its tag, papers with DOIs, link to PSI. Numbers sit in links to PSI. */
+  function detail(e: Experiment): HTMLElement {
+    const s = e.summary;
+    return h("div", { class: "detail-block", id: `detail-${e.id}` },
+      h("h4", {}, t("ui.sheet.detail.objective")),
+      e.objective ? h("blockquote", {}, cite(e.objective, e.psi_url, "plain")) : h("p", {}, missing()),
+      h("h4", {}, h("span", { class: "ai-tag" }, t("ui.sheet.detail.summary"))),
+      s
+        ? h("div", { class: "ai-summary" },
+            h("p", {}, cite(s.text, e.psi_url, "plain")),
+            h("p", { class: "by", "data-own": true }, t("ui.sheet.detail.summary-by", { model: s.model, made_at: s.made_at })),
+            h("p", { class: "by" }, t("ui.sheet.detail.quotes")),
+            s.quotes.length
+              ? h("ul", { class: "quotes" }, ...s.quotes.map((q) => h("li", {}, h("q", {}, cite(q, e.psi_url, "plain")))))
+              : missing())
+        : h("p", {}, missing()),
+      h("h4", {}, t("ui.sheet.detail.papers")),
+      e.publications.length ? h("ul", { class: "papers" }, ...e.publications.map((p) => paper(p, e.psi_url))) : h("p", {}, missing()),
+      h("p", {}, cite(t("ui.sheet.detail.psi-link"), e.psi_url, "plain")));
+  }
+
+  /** The acronym opens or closes the detail row under its row. */
+  function toggle(btn: HTMLButtonElement, e: Experiment): void {
+    const row = btn.closest("tr")!;
+    const next = row.nextElementSibling;
+    if (next?.classList.contains("detail")) {
+      next.remove();
+      btn.setAttribute("aria-expanded", "false");
+      return;
+    }
+    const cell = h("td", { colspan: String(row.children.length) }, detail(e));
+    row.after(h("tr", { class: "detail" }, cell));
+    btn.setAttribute("aria-expanded", "true");
+  }
+
+  // data-own: the acronym is a name, not a number; the title link beside it goes to the PSI page
+  function openButton(e: Experiment): HTMLButtonElement {
+    const btn = h("button", { type: "button", class: "row-open", "aria-expanded": "false", "data-own": true }, e.acronym);
+    btn.addEventListener("click", () => toggle(btn, e));
+    return btn;
+  }
+
   function investigations(): HTMLElement {
     const rows = [...api.data.experiments].sort(
       (a: Experiment, b: Experiment) => a.family.localeCompare(b.family) || a.acronym.localeCompare(b.acronym));
@@ -32,7 +83,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
       h("span", { "data-own": true }, t("ui.sheet.caption", { investigations: rows.length, tests: api.data.tests.length })),
       ["ui.sheet.col.acronym", "ui.sheet.col.title", "ui.sheet.col.family", "ui.sheet.col.tests", "ui.sheet.col.o2", "ui.sheet.col.pressure", "ui.sheet.col.outcomes", "ui.sheet.col.papers"],
       rows.map((e) => [
-        cite(e.acronym, e.psi_url, "num id"),
+        openButton(e),
         cite(e.title, e.psi_url, "plain"),
         h("span", {}, t(`ui.family.${e.family}`)),
         num(e.test_count, 0, "", e.psi_url),
