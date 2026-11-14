@@ -7,15 +7,15 @@ import {
   parseIncidents,
   parseMoon,
   parseTests,
-} from "./data.js";
+} from "./index";
 
 function golden(name: string): unknown {
-  const url = new URL(`../../contracts/golden/${name}`, import.meta.url);
+  const url = new URL(`../../../contracts/golden/${name}`, import.meta.url);
   return JSON.parse(readFileSync(fileURLToPath(url), "utf8"));
 }
 
 function curated(name: string): unknown {
-  const url = new URL(`../../data/curated/${name}`, import.meta.url);
+  const url = new URL(`../../../data/curated/${name}`, import.meta.url);
   return JSON.parse(readFileSync(fileURLToPath(url), "utf8"));
 }
 

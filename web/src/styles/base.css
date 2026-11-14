@@ -1,0 +1,62 @@
+/* Page frame: where each module's root sits. Skeleton by the orchestrator; coder E owns
+   web/src/styles/ from T7 on. Modules style their own insides in their own folder. */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--space-deep);
+  color: var(--ink-dark);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.5;
+}
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+
+/* header: lens switch, Stories, Skip to Moon air */
+#chrome {
+  position: sticky; top: 0; z-index: 30;
+  min-height: var(--chrome-h);
+  background: #000; color: var(--ink-dark);
+}
+
+/* the stage stays in view while the story scrolls over it */
+#stage {
+  position: sticky; top: var(--chrome-h); z-index: 0;
+  height: calc(100vh - var(--chrome-h));
+  overflow: hidden;
+}
+/* story steps scroll over the stage; only the cards take clicks */
+#story {
+  position: relative; z-index: 10;
+  margin-top: calc(-1 * (100vh - var(--chrome-h)));
+  pointer-events: none;
+}
+#story .step { pointer-events: auto; }
+
+/* slider panel + nearest list (right side; the UI hides it while sliders are locked) */
+#panel {
+  position: fixed; z-index: 20;
+  top: calc(var(--chrome-h) + var(--gap)); right: var(--gap); bottom: var(--gap);
+  width: var(--panel-w); max-width: calc(100vw - 2 * var(--gap));
+  overflow: auto;
+}
+#panel[hidden], #sheet[hidden], #overlay[hidden] { display: none; }
+
+/* analyst sheet: a light sheet over the dark story */
+#sheet {
+  position: fixed; z-index: 25;
+  left: 0; right: 0; bottom: 0; max-height: 70vh; overflow: auto;
+  background: var(--sheet); color: var(--ink);
+}
+#sheet a { color: var(--link); }
+
+/* Stories overlay: full screen */
+#overlay { position: fixed; inset: 0; z-index: 40; overflow: auto; background: var(--space-deep); }
+
+#status { position: fixed; z-index: 50; left: var(--gap); bottom: var(--gap); color: var(--muted-dark); }
+
+@media (max-width: 767px) {
+  #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: 55vh; }
+}

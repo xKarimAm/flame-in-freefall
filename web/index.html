@@ -3,11 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flame in Freefall</title>
-    <link rel="stylesheet" href="/src/style.css" />
+    <title>Firebreak: fire evidence for a Moon base</title>
+    <meta name="description" content="Every NASA microgravity fire experiment on one comparable footing, each number traced to its source row." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&family=Fira+Code:wght@400&display=swap" />
   </head>
   <body>
-    <div id="app"></div>
+    <header id="chrome"></header>
+    <main>
+      <div id="stage" aria-label="Evidence chart"></div>
+      <div id="story"></div>
+    </main>
+    <aside id="panel" hidden></aside>
+    <section id="sheet" hidden></section>
+    <div id="overlay" hidden></div>
+    <p id="status" role="status"></p>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
