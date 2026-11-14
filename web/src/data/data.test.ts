@@ -59,7 +59,7 @@ describe("data loader", () => {
 
   it("parses curated moon facts without inventing numbers", () => {
     const moon = parseMoon(curated("moon.json"));
-    const heo = moon.atmospheres.find((a) => a.pressure_kpa === 56.5);
+    const heo = moon.atmospheres.find((a) => a.id === "heo-dm-1006");
     expect(heo).toBeDefined();
     expect(heo!.o2_pct_min).toBe(33.7);
     expect(heo!.o2_pct_max).toBe(40);
