@@ -1,0 +1,58 @@
+[
+  {
+    "id": "PSI-98",
+    "acronym": "SAFFIRE-I",
+    "title": "Spacecraft Fire Safety Experiment-I",
+    "family": "large-scale solids",
+    "hardware": "Saffire 1 enclosure in Cygnus",
+    "platform": "International Space Station (ISS)",
+    "doi": "10.60555/0t15-1z43",
+    "psi_url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+    "license": "CC0-1.0",
+    "objective": "The objectives of this investigation were to:\n(1) determine how rapidly a large scale fire grows in low-gravity and (2) investigate the low-g flammability limits compared to those obtained in NASA’s normal\ngravity material flammability screening test.",
+    "summary": null,
+    "tags": [
+      "fire growth",
+      "material flammability"
+    ],
+    "test_count": 4,
+    "o2_pct_range": [
+      21.5,
+      21.7
+    ],
+    "pressure_kpa_range": null,
+    "has_outcomes": true,
+    "publications": [
+      {
+        "title": "The Spacecraft Fire Experiment (Saffire) - Objectives, Development and Status",
+        "authors": "W Schoren, GA Ruff, DL Urban",
+        "doi": null,
+        "year": null
+      },
+      {
+        "title": "Buoyant Effects on the Flammability of Silicone Samples Planned for the Spacecraft Fire Experiment (Saffire)",
+        "authors": "JE Niehaus, PV Ferkul, SA Gokoglu, GA Ruff",
+        "doi": null,
+        "year": null
+      },
+      {
+        "title": "Flame spread: Effects of microgravity and scale",
+        "authors": "Urban David L., Ferkul Paul, Olson Sandra, Ruff Gary A., Easton John, T'ien James S., Liao Ya-Ting T., Li Chengyao, Fernandez-Pello Carlos, Torero Jose L., Legros Guillaume, Eigenbrod Christian, Smirnov Nickolay, Fujita Osamu, Rouvreau Sébastien, Toth Balazs, Jomaas Grunde",
+        "doi": "10.1016/j.combustflame.2018.10.012",
+        "year": null
+      },
+      {
+        "title": "Transient flame growth and spread processes over a large solid fabric in concurrent low-speed flows in microgravity – Model versus experiment",
+        "authors": "Li Chengyao, Liao Ya-Ting T., T'ien James S., Urban David L., Ferkul Paul, Olson Sandra, Ruff Gary A., Easton John",
+        "doi": "10.1016/j.proci.2018.05.168",
+        "year": null
+      },
+      {
+        "title": "Fire safety in space – beyond flammability testing of small samples",
+        "authors": "Jomaas Grunde, Torero Jose L., Eigenbrod Christian, Niehaus Justin, Olson Sandra L., Ferkul Paul V., Legros Guillaume, Fernandez-Pello A. Carlos, Cowlard Adam J., Rouvreau Sebastien, Smirnov Nickolay, Fujita Osamu, T׳ien James S., Ruff Gary A., Urban David L.",
+        "doi": "10.1016/j.actaastro.2014.11.025",
+        "year": null
+      }
+    ]
+  }
+]

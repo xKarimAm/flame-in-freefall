@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Test runs",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "investigation",
+      "fuel",
+      "fuel_class",
+      "gravity",
+      "o2_pct",
+      "pressure_kpa",
+      "outcome",
+      "source"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "<investigation>#<row>, e.g. PSI-69#2"
+      },
+      "investigation": {
+        "type": "string",
+        "pattern": "^PSI-[0-9]+$"
+      },
+      "fuel": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "fuel_class": {
+        "enum": [
+          "droplet",
+          "gas-jet",
+          "solid",
+          "smoke"
+        ]
+      },
+      "gravity": {
+        "enum": [
+          "micro-g",
+          "1-g"
+        ]
+      },
+      "o2_pct": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "minimum": 0,
+        "maximum": 100
+      },
+      "o2_pct_min": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "o2_pct_max": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "o2_note": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "pressure_kpa": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "minimum": 0,
+        "maximum": 400
+      },
+      "flow_cm_s": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "outcome": {
+        "enum": [
+          "extinction",
+          "disruption",
+          "completion",
+          "self-extinguished",
+          "flow-terminated",
+          "burned",
+          "no-ignition",
+          "unknown"
+        ]
+      },
+      "outcome_raw": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "burn_time_s": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "source": {
+        "type": "object",
+        "required": [
+          "file",
+          "row",
+          "url"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "file name under data/psi-snapshot/"
+          },
+          "row": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "1-based data row (header excluded, blank rows skipped)"
+          },
+          "url": {
+            "type": "string",
+            "description": "PSI page of the investigation"
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "our field -> original CSV header"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Curated facts (orchestrator)",
+  "description": "Every entry carries source + url. moon.json: atmospheres, lunar_margins, paper_tests, gap. incidents.json: incidents.",
+  "type": "object"
+}

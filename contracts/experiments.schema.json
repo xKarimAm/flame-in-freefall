@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Investigations",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "acronym",
+      "title",
+      "family",
+      "doi",
+      "psi_url",
+      "license",
+      "objective",
+      "test_count",
+      "has_outcomes",
+      "publications"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^PSI-[0-9]+$"
+      },
+      "acronym": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "family": {
+        "enum": [
+          "large-scale solids",
+          "solids in flow duct",
+          "gas jets",
+          "droplets",
+          "smoke detection",
+          "ground/modeling"
+        ]
+      },
+      "hardware": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "platform": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "doi": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "psi_url": {
+        "type": "string"
+      },
+      "license": {
+        "type": "string"
+      },
+      "objective": {
+        "type": "string",
+        "description": "verbatim from PSI"
+      },
+      "summary": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "required": [
+          "text",
+          "quotes",
+          "model",
+          "made_at"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "quotes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "each must appear verbatim in the PSI objective/approach/description"
+          },
+          "model": {
+            "type": "string"
+          },
+          "made_at": {
+            "type": "string"
+          }
+        }
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "prevention",
+            "detection",
+            "suppression",
+            "material flammability",
+            "fire growth",
+            "partial-gravity proxy"
+          ]
+        }
+      },
+      "test_count": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "o2_pct_range": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "pressure_kpa_range": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "has_outcomes": {
+        "type": "boolean"
+      },
+      "publications": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "authors": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "doi": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "year": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

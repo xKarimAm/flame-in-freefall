@@ -1,0 +1,105 @@
+{
+  "atmospheres": [
+    {
+      "name": "Earth sea level / ISS cabin",
+      "pressure_kpa": 101.4,
+      "o2_pct_min": 21,
+      "o2_pct_max": 21,
+      "source": "Challenge #7 brief",
+      "url": "https://www.spaceappschallenge.org/2026/challenges/ (challenge #7 brief)"
+    },
+    {
+      "name": "Moon base / rover (brief)",
+      "pressure_kpa": 70.3,
+      "o2_pct_min": 30,
+      "o2_pct_max": null,
+      "note": ">= 30% O2 at <= 10.2 psi",
+      "source": "Challenge #7 brief",
+      "url": "https://www.spaceappschallenge.org/2026/challenges/ (challenge #7 brief)"
+    },
+    {
+      "name": "Exploration atmosphere HEO-DM-1006 (8.2 psia)",
+      "pressure_kpa": 56.5,
+      "o2_pct_min": 33.7,
+      "o2_pct_max": 40,
+      "note": "max O2 36-40% with control bands; materials assessed to 40%",
+      "source": "ICES-2022-45, NTRS 20220006612",
+      "url": "https://ntrs.nasa.gov/citations/20220006612"
+    },
+    {
+      "name": "Exploration atmosphere (10.2 psia)",
+      "pressure_kpa": 70.3,
+      "o2_pct_min": 26.5,
+      "o2_pct_max": 30,
+      "note": "26.5% nominal; materials certified to 30%",
+      "source": "ICES-2022-45, NTRS 20220006612",
+      "url": "https://ntrs.nasa.gov/citations/20220006612"
+    },
+    {
+      "name": "Spacesuit",
+      "pressure_kpa": 29.6,
+      "o2_pct_min": 100,
+      "o2_pct_max": 100,
+      "source": "Challenge #7 brief",
+      "url": "https://www.spaceappschallenge.org/2026/challenges/ (challenge #7 brief)"
+    }
+  ],
+  "lunar_margins": {
+    "meaning": "Conservative O2 delta (percentage points) to subtract from 1-g NASA-STD-6001 Test 1 limits for lunar gravity. Worst case 2.3. Polycarbonate and Nomex Velcro measured LESS flammable in lunar g (quenching branch).",
+    "source": "ICES-2025-392 Table 2, NTRS 20250002114",
+    "url": "https://ntrs.nasa.gov/citations/20250002114",
+    "materials": [
+      {
+        "material": "Polycarbonate",
+        "delta_o2_pts": 2.3
+      },
+      {
+        "material": "PMMA",
+        "delta_o2_pts": 1.9
+      },
+      {
+        "material": "Beefy-T (smoulder)",
+        "delta_o2_pts": 1.8
+      },
+      {
+        "material": "P213 tape",
+        "delta_o2_pts": 1.4
+      },
+      {
+        "material": "Beefy-T (flaming)",
+        "delta_o2_pts": 0.82
+      },
+      {
+        "material": "Nomex Velcro",
+        "delta_o2_pts": 0.32
+      }
+    ]
+  },
+  "paper_tests": {
+    "note": "Saffire VI burns (spacecraft scale, micro-g). Published in a paper, not in PSI.",
+    "source": "Niehaus et al., ICES-2025, NTRS 20250002675",
+    "url": "https://ntrs.nasa.gov/citations/20250002675",
+    "points": [
+      {
+        "name": "Saffire VI SIBAL",
+        "pressure_kpa": 54.1,
+        "o2_pct": 31.0
+      },
+      {
+        "name": "Saffire VI 2-sided PMMA",
+        "pressure_kpa": 54.6,
+        "o2_pct": 30.3
+      },
+      {
+        "name": "Saffire VI 1-sided PMMA",
+        "pressure_kpa": 55.2,
+        "o2_pct": 28.8
+      }
+    ]
+  },
+  "gap": {
+    "text": "No PSI combustion tests in partial (lunar or Martian) gravity. FM2 will burn 4 solid samples in real lunar gravity, planned late 2026.",
+    "source": "Challenge #7 brief; LPSC 2026, NTRS 20260000646",
+    "url": "https://ntrs.nasa.gov/citations/20260000646"
+  }
+}

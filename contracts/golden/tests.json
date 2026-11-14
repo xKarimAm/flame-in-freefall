@@ -1,0 +1,82 @@
+[
+  {
+    "id": "PSI-69#2",
+    "investigation": "PSI-69",
+    "fuel": "Methanol",
+    "fuel_class": "droplet",
+    "gravity": "micro-g",
+    "o2_pct": 21.0,
+    "o2_pct_min": null,
+    "o2_pct_max": null,
+    "o2_note": null,
+    "pressure_kpa": 101.59,
+    "flow_cm_s": null,
+    "outcome": "extinction",
+    "outcome_raw": "Extinction",
+    "burn_time_s": 5.0,
+    "source": {
+      "file": "csv_69_34.csv",
+      "row": 2,
+      "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+      "fields": {
+        "o2_pct": "O initial ambient composition; mole fraction",
+        "pressure_kpa": "Ambient pressure; mmHg",
+        "outcome": "Test end",
+        "burn_time_s": "Burn time; s"
+      }
+    }
+  },
+  {
+    "id": "PSI-98#1",
+    "investigation": "PSI-98",
+    "fuel": "SIBAL Fabric",
+    "fuel_class": "solid",
+    "gravity": "micro-g",
+    "o2_pct": 21.6,
+    "o2_pct_min": 21.5,
+    "o2_pct_max": 21.7,
+    "o2_note": "range in source: 21.5 - 21.7",
+    "pressure_kpa": null,
+    "flow_cm_s": 20.0,
+    "outcome": "burned",
+    "outcome_raw": "Burn Time (s) = 420",
+    "burn_time_s": 420.0,
+    "source": {
+      "file": "csv_98_39.csv",
+      "row": 1,
+      "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+      "fields": {
+        "o2_pct": "Percent O2",
+        "flow_cm_s": "Air Flow (cm/s)",
+        "burn_time_s": "Burn Time (s)"
+      }
+    }
+  },
+  {
+    "id": "PSI-159#1",
+    "investigation": "PSI-159",
+    "fuel": "ethane",
+    "fuel_class": "gas-jet",
+    "gravity": "micro-g",
+    "o2_pct": 39.39,
+    "o2_pct_min": null,
+    "o2_pct_max": null,
+    "o2_note": null,
+    "pressure_kpa": 94.44,
+    "flow_cm_s": null,
+    "outcome": "self-extinguished",
+    "outcome_raw": "Hot ignition: Yes; Self-ext or flow term: SE",
+    "burn_time_s": 50.0,
+    "source": {
+      "file": "csv_159_50.csv",
+      "row": 1,
+      "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159",
+      "fields": {
+        "o2_pct": " XO2 before test",
+        "pressure_kpa": "approx p (bar)",
+        "outcome": "Self-ext or flow term",
+        "burn_time_s": "burn time (sec)"
+      }
+    }
+  }
+]

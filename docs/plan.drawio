@@ -1,0 +1,104 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="plan" name="Flame in Freefall plan">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" page="1" pageWidth="1700" pageHeight="1000">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;Flame in Freefall (Space Apps #7)&lt;/b&gt;&lt;br&gt;Every NASA fire experiment on one comparable footing; every number traceable; where Moon-base evidence runs out" style="text;html=1;align=left;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="20" y="10" width="1100" height="50" as="geometry"/>
+        </mxCell>
+        <!-- Sources (existing) -->
+        <mxCell id="psi" value="&lt;b&gt;PSI snapshot&lt;/b&gt;&lt;br&gt;data/psi-snapshot/&lt;br&gt;22 investigations, 23 CSV tables, 298 papers (CC0)&lt;br&gt;&lt;i&gt;existing&lt;/i&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="120" width="220" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="papers" value="&lt;b&gt;NASA papers (NTRS)&lt;/b&gt;&lt;br&gt;ICES-2022-45, ICES-2025-392, Saffire VI, FM2, ICES-2020-173&lt;br&gt;&lt;i&gt;existing&lt;/i&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="420" width="220" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="meta" value="&lt;b&gt;Meta Model API&lt;/b&gt;&lt;br&gt;muse-spark-1.3&lt;br&gt;api.meta.ai/v1 (META_API_KEY)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="290" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <!-- W1 lane -->
+        <mxCell id="w1" value="Lane W1: data (Muse) - pipeline/" style="swimlane;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="560" y="90" width="330" height="330" as="geometry"/>
+        </mxCell>
+        <mxCell id="parse" value="&lt;b&gt;1. parse + normalize&lt;/b&gt;&lt;br&gt;one parser per CSV; O2 %, kPa, cm/s; outcomes; bad cells -&amp;gt; null + note&lt;br&gt;&lt;i&gt;partly existing&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="w1">
+          <mxGeometry x="15" y="35" width="300" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="exps" value="&lt;b&gt;2. experiments&lt;/b&gt;&lt;br&gt;PSI text + papers + ranges + family" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="w1">
+          <mxGeometry x="15" y="130" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="summ" value="&lt;b&gt;3. AI summaries (prepared ahead)&lt;/b&gt;&lt;br&gt;2-3 sentences + verbatim quotes + tags; cached; tagged model/made_at" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="w1">
+          <mxGeometry x="15" y="205" width="300" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="w1t" value="&lt;i&gt;Done = pytest: schemas valid, golden rows exact, O2 0-100, kPa 0-400, every row has source, quotes verbatim&lt;/i&gt;" style="text;html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="w1">
+          <mxGeometry x="15" y="280" width="300" height="45" as="geometry"/>
+        </mxCell>
+        <!-- Contracts -->
+        <mxCell id="ctests" value="tests.json" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fillColor=#eeeeee;" vertex="1" parent="1">
+          <mxGeometry x="950" y="130" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="cexps" value="experiments.json" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fillColor=#eeeeee;" vertex="1" parent="1">
+          <mxGeometry x="950" y="220" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="cmoon" value="moon.json&lt;br&gt;incidents.json" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Courier New;fillColor=#eeeeee;" vertex="1" parent="1">
+          <mxGeometry x="950" y="440" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="orch" value="&lt;b&gt;Orchestrator (Claude)&lt;/b&gt;&lt;br&gt;contracts/, data/curated/, reviews every PR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="560" y="440" width="330" height="60" as="geometry"/>
+        </mxCell>
+        <!-- W2 lane -->
+        <mxCell id="w2" value="Lane W2: web (Muse) - web/ (static, Vite + TS + Observable Plot)" style="swimlane;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="90" width="420" height="470" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1" value="&lt;b&gt;Opener (goal 3)&lt;/b&gt;: one enriched-O2 incident -&amp;gt; into the data&lt;br&gt;&lt;i&gt;existing&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="w2">
+          <mxGeometry x="15" y="35" width="390" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="&lt;b&gt;Compare (goal 1)&lt;/b&gt;: all investigations, filter by family, rank for a crew environment with criteria shown&lt;br&gt;&lt;i&gt;partly existing&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="w2">
+          <mxGeometry x="15" y="110" width="390" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="&lt;b&gt;Moon chart (goal 2)&lt;/b&gt;: O2 vs kPa of every test; Moon box 56.5 kPa / 33.7-40%; Saffire VI paper points; no-partial-g band; lunar margins; 10 nearest tests&lt;br&gt;&lt;i&gt;invented&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="w2">
+          <mxGeometry x="15" y="195" width="390" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" value="&lt;b&gt;Experiment page&lt;/b&gt;: verbatim objective, AI summary (tagged) + quotes, tests, papers, PSI link" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="w2">
+          <mxGeometry x="15" y="300" width="390" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="w2t" value="&lt;i&gt;Done = vitest: nearestTests, rankExperiments, Moon box spec, every number has a source link; build works on golden data only&lt;/i&gt;" style="text;html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="w2">
+          <mxGeometry x="15" y="375" width="390" height="45" as="geometry"/>
+        </mxCell>
+        <!-- Edges: value = contract on the arrow -->
+        <mxCell id="e1" value="CSV + JSON (read-only)" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="psi" target="parse">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="chat/completions (prepared ahead, cached)" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;" edge="1" parent="1" source="meta" target="summ">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="contracts/tests.schema.json" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="parse" target="ctests">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="contracts/experiments.schema.json" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="exps" target="cexps">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="hand-checked facts + URLs" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="papers" target="orch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="curated.schema.json" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="orch" target="cmoon">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="ctests" target="w2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="cexps" target="w2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="cmoon" target="w2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- Decisions box -->
+        <mxCell id="dec" value="&lt;b&gt;Decisions&lt;/b&gt;&lt;br&gt;- App reads the snapshot, never live PSI&lt;br&gt;- AI prepared ahead; live box only if time (cut line 1)&lt;br&gt;- CFI-G 'Hot ignition = No' -&amp;gt; unknown&lt;br&gt;- Partial gravity shown as a no-data band, never predicted&lt;br&gt;- Checkpoint A Sun 1:00 AM; submit Sun 6:30 PM" style="text;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="20" y="600" width="520" height="130" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
