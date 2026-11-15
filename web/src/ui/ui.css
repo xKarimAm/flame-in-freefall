@@ -39,6 +39,10 @@
 .family select { font: inherit; min-height: 40px; background: var(--space-deep); color: var(--ink-dark); border: 1px solid var(--rule); border-radius: var(--radius); }
 .weighting, .mix { color: var(--muted-dark); }
 ol.nearest, ul.not-placed { list-style: none; margin: 8px 0; padding: 0; }
+.answer { font-size: 18px; line-height: 1.5; margin: 12px 0; }
+.answer a { color: var(--ink-dark); }
+.nearest-details[hidden] { display: none; }
+.nearest-details { margin-top: 12px; }
 ol.nearest li, ul.not-placed li, .extreme { padding: 8px 0 8px 10px; border-left: 3px solid var(--data-on-dark); border-bottom: 1px solid var(--rule); }
 ul.not-placed li { border-left-color: var(--rule); }
 .extreme.burned { border-left: 3px solid var(--flame); }

@@ -140,6 +140,47 @@ describe("ui", () => {
     expect(li.textContent).toMatch(/Flow\s+\S*\s*not recorded/);
   });
 
+  it("the Public lens leads with one answer sentence and the details behind a button", () => {
+    const { ctx } = setup(); // public
+    const panel = roots().panel;
+    expect(unlinkedNumbers(panel)).toEqual([]);
+    const first = ctx.api.nearest({ kind: "point", pressure_kpa: p159.pressure_kpa!, o2_pct: p159.o2_pct! }, 10).rows[0]!;
+    const ans = panel.querySelector(".answer")!;
+    const links = [...ans.querySelectorAll<HTMLAnchorElement>("a")];
+    const o2 = links.find((a) => a.textContent!.includes("%"))!;
+    const pressure = links.find((a) => a.textContent!.includes("kPa"))!;
+    const fuel = links.find((a) => a !== o2 && a !== pressure)!;
+    // one row, one source: every number a link to it
+    expect(new Set(links.map((a) => a.href)).size).toBe(1);
+    expect(links[0]!.href).toMatch(/^https:\/\//);
+    // the sentence is built from the first nearest row: fuel, oxygen, pressure, outcome
+    expect(fuel.textContent).toBe(first.fuel);
+    expect(o2.textContent).toContain(String(Number(first.o2_pct.toFixed(1))));
+    expect(pressure.textContent).toContain(String(Number(first.pressure_kpa.toFixed(1))));
+    expect(ans.textContent).toContain(ctx.t(`ui.outcome.${first.outcome}`));
+    const btnText = (label: string) => [...panel.querySelectorAll("button")].find((b) => b.textContent === label)!;
+    const details = () => panel.querySelector(".nearest-details")!;
+    expect(btnText("Show the details").getAttribute("aria-expanded")).toBe("false");
+    expect(details().hasAttribute("hidden")).toBe(true);
+    btnText("Show the details").click();
+    expect(details().hasAttribute("hidden")).toBe(false);
+    expect(btnText("Hide the details").getAttribute("aria-expanded")).toBe("true");
+    expect(panel.querySelector("ol.nearest")).not.toBeNull();
+    btnText("Hide the details").click();
+    expect(details().hasAttribute("hidden")).toBe(true);
+  });
+
+  it("Astronaut and Analyst keep the full list with no answer sentence", () => {
+    const { store } = setup();
+    for (const lens of ["astronaut", "analyst"] as const) {
+      store.set({ lens });
+      const panel = roots().panel;
+      expect(panel.querySelector(".answer")).toBeNull();
+      expect(panel.querySelector(".nearest-details")).toBeNull();
+      expect(panel.querySelector("ol.nearest")).not.toBeNull();
+    }
+  });
+
   it("lists the not-placed SAFFIRE rows and both nearest lines", () => {
     setup();
     const t = roots().panel.textContent!;

@@ -19,6 +19,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
   let pIn: HTMLInputElement, oIn: HTMLInputElement, pOut: HTMLElement, oOut: HTMLElement;
   let famSel: HTMLSelectElement, list: HTMLElement;
   let lastKey = "";
+  let detailsOpen = false;
 
   const family = (f: Family | null): string => (f ? t(`ui.family.${f}`) : t("ui.nearest.family-unknown"));
   const kv = (labelKey: string, value: Node): HTMLElement =>
@@ -49,14 +50,32 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
       ...(row ? rowBody(row) : [h("span", {}, t("ui.nearest.none"))]));
   }
 
+  /** One sentence from the nearest row; placeholders keep word order localizable. */
+  function answer(r: NearestRow): HTMLElement {
+    const parts: Record<string, Node> = {
+      fuel: r.fuel ? cite(r.fuel, r.url, "num fuel") : h("span", { class: "missing" }, t("ui.nearest.fuel-unknown")),
+      oxygen: num(r.o2_pct, 1, "%", r.url),
+      pressure: num(r.pressure_kpa, 1, "kPa", r.url),
+      outcome: h("span", {}, t(`ui.outcome.${r.outcome}`)),
+    };
+    const kids: (Node | string)[] = [];
+    for (const bit of t("ui.panel.answer").split(/(\{\w+\})/g)) {
+      const m = bit.match(/^\{(\w+)\}$/);
+      kids.push(m && parts[m[1]] ? parts[m[1]] : bit);
+    }
+    return h("p", { class: "answer" }, ...kids);
+  }
+
   function renderList(): void {
     const s = store.get();
     const q = queryFromState(s);
-    const kids: Node[] = [];
+    const full: Node[] = [];
+    let first: NearestRow | null = null;
     if (q) {
       const res = api.nearest(q, 10, s.family ?? undefined);
+      first = res.rows[0] ?? null;
       const mix = res.familyMix.map((m) => t("ui.nearest.mix-item", { count: m.count, family: family(m.family) })).join(", ");
-      kids.push(
+      full.push(
         h("h2", { class: "nearest-heading" }, t("ui.nearest.heading")),
         h("p", { class: "weighting", "data-own": true }, t("ui.nearest.weighting")),
         h("p", { class: "mix", "data-own": true }, mix),
@@ -70,7 +89,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     // SAFFIRE: large fabric, the most cabin-like tests; no pressure recorded, so never on the chart
     const saffire = api.notPlaced("large-scale solids");
     const others = api.notPlaced().length - saffire.length;
-    kids.push(
+    full.push(
       h("h3", {}, t("ui.nearest.not-placed.title")),
       h("p", {}, t("ui.nearest.not-placed.intro")),
       h("ul", { class: "not-placed" }, ...saffire.map((r) =>
@@ -83,6 +102,19 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
         ))),
       h("p", { "data-own": true }, t("ui.nearest.not-placed.others", { n: Math.max(0, others) })),
     );
+    // Public lens: one sentence first, the full list behind a button. Other lenses keep the list.
+    if (s.lens !== "public") {
+      list.replaceChildren(...full);
+      return;
+    }
+    const kids: Node[] = [first ? answer(first) : h("p", { class: "answer" }, t("ui.nearest.empty"))];
+    const btn = h("button", { type: "button", class: "btn", "aria-expanded": detailsOpen ? "true" : "false" },
+      t(detailsOpen ? "ui.panel.hide-details" : "ui.panel.show-details"));
+    btn.addEventListener("click", () => { detailsOpen = !detailsOpen; renderList(); });
+    const details = h("div", { class: "nearest-details" });
+    if (!detailsOpen) details.setAttribute("hidden", "");
+    details.append(...full);
+    kids.push(btn, details);
     list.replaceChildren(...kids);
   }
 
@@ -138,7 +170,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     pOut.textContent = `${s.sliders.pressure_kpa} ${t("ui.panel.unit.kpa")}`;
     oOut.textContent = `${s.sliders.o2_pct} ${t("ui.panel.unit.pct")}`;
     famSel.value = s.family ?? "";
-    const key = JSON.stringify([s.sliders, s.family, s.locale]);
+    const key = JSON.stringify([s.sliders, s.family, s.locale, s.lens]);
     if (key !== lastKey) { lastKey = key; renderList(); }
   }
 
