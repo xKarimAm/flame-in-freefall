@@ -1,0 +1,94 @@
+/* Picture-book story pages: the entrance, the page design and the turn-the-page cue.
+   Generated with Claude, SI-assisted. Tokens only; flat colour; transform and opacity only.
+   The ease is MOTION_EASE from ui/motion.ts (a test keeps the two equal). */
+
+/* ---- entrance: parts arrive one after another when a page becomes active ----
+   index.ts adds .reveal to the step on activation (and .reveal-done after a lens or
+   language change, so the words update in place without replaying) and sets --i per part:
+   0 label, 1..n sentences, then sources, then the cue. --i stops at 7:
+   7 x 110 ms + 320 ms = 1.09 s. Inactive pages carry neither class: all parts are there, dimmed. */
+@keyframes rv-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.step.reveal:not(.reveal-done) .rv {
+  animation: rv-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 110ms);
+}
+
+/* ---- page design ---- */
+#story .step-card {
+  --hero: clamp(18px, calc(22px + (100vw - 1280px) * 0.0125), 30px); /* 22 px at 1280 wide, 30 px at 1920 */
+  border-left: 3px solid var(--data-on-dark); /* thin rule in the chapter's colour role */
+}
+/* chapter 1 fire = orange, chapters 2 and 3 data = blue, chapter 4 the Moon = grey (yellow is reserved) */
+#story .story[data-act="1"] .step-card { border-left-color: var(--flame); }
+#story .story[data-act="2"] .step-card,
+#story .story[data-act="3"] .step-card { border-left-color: var(--data-on-dark); }
+#story .story[data-act="4"] .step-card { border-left-color: var(--muted-dark); }
+
+/* the page label is a small quiet tab above the text */
+#story .step-page {
+  display: inline-block;
+  margin: 0 0 20px;
+  padding: 2px 10px;
+  border: 1px solid var(--rule);
+  font-size: var(--text-meta);
+  line-height: 1.4;
+  color: var(--muted-dark);
+}
+
+/* the text is the hero; the first sentence is the lead. Same size on every lens. */
+#story[data-lens] .step-text {
+  max-width: 36em; /* a line group stays short enough to hold about 24 words */
+  font-size: var(--hero);
+  line-height: 1.35;
+  font-weight: 500;
+}
+#story .step-text .sent { display: block; margin-top: 0.5em; }
+#story .step-text .sent:first-child { margin-top: 0; font-size: 1.18em; font-weight: 700; }
+
+/* sources: one muted line under a hairline */
+#story .step-sources {
+  margin: 24px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ---- turn-the-page cue ---- */
+#story .step-cue {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 8px 0;
+  min-height: 40px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-meta);
+  color: var(--muted-dark);
+}
+#story button.step-cue { cursor: pointer; }
+#story button.step-cue:hover { color: var(--ink-dark); }
+#story button.step-cue:focus-visible { outline: 2px solid var(--ink-dark); outline-offset: 2px; }
+#story .step:not(.is-active) .step-cue { visibility: hidden; } /* only the page being read offers the turn */
+.cue-chevron {
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  animation: cue-nudge 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+@keyframes cue-nudge {
+  0%, 100% { transform: translateY(0) rotate(45deg); }
+  50% { transform: translateY(4px) rotate(45deg); }
+}
+
+/* ---- reduced motion: everything is simply visible and still ---- */
+@media (prefers-reduced-motion: reduce) {
+  .step.reveal:not(.reveal-done) .rv { animation: none; opacity: 1; transform: none; }
+  .cue-chevron { animation: none; }
+}

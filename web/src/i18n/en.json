@@ -6,6 +6,8 @@
   "ui.engine.act": "Act {n}",
   "ui.engine.chapterTitle": "Chapter {n}. {title}",
   "ui.engine.page": "Page {n} of {total}",
+  "ui.engine.next-cue": "Scroll to turn the page",
+  "ui.engine.last-cue": "This is the last page",
   "ui.engine.pictureImage": "Image",
   "ui.cover.title": "Fire, oxygen and the Moon",
   "ui.cover.lead": "NASA space-fire tests on one chart, with the ones that cannot be placed listed beside it, and where the evidence for a Moon base runs out.",
