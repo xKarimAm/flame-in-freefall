@@ -146,8 +146,8 @@ describe("library", () => {
   it("astronaut lens without engineer text says the PSI record is silent (task 53)", () => {
     const c = ctx();
     c.store.set({ lens: "astronaut" });
-    for (const s of stories) {
-      expect(s.engineer).toBeNull(); // the backend has no engineer text yet
+    for (const s0 of stories) {
+      const s = { ...s0, engineer: null }; // the pipeline now ships engineer text; this case is the one without it
       const page = renderLibraryPage(s, moments, c);
       expect(page.textContent).toContain("The PSI record does not state a safety application.");
       expect(page.querySelector(".lib-conditions")).not.toBeNull(); // the table still shows
@@ -412,7 +412,8 @@ describe("library", () => {
 
   it("engineer text is optional, shape-checked and survives a round trip (task 53)", () => {
     const raw = read("../../../data/build/library.json");
-    expect(parseLibrary(raw)[0].engineer).toBeNull();
+    const { engineer: _shipped, ...bare } = raw[0]; // the pipeline now ships engineer text; test the absent case on a copy
+    expect(parseLibrary([bare])[0].engineer).toBeNull();
     const eng = { text: "Crew relevance.", quote: "A quoted PSI sentence." };
     expect(parseLibrary([{ ...raw[0], engineer: eng }])[0].engineer).toEqual(eng);
     const back = parseLibrary(parseLibrary([{ ...raw[0], engineer: eng }]));
