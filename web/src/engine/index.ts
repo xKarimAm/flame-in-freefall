@@ -48,8 +48,11 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const cover = node("section", "cover");
   const coverTitle = node("h1", "cover-title");
   const coverLead = node("p", "cover-lead");
+  const coverAudience = node("p", "cover-audience");
+  const coverExplore = node("button", "btn primary cover-explore");
+  coverExplore.type = "button";
   const coverCue = node("p", "cover-cue");
-  cover.append(coverTitle, coverLead, coverCue);
+  cover.append(coverTitle, coverLead, coverAudience, coverExplore, coverCue);
   el.append(cover);
   for (const { story, scene, beat } of flat) {
     let section = sections.get(story.id);
@@ -114,12 +117,18 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const endTitle = node("h2", "end-title");
   const endSummary = node("p", "end-summary");
   const endActions = node("div", "end-actions");
-  const retryBtn = node("button", "end-btn primary");
+  const exploreBtn = node("button", "end-btn primary");
+  exploreBtn.type = "button";
+  const retryBtn = node("button", "end-btn");
   retryBtn.type = "button";
   const libraryBtn = node("button", "end-btn");
   libraryBtn.type = "button";
-  const dataBtn = node("button", "end-btn");
-  dataBtn.type = "button";
+  const explore = (): void => {
+    ctx.store.set({ lens: "analyst" });
+    scrollCenter(document.getElementById("sheet"));
+  };
+  coverExplore.addEventListener("click", explore);
+  exploreBtn.addEventListener("click", explore);
   retryBtn.addEventListener("click", () =>
     scrollCenter(
       document.querySelector(`#story-${MOON_STORY_ID} .step[data-sliders="true"]`) ??
@@ -127,11 +136,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     ),
   );
   libraryBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent(OPEN_LIBRARY_EVENT, { detail: libraryBtn })));
-  dataBtn.addEventListener("click", () => {
-    ctx.store.set({ lens: "analyst" });
-    scrollCenter(document.getElementById("sheet"));
-  });
-  endActions.append(retryBtn, libraryBtn, dataBtn);
+  endActions.append(exploreBtn, retryBtn, libraryBtn);
   const endCard = node("div", "end-card");
   endCard.append(endTitle, endSummary, endActions);
   ending.append(endCard);
@@ -163,12 +168,14 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     dots.forEach((d, i) => d.setAttribute("aria-label", ctx.t("ui.engine.page", { n: i + 1, total: dots.length })));
     coverTitle.textContent = ctx.t("ui.cover.title");
     coverLead.textContent = ctx.t("ui.cover.lead");
+    coverAudience.textContent = ctx.t("ui.cover.audience");
+    coverExplore.textContent = ctx.t("ui.engine.explore");
     coverCue.textContent = ctx.t("ui.cover.cue");
     endTitle.textContent = ctx.t("ui.ending.title");
     endSummary.textContent = ctx.t("ui.ending.summary");
+    exploreBtn.textContent = ctx.t("ui.engine.explore");
     retryBtn.textContent = ctx.t("ui.ending.retry");
     libraryBtn.textContent = ctx.t("ui.ending.library");
-    dataBtn.textContent = ctx.t("ui.ending.data");
     flat.forEach(({ beat }, i) => {
       pages[i].textContent = ctx.t("ui.engine.page", { n: i + 1, total: flat.length });
       texts[i].textContent = resolveText(ctx.dicts, beat.text, lens, locale);

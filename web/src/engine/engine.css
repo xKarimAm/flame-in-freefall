@@ -34,6 +34,13 @@
   font-size: var(--text-card);
   line-height: 1.4;
 }
+.cover-audience {
+  max-width: 44ch;
+  margin: 16px 0 0;
+  color: var(--muted-dark);
+  font-size: var(--text-body);
+}
+.cover-explore { margin-top: 24px; align-self: flex-start; }
 .cover-cue { margin: 40px 0 0; color: var(--muted-dark); font-size: var(--text-meta); font-weight: 500; }
 
 /* chapter page: a full viewport tall electric-blue field between acts */

@@ -227,11 +227,30 @@ describe("engine mount", () => {
     expect(endings[0]!.querySelector(".end-summary")!.textContent).toBe(dicts.en!["ui.ending.summary"]);
     const btns = [...endings[0]!.querySelectorAll("button")];
     expect(btns.map((b) => b.textContent)).toEqual([
+      dicts.en!["ui.engine.explore"],
       dicts.en!["ui.ending.retry"],
       dicts.en!["ui.ending.library"],
-      dicts.en!["ui.ending.data"],
     ]);
     expect(btns[0]!.classList.contains("primary")).toBe(true);
+  });
+
+  it("the cover names its audience and offers the dashboard; the ending leads with it (task 52)", () => {
+    const { el, store } = setup();
+    const cover = el.querySelector(".cover")!;
+    expect([...cover.children].map((c) => c.className)).toEqual([
+      "cover-title",
+      "cover-lead",
+      "cover-audience",
+      "btn primary cover-explore",
+      "cover-cue",
+    ]);
+    expect(cover.querySelector(".cover-audience")!.textContent).toBe(dicts.en!["ui.cover.audience"]);
+    expect(cover.querySelector(".cover-audience")!.textContent).toContain("students");
+    const explore = cover.querySelector<HTMLButtonElement>(".cover-explore")!;
+    expect(explore.textContent).toBe(dicts.en!["ui.engine.explore"]);
+    expect(explore.textContent).toBe("Explore the dashboard");
+    explore.click();
+    expect(store.get().lens).toBe("analyst");
   });
 
   const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "engine.css"), "utf8");
@@ -406,16 +425,16 @@ describe("engine mount", () => {
     expect(css).toMatch(/\.step-sources\s*\{[^}]*overflow-wrap:\s*anywhere/);
   });
 
-  it("the ending buttons retry the sliders, open the library and switch to the data", () => {
+  it("the ending buttons explore the dashboard, retry the sliders and open the library", () => {
     const { store, el } = setup();
     const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
-    const [retry, library, data] = [...el.querySelectorAll<HTMLButtonElement>(".ending button")];
+    const [explore, retry, library] = [...el.querySelectorAll<HTMLButtonElement>(".ending button")];
     const opened: Event[] = [];
     window.addEventListener("firebreak:open-library", (e) => opened.push(e));
     library!.click();
     expect(opened).toHaveLength(1);
     expect((opened[0] as CustomEvent).detail).toBe(library);
-    data!.click();
+    explore!.click();
     expect(store.get().lens).toBe("analyst");
     retry!.click();
     expect(scroll.mock.contexts.at(-1)).toBe(document.getElementById("beat-moon-air-moon-air-main-interactive"));
