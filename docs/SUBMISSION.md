@@ -26,7 +26,7 @@ NASA has flown many fire experiments in microgravity, but each one records its t
 
 **Story chapters.** 1 Why oxygen matters (Apollo 1, Mir, NASA's review). 2 What NASA has tested (every test as a dot, family by family). 3 Build your Moon-base air. 4 What nobody knows yet (an empty Moon-gravity plane and the planned FM2 experiment).
 
-**Experiment stories.** "See every experiment" opens 19 stories that cover all 22 investigations. Each shows a computed picture of its tests, the numbers behind it, and short AI-drafted text with a verbatim quote from the PSI record.
+**Experiment stories.** The Stories button lists 19 experiment stories that cover all 22 investigations. Each shows a computed picture of its tests, the numbers behind it, and short AI-drafted text with a verbatim quote from the PSI record.
 
 **The slider page.** Two sliders, air pressure and oxygen, place an air among the real tests and list the 10 nearest. "Nearest tested conditions" means the tests closest to your air in pressure and oxygen, with a fixed rule: 5 oxygen points count the same as 25 kPa. It says how close the evidence is. It does not say what would happen in Moon gravity, and it never calls an investigation safer or more dangerous.
 
@@ -98,7 +98,7 @@ Run from the repository root. File names are relative to it.
 - **15 of 22 source files mapped, 7 skipped; 178 data-dictionary fields:** `data/build/provenance.json` (`mapped`), length of `data/build/dictionary.json`.
 - **19 experiment stories covering 22 investigations; 49 computed moments:** lengths of `data/build/library.json` and `data/build/moments.json`; the `investigations` lists in `library.json` add up to 22.
 - **Model tags (22 summaries `claude-sonnet-5-5`; 60 quotes; 19 stories `muse-spark-1.3-contributor`):** `data/build/experiments.json` `summary.model`, `summary.quotes`; `data/build/library.json` `ai.model`.
-- **Translations (207 of 326 strings; Muse Spark):** `web/src/i18n/en.json`, `es.json`, `hi.json` (key counts) and `es.meta.json`, `hi.meta.json` (`model`, `keys`).
+- **Translations (207 of 349 strings; Muse Spark):** `web/src/i18n/en.json`, `es.json`, `hi.json` (key counts) and `es.meta.json`, `hi.meta.json` (`model`, `keys`).
 - **Languages, lens names and the seven dashboard tabs:** `web/src/i18n/en.json` (`ui.chrome.lens.*`, `ui.dash.tab.*`, `ui.sheet.tab.*`), `web/src/ui/chrome.ts`, `web/src/ui/sheet.ts`.
 - **Four chapters:** `stories/*.json` (`act`, `title_key`) with their titles in `en.json` (`story.*.title`).
 - **Moon-base air 56.5 kPa and 33.7 to 40 % oxygen; Earth 21 %; margins 0.32 to 2.3 points for six materials; Saffire VI points; FM2 "planned late 2026":** `data/curated/moon.json` (`atmospheres`, `lunar_margins`, `paper_tests`, `gap`).
