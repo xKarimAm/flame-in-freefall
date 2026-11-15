@@ -8,7 +8,7 @@ Karim switches between three Claude accounts. Every session, on every account, *
 Times are local (UTC+3).
 
 ## Last action
-2026-11-15 18:55, build session 3 handing over (context limit): **read the first block of `STATE.md`, then `docs/SUBMISSION-CHECKLIST.md`.** The site is live at https://xkarimam.github.io/flame-in-freefall/ , `main` is green (399 web tests), `docs/SUBMISSION.md` is ready. Missing for the form: the public demo link (Karim). Open UI work: K3 to K13 in `STATE.md`. Nothing is running.
+2026-11-15 19:15, build session 4 (Opus orchestrator): Karim (19:00) said to use as many Sonnet agents as needed. 7 Sonnet coders run in parallel, one worktree each: `E:if-wt\k5`, `k9` (K9+K8), `k6`, `k3`, `k4` (K4 + hover labels on the left rail dots), `k7`, `k13` (Stories fan graph after the Fuselab Dribbble shot). Each opens a PR; the orchestrator checks it at 1280x720, 1536x864, 1920x1080 and squash-merges in K order. The kN worktrees have `web/node_modules` as junctions into main's: remove the junctions before deleting a worktree. Build with `npm run build` (bare `vite build` skips the data copy and gives a blank page).
 
 ## Action table (the plan)
 | # | Action | Who | Status | Done when |
@@ -113,3 +113,4 @@ Times are local (UTC+3).
 | 18:46 | build 3 | Karim: "Yes, merge #22". Merged; Pages deploy succeeded; **the site is live at https://xkarimam.github.io/flame-in-freefall/** (opened it: 18 pages load, the walkthrough opens, no console errors). Every push to main redeploys | public project link ready for the form |
 | 18:53 | build 3 | Karim's screenshots and list (flame jumps, overlaps, plane buttons, sharp text, use the taste skill). Ran the taste inspector on main: 5 FAIL. Fixed and merged PR #25 (cover title two lines, scale fits, panel hidden over chapter pages); 4 FAIL left. His full list is in STATE.md as K1-K13 | K1, K2 done; K3-K13 open |
 | 18:55 | build 3 | Handover written: current status block at the top of STATE.md | next account continues at K3-K13 |
+| 19:15 | build 4 | Karim: "produce as many sonnet agents as you need". 7 Sonnet coders started on K3-K9, K13 (worktrees `E:if-wt\k*`). K12 `placeholder-data` ("acme") is the real NASA ACME hardware name in `experiments.json`, not a placeholder | PRs pending review |
