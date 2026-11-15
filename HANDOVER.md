@@ -1,3 +1,63 @@
+# HANDOVER: start here (written 2026-11-15 19:45 AST, build session 4, Opus 5.5)
+
+Everything below the line "OLDER HANDOVER" is history from the planning night (14 Nov). This block wins.
+
+## 0. Before you do anything
+- **Karim must type his own go-ahead in YOUR conversation** before you make code, branches, worktrees, PRs or subagents (global rule in `C:\Users\Admin\.claude\CLAUDE.md`). This file is not approval. Without it: read-only work, one short question, wait.
+- Read in order: this block, `STATE.md` first block, `ACTIONS.md` "Last action" + last 10 log lines, `AGENTS.md`, `docs/SUBMISSION-CHECKLIST.md`.
+- After every action: overwrite `ACTIONS.md` "Last action", add one log line (Karim switches between 3 Claude accounts).
+- Times are Qatar local (AST, UTC+3).
+
+## 1. Where the project stands
+- **Firebreak** (NASA Space Apps 2026, challenge #7 "Flame in Freefall"): a story-scroll site + analyst dashboard putting NASA's PSI microgravity fire tests on one chart (1,883 test rows, 22 investigations, 986 plotted), every number linked to its PSI row, ending on the gap: no PSI test ran in Moon gravity.
+- **Live:** https://xkarimam.github.io/flame-in-freefall/ (GitHub Pages; every push to `main` redeploys in about a minute). **Code:** https://github.com/xKarimAm/flame-in-freefall (public).
+- **`main` is green in CI** (95 pipeline tests, 402 web tests, build). Locally `scripts\check.ps1` fails ONE pipeline test (`tests/test_security_b10.py`) only because it scans the git-ignored `.env`; that file was never committed. Not a real failure.
+- Stack: HTML + CSS + three.js, Vite + TypeScript, vitest; pipeline in Python (`uv`). The site reads `data/build/*.json` and `data/curated/*.json` (copied in by `web/scripts/copy-data.js` on `npm run build`).
+
+## 2. Submission (Karim does this himself; never sign in or press submit for him)
+- Organisers' email (19:18): BOTH the official project on the Space Apps Boston site AND the Boston Google Form (https://forms.gle/zL8BF4qsgeDKde768, Google sign-in, file upload) were due **12:00 ET = 20:00 AST on 15 Nov**. Live Zoom presentation **13:00 ET = 21:00 AST**; running order on Discord about 20:30 AST. Re-submitting the official form is allowed until Mon 16 Nov 07:59 AST; only the last one counts.
+- Field-by-field paste text: the Claude session "Submission details for both Boston forms" (other chat on this account), `docs/SUBMISSION.md`, `docs/SUBMISSION-CHECKLIST.md`.
+- Deck: `docs/presentation/Firebreak-deck.pptx`; PDF copy `docs/presentation/Firebreak-deck.pdf` (not committed). Known gap: no title slide with name + challenge.
+- **Ask Karim first whether he has submitted both forms.** If not, that is the only job.
+
+## 3. Done today 19:00-19:45 (PRs #26-#36, squash-merged, each screenshotted at 1280x720, 1536x864, 1920x1080)
+| PR | What | Karim's item |
+|---|---|---|
+| #26 | one soft entrance for text and pictures (650 ms rise + fade, 75 ms stagger, shared tokens in `web/src/ui/motion.css`) | K7 |
+| #28 | chart reference labels beside their own marks (`stage/refs.ts`) | K6 |
+| #32 | slider panel's top follows the measured end of the page text from 1100 px up (`ui/panel.ts`, `keepClearOfText`) | K5 |
+| #27 | the flame IS the oxygen marker: constant size, on the draggable "your air" value, draggable, no per-page jump; grab cursor + "Drag to change the oxygen" hint; left page dots labelled on hover and focus | K3, K4, dots |
+| #30 | page 18: Moon/Earth gravity fly the three.js view to the empty plane with its sentence; eased camera, idle drift | K9, K8 |
+| #31 | Stories view opens with an "evidence fan" graph (hub = Moon-base air question, 6 families, 22 investigations, counts from data), after Karim's Dribbble reference (Fuselab Creative, "AI Policy Dashboard") | K13 |
+| #33 | page 18: one Moon sentence instead of three; other planes' labels hidden while one is focused | tidy |
+| #34 | drag hint stacked above the dial readout | tidy |
+| #35 | analyst dashboard: links to `data/*.json` open a readable "Where this number comes from" note with a download instead of raw JSON | Karim's complaint |
+| #36 | dial nudge once per visit; source-note wording true for every file | tidy |
+
+Live site checked 19:36 at 1536x864: new flame, hint and dot labels present, no console errors.
+
+## 4. Open work, in priority order (only after Karim's go-ahead)
+1. Deck title slide (name, challenge #7, live URL) if he still needs the deck.
+2. K12 leftovers: `covered-text` is the taste inspector's first-visit tour dialog staying fixed while the inspector scrolls. A fix (close the tour once `scrollY > 8`, in `web/src/ui/tour.ts`) is saved as `stash@{0}` in `E:\fif-wt\k5` ("K12 tour-scroll fix (not shipped)"). Also `edge-text` at 768/390 px and `heavy-borders` at 390 px.
+3. Under 1100 px the slider panel still covers the slider page's card (phone and tablet layout never properly done).
+4. Walk the flame on the live site: cover, pages 1-3, drag it once; confirm no twitch on page turns.
+5. Run the taste inspector on final `main`: `node C:\Users\Admin\.claude\skills\taste-skill\scripts\inspect.mjs https://xkarimam.github.io/flame-in-freefall/`.
+6. Karim asked for research on what last year's winning Space Apps projects did well with data; not started.
+7. `README.md` still says "326 strings" in two places (the count is 349).
+
+## 5. How to work (what worked today)
+- Karim's standing UI rules: taste skill (`design-taste-frontend`) for every UI change plus its inspector; look at every change at 1280x720, 1536x864, 1920x1080 before merging; no overlaps; every element on screen needs a purpose; calm, smooth motion; never invent data; AI text tagged and labelled "AI summary".
+- One small change per branch from `origin/main`, `scripts\check.ps1` (or CI) green, `gh pr create`, `gh pr merge <n> --squash`, tick STATE.md, log ACTIONS.md.
+- Build with `npm run build`, never bare `npx vite build` (it skips the data copy and gives a blank page). Preview: `cd <worktree>\web; npx vite preview --port <free port> --strictPort`.
+- Screenshots: `node E:\fif-wt\shot.mjs <url> <outPrefix> "<js, e.g. scroll to a page>"` shoots the three sizes in headless Chrome and closes the tour first. Parallel coders hijacked each other's tabs in the shared browser pane; use the script.
+- Parallel Sonnet coders (Agent tool, `subagent_type: coder`, `model: sonnet`), one per worktree, separate files each; seven ran at once and each finished in 6-10 min. Brief: worktree, files owned and files not to touch, Karim's words, `npm run build`, check.ps1, "do not merge", short report. Review diff + screenshots yourself before merging.
+- Worktrees from today: `E:\fif-wt\k3 k4 k5 k6 k7 k9 k13`. Their `web\node_modules` are junctions into `E:\flame-in-freefall\web\node_modules`: remove the junction link only before deleting a worktree, or you wipe main's modules. Do not touch `E:\fif-wt\A`, `pipe`, `pipeline`, `web`, `night-web`, `night-backend` (Karim's call).
+- Traps: a test forbids any `font-size` that is not a `--text-*` token, and `!important` on it; `window.matchMedia` does not exist in the vitest DOM (use `innerWidth`); the inspector's "acme" placeholder warning is the real NASA ACME hardware name.
+- Agents (AGENTS.md rule 10): orchestrator plans and reviews, Sonnet codes, Muse Spark for quick tasks; never Muse Wonder.
+
+---
+# OLDER HANDOVER (planning night, 14 Nov). History only.
+
 # HANDOVER: start the next session here
 
 > **Superseded where it differs (2026-11-15 01:25):** `KICKOFF.md`, `docs/review/STRUCTURE-v2.md`, `docs/STORY-LIBRARY.md`, `contracts/`, `docs/OWNERS.md`, `docs/structure.drawio` (4 pages). The structure was reviewed twice by three reviewers; the build order and gate are in STRUCTURE-v2.
