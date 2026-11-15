@@ -388,6 +388,16 @@ describe("ui", () => {
     expect(roots().panel.hidden).toBe(false);
   });
 
+  it("lens buttons show the final names: Student, Astronaut, Analyst (tasks 54, 55)", () => {
+    setup(null, i18nDicts);
+    const btn = (lens: string) => roots().chrome.querySelector<HTMLButtonElement>(`[data-lens="${lens}"]`)!;
+    expect(btn("public").textContent).toBe("Student");
+    expect(btn("astronaut").textContent).toBe("Astronaut");
+    expect(btn("analyst").textContent).toBe("Analyst");
+    // no other visible string names the Public lens (Publications is a different word)
+    for (const v of Object.values(i18nDicts.en!)) expect(v).not.toBe("Public");
+  });
+
   it("lens buttons set store.lens and toggle the sheet", () => {
     const { store } = setup();
     const btn = (lens: string) => roots().chrome.querySelector<HTMLButtonElement>(`[data-lens="${lens}"]`)!;
