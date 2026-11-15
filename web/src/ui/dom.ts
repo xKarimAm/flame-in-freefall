@@ -26,6 +26,22 @@ export function num(value: number, digits: number, unit: string, href: string): 
   return cite(unit ? `${text} ${unit}` : text, href);
 }
 
+/** A translated sentence with each data value rendered as a link to its source.
+ *  Longer values match first, so "56.5 kPa" wins over "56.5". */
+export function linkedText(text: string, links: { text: string; href: string }[]): (Node | string)[] {
+  let parts: (Node | string)[] = [text];
+  for (const { text: needle, href } of [...links].sort((a, b) => b.text.length - a.text.length)) {
+    const next: (Node | string)[] = [];
+    for (const part of parts) {
+      if (typeof part !== "string" || !part.includes(needle)) { next.push(part); continue; }
+      const i = part.indexOf(needle);
+      next.push(part.slice(0, i), cite(needle, href), part.slice(i + needle.length));
+    }
+    parts = next;
+  }
+  return parts;
+}
+
 /** A count from the data files, linked to the built tests file it was counted from. */
 export function dataLink(text: string): HTMLAnchorElement {
   const a = document.createElement("a");

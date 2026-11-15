@@ -611,6 +611,25 @@ describe("explainer boxes", () => {
     }
   });
 
+  it("links every explainer number with its unit to its moon.json source (task 32)", () => {
+    const { host } = setup(revealStage, initialState.sliders, {}, SIZE, "public", revealBeat);
+    const heo = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    const iss = moon.atmospheres.find((a) => a.id === "iss-air")!;
+    const link = (box: string, text: string): HTMLAnchorElement => {
+      const el = [...host.querySelectorAll(`.stage-explainers .exp[data-for="${box}"] .exp-what a`)].find(
+        (a) => a.textContent === text,
+      );
+      expect(el, `${box} links ${text}`).not.toBeUndefined();
+      return el as HTMLAnchorElement;
+    };
+    // the unit is inside the link, and the href is the atmosphere's own moon.json url
+    expect(link("moon-box", `${heo.pressure_kpa} kPa`).getAttribute("href")).toBe(heo.url);
+    expect(link("moon-box", String(heo.o2_pct_min)).getAttribute("href")).toBe(heo.url);
+    expect(link("moon-box", String(heo.o2_pct_max)).getAttribute("href")).toBe(heo.url);
+    expect(link("iss-air", `${iss.pressure_kpa} kPa`).getAttribute("href")).toBe(iss.url);
+    expect(link("iss-air", String(iss.o2_pct_min)).getAttribute("href")).toBe(iss.url);
+  });
+
   it("stays silent on other pages and lenses", () => {
     const otherBeat = { story: "what-nasa-tested", scene: "what-nasa-tested-main", beat: "droplets", kind: "reveal" as const };
     for (const [stage, beat, lens] of [
