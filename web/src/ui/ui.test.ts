@@ -658,7 +658,7 @@ describe("ui", () => {
       fires.forEach((fn) => fn());
       const wide = roots().chrome.querySelector(".chrome-bar")!;
       expect([...wide.children].map((c) => c.className)).toEqual(
-        ["brand", "rail", "lens-switch", "btn", "btn primary", "locale-select", "chrome-menu"]);
+        ["brand", "rail", "lens-switch", "btn stories-open", "btn primary skip-moon", "locale-select", "chrome-menu"]);
     } finally {
       window.matchMedia = prev;
     }
