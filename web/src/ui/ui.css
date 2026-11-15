@@ -105,9 +105,11 @@ table.test-rows { margin-top: 12px; font-size: 14px; }
   /* numbers only; the titles stay readable to screen readers */
   .chip-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
+.locale-switch { display: flex; gap: 8px; }
 @media (max-width: 767px) {
   .brand { font-size: 18px; }
   .lens-switch { order: 5; width: 100%; }
+  .locale-switch { order: 6; width: 100%; }
   .lens-switch .lens { flex: 1; }
   #sheet { font-size: 14px; }
 }

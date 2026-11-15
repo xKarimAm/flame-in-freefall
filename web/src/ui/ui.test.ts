@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppData, Ctx, DataApi, Experiment, NearestRow, PlacedTest, TestRun } from "../contract";
+import { dicts as i18nDicts } from "../i18n/index";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import { createDataApi } from "../data/index";
 import { stories } from "../engine/stories";
@@ -72,10 +73,10 @@ const roots = () => ({
 const p159 = tests.find((t) => t.id === "PSI-159#1")!;
 const p69 = tests.find((t) => t.id === "PSI-69#2")!;
 
-function setup(sliders: { pressure_kpa: number; o2_pct: number } | null = { pressure_kpa: p159.pressure_kpa!, o2_pct: p159.o2_pct! }) {
+function setup(sliders: { pressure_kpa: number; o2_pct: number } | null = { pressure_kpa: p159.pressure_kpa!, o2_pct: p159.o2_pct! }, dicts: Ctx["dicts"] = {}) {
   document.body.innerHTML = `<header id="chrome"></header><div id="story"></div><aside id="panel" hidden></aside><section id="sheet" hidden></section><div id="overlay" hidden></div>`;
   const store = createStore({ ...initialState, sliders });
-  const ctx: Ctx = { api: fakeApi(), store, dicts: {}, t: makeT(() => "en") };
+  const ctx: Ctx = { api: fakeApi(), store, dicts, t: makeT(() => "en") };
   mount(roots(), ctx);
   return { store, ctx };
 }
@@ -210,6 +211,16 @@ describe("ui", () => {
     expect(roots().sheet.hidden).toBe(false);
     btn("astronaut").click();
     expect(roots().sheet.hidden).toBe(true);
+  });
+
+  it("the language picker lists the loaded locales and switches the store locale", () => {
+    const { store } = setup(null, i18nDicts);
+    const btns = [...roots().chrome.querySelectorAll<HTMLButtonElement>("button[data-locale]")];
+    expect(btns.map((b) => b.getAttribute("data-locale")).sort()).toEqual(Object.keys(i18nDicts).sort());
+    const target = (Object.keys(i18nDicts) as (keyof typeof i18nDicts)[]).find((l) => l !== "en") ?? "en";
+    btns.find((b) => b.getAttribute("data-locale") === target)!.click();
+    expect(store.get().locale).toBe(target);
+    expect(roots().chrome.querySelector(`button[data-locale="${target}"]`)!.getAttribute("aria-pressed")).toBe("true");
   });
 
   it("the investigations table has one row per experiment, sorted by family then acronym", () => {

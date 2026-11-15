@@ -90,6 +90,7 @@
   "ui.chrome.lens.astronaut": "Astronaut",
   "ui.chrome.lens.analyst": "Analyst",
   "ui.chrome.stories": "Stories",
+  "ui.chrome.locale-label": "Language",
   "ui.chrome.skip": "Skip to Moon air",
   "ui.rail.label": "Chapters",
   "ui.rail.chapter": "Chapter {n}",
