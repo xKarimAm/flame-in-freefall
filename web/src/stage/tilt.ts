@@ -93,6 +93,76 @@ export function tiltAllowed(lens: Lens, view: StageView): boolean {
   return view === "tilt-lunar" && lens !== "analyst";
 }
 
+export type TiltLabelId = "micro" | "lunar" | "earth" | "x" | "y" | "you";
+export type TiltFixedLabelId = Exclude<TiltLabelId, "you">;
+
+export interface TiltAnchor {
+  group: "micro" | "lunar" | "earth";
+  local: [number, number, number];
+}
+
+/** Plane-local label anchors, the single source for the scene and the tests. Plane labels sit
+ *  at their own plane's top-left corner; the axis titles sit on the front edges (oxygen down
+ *  the micro plane's left edge, pressure along the Earth strip's front edge), each with its own
+ *  place so no title is drawn over a label. The your-air label has no fixed anchor: it follows
+ *  the slider mark. */
+export function tiltLabelAnchors(): Record<TiltFixedLabelId, TiltAnchor> {
+  return {
+    micro: { group: "micro", local: [-TILT_W / 2, TILT_H / 2, 0.05] },
+    lunar: { group: "lunar", local: [-TILT_W / 2, TILT_H / 2, 0.05] },
+    earth: { group: "earth", local: [-TILT_W / 2, EARTH_H / 2, 0.05] },
+    x: { group: "earth", local: [0, -EARTH_H / 2, 0.05] },
+    y: { group: "micro", local: [-TILT_W / 2, 0, 0.05] },
+  };
+}
+
+export interface TiltLabelSpec {
+  id: TiltLabelId;
+  /** projected frame position of the anchor, in pixels */
+  anchor: { x: number; y: number };
+  /** measured label size in pixels */
+  w: number;
+  h: number;
+}
+
+export interface TiltLabelBox {
+  id: TiltLabelId;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** Put every tilt label at its own place inside the frame: plane labels above their plane's
+ *  top-left corner, the pressure title centred below the Earth strip's front edge, the oxygen
+ *  title left of the micro plane's middle, the your-air label centred above its crosshair.
+ *  Boxes are clamped into the frame and each label nudges down past the ones before it, so no
+ *  box leaves the frame and no two overlap — unless the frame cannot hold them all, when the
+ *  last ones stack along the bottom edge (documented, never the case on a story page). Pure. */
+export function tiltLabelBoxes(frame: { w: number; h: number }, items: TiltLabelSpec[]): TiltLabelBox[] {
+  const order: TiltLabelId[] = ["micro", "lunar", "earth", "x", "y", "you"];
+  const byId = new Map(items.map((i) => [i.id, i]));
+  const placed: TiltLabelBox[] = [];
+  const clashes = (r: TiltLabelBox): boolean =>
+    placed.some((p) => r.x < p.x + p.w && p.x < r.x + r.w && r.y < p.y + p.h && p.y < r.y + r.h);
+  for (const id of order) {
+    const item = byId.get(id);
+    if (!item) continue;
+    let x: number;
+    let y: number;
+    if (id === "x") { x = item.anchor.x - item.w / 2; y = item.anchor.y + 4; }
+    else if (id === "y") { x = item.anchor.x - item.w - 6; y = item.anchor.y - item.h / 2; }
+    else if (id === "you") { x = item.anchor.x - item.w / 2; y = item.anchor.y - item.h - 6; }
+    else { x = item.anchor.x; y = item.anchor.y - item.h - 4; }
+    x = Math.min(Math.max(x, 0), Math.max(0, frame.w - item.w));
+    y = Math.min(Math.max(y, 0), Math.max(0, frame.h - item.h));
+    const box: TiltLabelBox = { id, x, y, w: item.w, h: item.h };
+    while (clashes(box) && box.y + 4 + box.h <= frame.h) box.y += 4;
+    placed.push(box);
+  }
+  return placed;
+}
+
 /** The Moon plane's label is the beat annotation's own words, falling back to the plane label. */
 export function lunarLabelFor(
   annotations: NonNullable<StageState["annotation"]>,
@@ -272,31 +342,53 @@ export function buildTiltScene(colors: TiltColors, initial: TiltLabels): TiltSce
   let aspect = 1.3;
   let youAnchor: [number, number, number] | null = null;
 
-  const anchors = (): [HTMLElement, [number, number, number] | null][] => [
-    [labelEls["plane-micro"], [-TILT_W / 2, TILT_H / 2, 0.05]],
-    [labelEls["plane-lunar"], [-TILT_W / 2, TILT_H / 2, 0.05]],
-    [labelEls["plane-earth"], [-TILT_W / 2, EARTH_H / 2, 0.05]],
-    [labelEls["axis-x"], [0, -TILT_H / 2, 0.05]],
-    [labelEls["axis-y"], [-TILT_W / 2, -TILT_H / 2, 0.05]],
-    [labelEls.you, youAnchor],
-  ];
+  const defs = tiltLabelAnchors();
   labelEls.you.hidden = true;
   // anchors are plane-local; the groups carry the plane offsets
-  const groupOf = (el: HTMLElement): THREE.Group =>
-    el === labelEls["plane-lunar"] ? lunar : el === labelEls["plane-earth"] ? earth : micro;
+  const groupOf = (group: TiltAnchor["group"]): THREE.Group => (group === "lunar" ? lunar : group === "earth" ? earth : micro);
+  const elOf = (id: TiltLabelId): HTMLElement =>
+    id === "micro" ? labelEls["plane-micro"] : id === "lunar" ? labelEls["plane-lunar"] : id === "earth" ? labelEls["plane-earth"] : id === "x" ? labelEls["axis-x"] : id === "y" ? labelEls["axis-y"] : labelEls.you;
 
+  // measured label boxes, re-read when the words or the frame change (never mid-ease)
+  let sizeKey = "";
+  const sizes = new Map<TiltLabelId, { w: number; h: number }>();
   const reposition = (): void => {
     scene.updateMatrixWorld();
     camera.updateMatrixWorld();
+    const key = `${frame.w}x${frame.h}|${labelEls["plane-micro"].textContent}|${labelEls["plane-lunar"].textContent}|${labelEls["plane-earth"].textContent}|${labelEls["axis-x"].textContent}|${labelEls["axis-y"].textContent}|${labelEls.you.textContent}`;
+    if (key !== sizeKey) {
+      sizeKey = key;
+      sizes.clear();
+      for (const id of ["micro", "lunar", "earth", "x", "y", "you"] as TiltLabelId[]) {
+        const el = elOf(id);
+        sizes.set(id, { w: el.offsetWidth, h: el.offsetHeight });
+      }
+    }
     const v = new THREE.Vector3();
-    for (const [el, local] of anchors()) {
-      if (!local) { el.hidden = true; continue; }
-      const g = groupOf(el);
-      v.set(local[0], local[1], local[2]).applyMatrix4(g.matrixWorld);
+    const project = (group: TiltAnchor["group"], local: [number, number, number]): { x: number; y: number } => {
+      v.set(local[0], local[1], local[2]).applyMatrix4(groupOf(group).matrixWorld);
       v.project(camera);
+      return { x: (v.x * 0.5 + 0.5) * frame.w, y: (-v.y * 0.5 + 0.5) * frame.h };
+    };
+    const specs: TiltLabelSpec[] = [];
+    for (const [id, def] of Object.entries(defs) as [TiltFixedLabelId, TiltAnchor][]) {
+      const size = sizes.get(id) ?? { w: 0, h: 0 };
+      specs.push({ id, anchor: project(def.group, def.local), w: size.w, h: size.h });
+    }
+    if (youAnchor) {
+      // the your-air label follows the slider mark, not a fixed anchor
+      v.set(youAnchor[0], youAnchor[1], youAnchor[2]).applyMatrix4(micro.matrixWorld);
+      v.project(camera);
+      const size = sizes.get("you") ?? { w: 0, h: 0 };
+      specs.push({ id: "you", anchor: { x: (v.x * 0.5 + 0.5) * frame.w, y: (-v.y * 0.5 + 0.5) * frame.h }, w: size.w, h: size.h });
+    } else {
+      labelEls.you.hidden = true;
+    }
+    for (const box of tiltLabelBoxes(frame, specs)) {
+      const el = elOf(box.id);
       el.hidden = false;
-      el.style.left = `${((v.x * 0.5 + 0.5) * frame.w).toFixed(1)}px`;
-      el.style.top = `${((-v.y * 0.5 + 0.5) * frame.h).toFixed(1)}px`;
+      el.style.left = `${box.x.toFixed(1)}px`;
+      el.style.top = `${box.y.toFixed(1)}px`;
     }
   };
 

@@ -9,8 +9,8 @@ import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { SELECT_INVESTIGATION, mount } from "./index";
 import * as THREE from "three";
-import { TILT_MS, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltPlaneGeometry, tiltPose, tiltProgress } from "./tilt";
-import type { TiltColors, TiltLabels } from "./tilt";
+import { TILT_H, TILT_MS, TILT_W, TILT_Y, TILT_Z, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltLabelAnchors, tiltLabelBoxes, tiltPlaneGeometry, tiltPose, tiltProgress } from "./tilt";
+import type { TiltColors, TiltFixedLabelId, TiltLabelId, TiltLabelSpec, TiltLabels } from "./tilt";
 import { CHART_RESERVE_PX, chartHeight, chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { dotKind, noPressureRows, refShape } from "./plan";
@@ -881,6 +881,98 @@ describe("three.js tilt rebuild (task 20)", () => {
       expect(you.textContent).toBe(tiltTexts.you);
     } finally {
       view.dispose();
+    }
+  });
+});
+
+describe("tilt label placement (task 28)", () => {
+  // the real words on the tilt pages (en); sizes stand in for offsetWidth/offsetHeight,
+  // which jsdom cannot measure (20 px bold plane labels, 12 px axis titles)
+  const specsFor = (project: (group: "micro" | "lunar" | "earth", local: readonly [number, number, number]) => { x: number; y: number }): TiltLabelSpec[] => {
+    const defs = tiltLabelAnchors();
+    const words: Record<TiltLabelId, { text: string; w: number; h: number }> = {
+      micro: { text: "Every NASA test so far", w: 250, h: 30 },
+      lunar: { text: "No fire test has run in Moon gravity.", w: 400, h: 30 },
+      earth: { text: "Earth gravity (1 g)", w: 200, h: 30 },
+      x: { text: "Air pressure (kPa)", w: 130, h: 22 },
+      y: { text: "Oxygen in the air (%)", w: 150, h: 22 },
+      you: { text: "Your air", w: 60, h: 22 },
+    };
+    return (Object.keys(words) as TiltLabelId[])
+      .filter((id): id is TiltFixedLabelId => id !== "you") // hidden without live sliders: placed nowhere
+      .map((id) => ({ id, anchor: project(defs[id].group, defs[id].local), ...words[id] }));
+  };
+  const projectAt = (w: number, h: number) => {
+    const camera = tiltCamera(tiltPose(1, w / h), w / h);
+    camera.updateMatrixWorld();
+    const off = { micro: TILT_Y.micro, lunar: TILT_Y.lunar, earth: TILT_Y.earth };
+    const offZ = { micro: TILT_Z.micro, lunar: TILT_Z.lunar, earth: TILT_Z.earth };
+    return (group: "micro" | "lunar" | "earth", local: readonly [number, number, number]): { x: number; y: number } => {
+      const v = new THREE.Vector3(local[0], off[group] + local[1], offZ[group] + local[2]).project(camera);
+      return { x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h };
+    };
+  };
+  const inside = (frame: { w: number; h: number }, b: { x: number; y: number; w: number; h: number }): boolean =>
+    b.x >= 0 && b.y >= 0 && b.x + b.w <= frame.w && b.y + b.h <= frame.h;
+  const disjoint = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }): boolean =>
+    a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y;
+
+  for (const frame of [{ w: 900, h: 600 }, { w: 688, h: 700 }, { w: 600, h: 800 }]) {
+    it(`gives every label its own place inside ${frame.w}x${frame.h}: none clipped, none overlapping`, () => {
+      const boxes = tiltLabelBoxes(frame, specsFor(projectAt(frame.w, frame.h)));
+      expect(boxes.map((b) => b.id).sort()).toEqual(["earth", "micro", "x", "y", "lunar"].sort());
+      for (const b of boxes) expect(inside(frame, b)).toBe(true);
+      for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) expect(disjoint(boxes[i]!, boxes[j]!)).toBe(true);
+      // the two reported defects: the Moon-plane label cut off on the right, the oxygen title clipped on the left
+      const lunar = boxes.find((b) => b.id === "lunar")!;
+      expect(lunar.x + lunar.w).toBeLessThanOrEqual(frame.w);
+      const yAxis = boxes.find((b) => b.id === "y")!;
+      expect(yAxis.x).toBeGreaterThanOrEqual(0);
+    });
+  }
+
+  it("the scene puts its HTML labels exactly where the placement says (jsdom: zero-size boxes)", () => {
+    const colors: TiltColors = { ground: "#111111", edge: "#222222", muted: "#333333", near: "#444444", burned: "#555555", moon: "#666666", ink: "#777777" };
+    const texts: TiltLabels = { micro: "m", lunar: "l", earth: "e", x: "x", y: "y", you: "you" };
+    const view = buildTiltScene(colors, texts);
+    try {
+      view.setDots([], new Set(), { toWorld: () => [0, 0], box: null, you: null }, texts);
+      view.setFrame(800, 600);
+      view.setPose(1);
+      const frame = { w: 800, h: 600 };
+      const expected = tiltLabelBoxes(frame, specsFor(projectAt(800, 600)).map((s) => ({ ...s, w: 0, h: 0 })));
+      for (const box of expected) {
+        const cls = box.id === "micro" ? "plane-micro" : box.id === "lunar" ? "plane-lunar" : box.id === "earth" ? "plane-earth" : box.id === "x" ? "axis-x" : "axis-y";
+        const el = view.element.querySelector(`.tilt-label.${cls}`) as HTMLElement;
+        // the scene writes toFixed(1) and jsdom normalises "400.0px" to "400px": compare the rounded numbers
+        expect(parseFloat(el.style.left)).toBe(parseFloat(box.x.toFixed(1)));
+        expect(parseFloat(el.style.top)).toBe(parseFloat(box.y.toFixed(1)));
+      }
+    } finally {
+      view.dispose();
+    }
+  });
+
+  it("the Moon box uses exactly the micro-plane mapping for the moon.json values", () => {
+    const atm = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    expect([atm.pressure_kpa, atm.o2_pct_min, atm.o2_pct_max]).toEqual([56.5, 33.7, 40]);
+    for (const dom of [
+      { min: 0, max: 350, ticks: [0, 350] }, // the real span: slider range plus the 331 kPa tests
+      { min: 0, max: 120, ticks: [0, 120] }, // slider widening only
+      { min: 40, max: 80, ticks: [40, 80] }, // a narrow zoom: agreement must not depend on the domain
+    ]) {
+      const s = chartScales({ w: 688, h: 700 }, dom, { bandH: 0, headH: 20, strip: false });
+      const toWorld = chartToWorld(s);
+      const box = moonBoxWorld(atm, s);
+      // a dot at the Moon air's own numbers lands exactly on the box corners
+      expect(box.cx).toBeCloseTo(toWorld(s.x(56.5), 0)[0], 10);
+      expect(box.top).toBeCloseTo(toWorld(0, s.y(40))[1], 10);
+      expect(box.bottom).toBeCloseTo(toWorld(0, s.y(33.7))[1], 10);
+      // the box sits on the lunar plane itself, clear of every edge
+      expect(box.cx - box.w / 2).toBeGreaterThan(-TILT_W / 2);
+      expect(box.cx + box.w / 2).toBeLessThan(TILT_W / 2);
+      expect(box.bottom).toBeGreaterThan(-TILT_H / 2 + 1);
+      expect(box.top).toBeLessThan(TILT_H / 2 - 1);
     }
   });
 });
