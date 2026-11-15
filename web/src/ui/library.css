@@ -81,3 +81,6 @@
   #overlay .lib-grid > .library-card { transition: none; }
   #overlay .lib-grid > .library-card:hover { transform: none; }
 }
+
+/* each family group takes the full width of the shelf, whatever grid its parent uses */
+.lib-group { grid-column: 1 / -1; width: 100%; }
