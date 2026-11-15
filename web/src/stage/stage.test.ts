@@ -1095,6 +1095,10 @@ describe("plain air names (task 22)", () => {
     const astro = setup({ view: "incident", incident_ids: ["apollo-1"] } as StageState, null, {}, SIZE, "astronaut");
     expect(astro.host.querySelectorAll(".dial-mark").length).toBe(0);
   });
+  it("names the second exploration air without claiming a sequence (task 33)", () => {
+    // moon.json and STORY.md do not support "earlier stage": it is just another planned air
+    expect(en["ui.air.exp-10-2"]).toBe("A second planned exploration air");
+  });
   it("the legend names the Moon box plainly in Public and from moon.json for Analyst", () => {
     const pub = setup(moonRef, null, {}, SIZE);
     expect(pub.host.querySelector(".stage-legend")!.textContent).toContain("Planned Moon-base air");
