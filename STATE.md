@@ -1,4 +1,13 @@
-# STATE: CURRENT STATUS at 18:55 on 2026-11-15. This block wins over anything below it.
+# STATE: CURRENT STATUS at 19:40 on 2026-11-15 (build session 4). This block wins over anything below it.
+
+**Deadline (organisers' email, 19:18):** BOTH the Space Apps Boston project submission and the Boston Google Form (https://forms.gle/zL8BF4qsgeDKde768) by 12:00 ET = 20:00 AST. Live Zoom presentation 13:00 ET = 21:00 AST. Field-by-field text: the session "Submission details for both Boston forms". Deck PDF: `docs/presentation/Firebreak-deck.pdf` (not committed).
+
+**Merged this session (#26-#36), all seen in headless Chrome at 1280x720, 1536x864, 1920x1080; live site checked 19:36, no console errors:** K3 flame is the oxygen marker, K4 drag hint + labelled dots, K5 panel below the text, K6 labels by their marks, K7 one entrance, K8/K9 planes + 3D motion, K13 Stories fan graph, page-18 tidy, dashboard number links open a readable source note (not raw JSON), nudge once per visit.
+
+**Open:** K12 `covered-text` is the inspector's tour dialog staying fixed while it scrolls (fix stashed in `E:if-wt\k5`: close the tour on scroll); `edge-text` 768/390 and `heavy-borders` 390; under 1100 px the panel still covers the slider page card; taste inspector not re-run on final main. Local `check.ps1` fails only on the git-ignored `.env` (secret scan); CI is green. Worktrees `E:if-wt\k*` have `web/node_modules` junctions into main's: remove the junction before deleting a worktree.
+
+---
+# STATE: STATUS at 18:55 (superseded) on 2026-11-15. This block wins over anything below it.
 
 **Deadline:** Boston submission 20:00 local (possibly 19:00). Re-submitting is allowed until Mon 07:59. Karim fills and submits the form himself; `docs/SUBMISSION-CHECKLIST.md` lists every field.
 

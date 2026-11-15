@@ -8,7 +8,7 @@ Karim switches between three Claude accounts. Every session, on every account, *
 Times are local (UTC+3).
 
 ## Last action
-2026-11-15 19:15, build session 4 (Opus orchestrator): Karim (19:00) said to use as many Sonnet agents as needed. 7 Sonnet coders run in parallel, one worktree each: `E:if-wt\k5`, `k9` (K9+K8), `k6`, `k3`, `k4` (K4 + hover labels on the left rail dots), `k7`, `k13` (Stories fan graph after the Fuselab Dribbble shot). Each opens a PR; the orchestrator checks it at 1280x720, 1536x864, 1920x1080 and squash-merges in K order. The kN worktrees have `web/node_modules` as junctions into main's: remove the junctions before deleting a worktree. Build with `npm run build` (bare `vite build` skips the data copy and gives a blank page).
+2026-11-15 19:40, build session 4: read the first block of `STATE.md`. K3-K9 and K13 merged (#26-#36), live site checked. Karim is submitting both forms (deadline 20:00 AST) and presents at 21:00 AST.
 
 ## Action table (the plan)
 | # | Action | Who | Status | Done when |
@@ -115,3 +115,4 @@ Times are local (UTC+3).
 | 18:55 | build 3 | Handover written: current status block at the top of STATE.md | next account continues at K3-K13 |
 | 19:15 | build 4 | Karim: "produce as many sonnet agents as you need". 7 Sonnet coders started on K3-K9, K13 (worktrees `E:if-wt\k*`). K12 `placeholder-data` ("acme") is the real NASA ACME hardware name in `experiments.json`, not a placeholder | PRs pending review |
 | 19:35 | build 4 | Merged #26 K7, #28 K6, #32 K5, #27 K3+K4 (flame = oxygen marker, labelled dots), #30 K9+K8, #31 K13 fan graph, #33 page-18 tidy, #34 hint stack, #35 dashboard links open a readable source note (Karim: raw JSON unacceptable). Each seen in headless Chrome at 1280x720, 1536x864, 1920x1080 | K3-K9, K13 done; K12 edge-text/heavy-borders open |
+| 19:40 | build 4 | #36 nudge once + source-note wording; handover written; previews stopped | Karim submits |
