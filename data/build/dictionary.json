@@ -1,0 +1,1604 @@
+[
+  {
+    "file": "tests.json",
+    "field": "burn_time_s",
+    "type": "null|number",
+    "unit": "s",
+    "meaning": "Recorded burn time.",
+    "records": 1883,
+    "non_null": 604
+  },
+  {
+    "file": "tests.json",
+    "field": "flow_cm_s",
+    "type": "null|number",
+    "unit": "cm/s",
+    "meaning": "Forced flow speed past the sample.",
+    "records": 1883,
+    "non_null": 570
+  },
+  {
+    "file": "tests.json",
+    "field": "flow_note",
+    "type": "string",
+    "unit": null,
+    "meaning": "raw cell text when the flow cell could not be parsed (COVERAGE.md rule 2).",
+    "records": 1883,
+    "non_null": 8
+  },
+  {
+    "file": "tests.json",
+    "field": "fuel",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "Fuel or sample material burned, as recorded.",
+    "records": 1883,
+    "non_null": 1761
+  },
+  {
+    "file": "tests.json",
+    "field": "fuel_class",
+    "type": "string",
+    "unit": null,
+    "meaning": "Kind of fuel: droplet, gas jet, solid or smoke.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "gravity",
+    "type": "string",
+    "unit": null,
+    "meaning": "Gravity of the test, always microgravity here.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "id",
+    "type": "string",
+    "unit": null,
+    "meaning": "Test id, investigation plus source row.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "investigation",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI investigation this test row belongs to.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "o2_note",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "Raw cell text when the oxygen cell needed a note.",
+    "records": 1883,
+    "non_null": 30
+  },
+  {
+    "file": "tests.json",
+    "field": "o2_pct",
+    "type": "null|number",
+    "unit": "percent",
+    "meaning": "Oxygen concentration of the test air.",
+    "records": 1883,
+    "non_null": 1150
+  },
+  {
+    "file": "tests.json",
+    "field": "o2_pct_max",
+    "type": "null|number",
+    "unit": "percent",
+    "meaning": "Upper end of a recorded oxygen range.",
+    "records": 1883,
+    "non_null": 11
+  },
+  {
+    "file": "tests.json",
+    "field": "o2_pct_min",
+    "type": "null|number",
+    "unit": "percent",
+    "meaning": "Lower end of a recorded oxygen range.",
+    "records": 1883,
+    "non_null": 11
+  },
+  {
+    "file": "tests.json",
+    "field": "outcome",
+    "type": "string",
+    "unit": null,
+    "meaning": "Recorded outcome, normalised to one word.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "outcome_raw",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "Outcome cell as written in the source.",
+    "records": 1883,
+    "non_null": 614
+  },
+  {
+    "file": "tests.json",
+    "field": "pressure_kpa",
+    "type": "null|number",
+    "unit": "kPa",
+    "meaning": "Chamber pressure of the test.",
+    "records": 1883,
+    "non_null": 997
+  },
+  {
+    "file": "tests.json",
+    "field": "pressure_note",
+    "type": "string",
+    "unit": null,
+    "meaning": "raw cell text when the pressure cell could not be parsed (COVERAGE.md rule 2).",
+    "records": 1883,
+    "non_null": 12
+  },
+  {
+    "file": "tests.json",
+    "field": "source",
+    "type": "object",
+    "unit": null,
+    "meaning": "Where this row comes from in the PSI snapshot.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "source.fields",
+    "type": "object",
+    "unit": null,
+    "meaning": "Which CSV header each field was read from.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "source.fields.burn_time_s",
+    "type": "string",
+    "unit": null,
+    "meaning": "Recorded burn time.",
+    "records": 1883,
+    "non_null": 622
+  },
+  {
+    "file": "tests.json",
+    "field": "source.fields.flow_cm_s",
+    "type": "string",
+    "unit": null,
+    "meaning": "Recorded flow speed.",
+    "records": 1883,
+    "non_null": 611
+  },
+  {
+    "file": "tests.json",
+    "field": "source.fields.o2_pct",
+    "type": "string",
+    "unit": null,
+    "meaning": "Recorded oxygen, in percent.",
+    "records": 1883,
+    "non_null": 1173
+  },
+  {
+    "file": "tests.json",
+    "field": "source.fields.outcome",
+    "type": "string",
+    "unit": null,
+    "meaning": "Recorded outcome.",
+    "records": 1883,
+    "non_null": 607
+  },
+  {
+    "file": "tests.json",
+    "field": "source.fields.pressure_kpa",
+    "type": "string",
+    "unit": null,
+    "meaning": "Recorded pressure, in kPa.",
+    "records": 1883,
+    "non_null": 1029
+  },
+  {
+    "file": "tests.json",
+    "field": "source.file",
+    "type": "string",
+    "unit": null,
+    "meaning": "file name under data/psi-snapshot/.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "source.row",
+    "type": "integer",
+    "unit": null,
+    "meaning": "1-based data row (header excluded, blank rows skipped).",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "tests.json",
+    "field": "source.url",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI page of the investigation.",
+    "records": 1883,
+    "non_null": 1883
+  },
+  {
+    "file": "experiments.json",
+    "field": "acronym",
+    "type": "string",
+    "unit": null,
+    "meaning": "Short investigation name.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "doi",
+    "type": "string",
+    "unit": null,
+    "meaning": "DOI of the linked publication, when recorded.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "family",
+    "type": "string",
+    "unit": null,
+    "meaning": "Which hardware family it belongs to.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "hardware",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "Apparatus the tests ran in.",
+    "records": 22,
+    "non_null": 18
+  },
+  {
+    "file": "experiments.json",
+    "field": "has_outcomes",
+    "type": "boolean",
+    "unit": null,
+    "meaning": "Whether any test row records a clear outcome.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "id",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI investigation id.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "license",
+    "type": "string",
+    "unit": null,
+    "meaning": "License of the source data.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "o2_pct_range",
+    "type": "array|null",
+    "unit": "percent",
+    "meaning": "Lowest and highest recorded oxygen.",
+    "records": 22,
+    "non_null": 8
+  },
+  {
+    "file": "experiments.json",
+    "field": "objective",
+    "type": "string",
+    "unit": null,
+    "meaning": "verbatim from PSI.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "platform",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "Where the tests ran.",
+    "records": 22,
+    "non_null": 19
+  },
+  {
+    "file": "experiments.json",
+    "field": "pressure_kpa_range",
+    "type": "array|null",
+    "unit": "kPa",
+    "meaning": "Lowest and highest recorded pressure.",
+    "records": 22,
+    "non_null": 4
+  },
+  {
+    "file": "experiments.json",
+    "field": "psi_url",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI page of the investigation.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "publications",
+    "type": "array",
+    "unit": null,
+    "meaning": "Papers linked to this investigation.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "publications.authors",
+    "type": "string",
+    "unit": null,
+    "meaning": "Paper authors, when recorded.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "publications.doi",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "Paper DOI, when recorded.",
+    "records": 22,
+    "non_null": 21
+  },
+  {
+    "file": "experiments.json",
+    "field": "publications.title",
+    "type": "string",
+    "unit": null,
+    "meaning": "Paper title.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "publications.year",
+    "type": "null",
+    "unit": null,
+    "meaning": "Publication year, when recorded.",
+    "records": 22,
+    "non_null": 0
+  },
+  {
+    "file": "experiments.json",
+    "field": "summary",
+    "type": "object",
+    "unit": null,
+    "meaning": "AI summary of the PSI text, labelled in the UI.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "summary.made_at",
+    "type": "string",
+    "unit": null,
+    "meaning": "UTC time the summary was written.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "summary.model",
+    "type": "string",
+    "unit": null,
+    "meaning": "Model that wrote the summary.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "summary.quotes",
+    "type": "array",
+    "unit": null,
+    "meaning": "each must appear verbatim in the PSI objective/approach/description.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "summary.text",
+    "type": "string",
+    "unit": null,
+    "meaning": "AI-written summary sentences.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "tags",
+    "type": "array",
+    "unit": null,
+    "meaning": "Topic tags for search.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "test_count",
+    "type": "integer",
+    "unit": "count",
+    "meaning": "Rows in tests.json for this investigation.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "experiments.json",
+    "field": "title",
+    "type": "string",
+    "unit": null,
+    "meaning": "Full investigation title.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "moments.json",
+    "field": "fuel",
+    "type": "string",
+    "unit": null,
+    "meaning": "Fuel of the row that holds the value, when it is one row.",
+    "records": 49,
+    "non_null": 8
+  },
+  {
+    "file": "moments.json",
+    "field": "id",
+    "type": "string",
+    "unit": null,
+    "meaning": "<investigation>.<kind>, with the outcome appended for outcome-count, e.g. PSI-69.outcome-count-extinction.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "investigation",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI investigation.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "kind",
+    "type": "string",
+    "unit": null,
+    "meaning": "tests-count = rows in tests.json; *-range = min and max of the recorded values (value = min, value_max = max); longest-burn = max burn_time_s; lowest-o2-burned = min o2_pct among rows in the burned group; highest-o2-went-out = max o2_pct among rows in the went-out group; outcome-count = rows with that outcome.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "label",
+    "type": "string",
+    "unit": null,
+    "meaning": "what was computed, in plain English, without the number.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "method",
+    "type": "string",
+    "unit": null,
+    "meaning": "how it was computed: field, filter, how many rows had the field.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "n",
+    "type": "integer",
+    "unit": "count",
+    "meaning": "Rows the moment was computed from.",
+    "records": 49,
+    "non_null": 28
+  },
+  {
+    "file": "moments.json",
+    "field": "outcome",
+    "type": "string",
+    "unit": null,
+    "meaning": "outcome-count only.",
+    "records": 49,
+    "non_null": 8
+  },
+  {
+    "file": "moments.json",
+    "field": "test_ids",
+    "type": "array",
+    "unit": null,
+    "meaning": "Test rows that hold the value.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "unit",
+    "type": "string",
+    "unit": "unit symbol",
+    "meaning": "Unit of the value field.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "url",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI page of the investigation.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "value",
+    "type": "integer|number",
+    "unit": null,
+    "meaning": "The computed fact, a single number.",
+    "records": 49,
+    "non_null": 49
+  },
+  {
+    "file": "moments.json",
+    "field": "value_max",
+    "type": "number",
+    "unit": null,
+    "meaning": "Upper end, for range moments.",
+    "records": 49,
+    "non_null": 18
+  },
+  {
+    "file": "library.json",
+    "field": "ai",
+    "type": "object",
+    "unit": null,
+    "meaning": "Tag naming the model and time that drafted the text.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "ai.made_at",
+    "type": "string",
+    "unit": null,
+    "meaning": "UTC time the draft was written.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "ai.model",
+    "type": "string",
+    "unit": null,
+    "meaning": "Model that drafted the story text.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "bridge",
+    "type": "string",
+    "unit": null,
+    "meaning": "one line linking to the Moon-air question, or saying this one is about something else, no digits.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "core",
+    "type": "object",
+    "unit": null,
+    "meaning": "Verbatim PSI quote the story rests on.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "core.investigation",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI text the quote comes from.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "core.quote",
+    "type": "string",
+    "unit": null,
+    "meaning": "Sentence copied word for word from the PSI text.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "engineer",
+    "type": "object",
+    "unit": null,
+    "meaning": "Astronaut / engineer lens: one or two plain sentences on what this investigation means for crew fire safety, drafted by Meta Muse Spark ONLY from the investigation's own PSI text (research impact, applications, objective). No digits. quote is the verbatim PSI sentence it rests on (whitespace-normalised substring). Absent when the PSI text says nothing about safety or applications: never inferred.",
+    "records": 19,
+    "non_null": 5
+  },
+  {
+    "file": "library.json",
+    "field": "engineer.investigation",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI text the engineer quote comes from.",
+    "records": 19,
+    "non_null": 5
+  },
+  {
+    "file": "library.json",
+    "field": "engineer.quote",
+    "type": "string",
+    "unit": null,
+    "meaning": "Verbatim PSI sentence the engineer text rests on.",
+    "records": 19,
+    "non_null": 5
+  },
+  {
+    "file": "library.json",
+    "field": "engineer.text",
+    "type": "string",
+    "unit": null,
+    "meaning": "What the investigation means for crew fire safety.",
+    "records": 19,
+    "non_null": 5
+  },
+  {
+    "file": "library.json",
+    "field": "hook",
+    "type": "string",
+    "unit": null,
+    "meaning": "one or two plain sentences, no digits.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "id",
+    "type": "string",
+    "unit": null,
+    "meaning": "Story slug from the library table.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "investigations",
+    "type": "array",
+    "unit": null,
+    "meaning": "PSI investigations this story covers.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "moments",
+    "type": "array",
+    "unit": null,
+    "meaning": "moment ids to show, the first is the story's climax; empty when the investigation has no rows.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "reveal",
+    "type": "string",
+    "unit": null,
+    "meaning": "what the tests did, in plain words, no digits.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "signature",
+    "type": "string",
+    "unit": null,
+    "meaning": "the view the data can actually support: condition-map needs rows with oxygen and pressure; sample-wall lists the rows as cards; outcome-strip is one mark per row along the one recorded variable; paper-trail lists publications when there are no rows.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "title",
+    "type": "string",
+    "unit": null,
+    "meaning": "the story title from the table in docs/STORY-LIBRARY.md.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "library.json",
+    "field": "voice",
+    "type": "string",
+    "unit": null,
+    "meaning": "the voice from the same table, e.g. 'the firefighter'.",
+    "records": 19,
+    "non_null": 19
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family",
+    "type": "object",
+    "unit": null,
+    "meaning": "Plotted counts per hardware family.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.droplets",
+    "type": "object",
+    "unit": null,
+    "meaning": "Counts for the droplets family.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.droplets.not_plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group without both recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.droplets.plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group with oxygen and pressure recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.droplets.total",
+    "type": "integer",
+    "unit": null,
+    "meaning": "All rows of this group.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.gas jets",
+    "type": "object",
+    "unit": null,
+    "meaning": "Counts for the gas jets family.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.gas jets.not_plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group without both recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.gas jets.plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group with oxygen and pressure recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.gas jets.total",
+    "type": "integer",
+    "unit": null,
+    "meaning": "All rows of this group.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.ground/modeling",
+    "type": "object",
+    "unit": null,
+    "meaning": "Counts for the ground/modeling family.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.ground/modeling.not_plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group without both recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.ground/modeling.plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group with oxygen and pressure recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.ground/modeling.total",
+    "type": "integer",
+    "unit": null,
+    "meaning": "All rows of this group.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.large-scale solids",
+    "type": "object",
+    "unit": null,
+    "meaning": "Counts for the large-scale solids family.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.large-scale solids.not_plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group without both recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.large-scale solids.plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group with oxygen and pressure recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.large-scale solids.total",
+    "type": "integer",
+    "unit": null,
+    "meaning": "All rows of this group.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.smoke detection",
+    "type": "object",
+    "unit": null,
+    "meaning": "Counts for the smoke detection family.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.smoke detection.not_plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group without both recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.smoke detection.plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group with oxygen and pressure recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.smoke detection.total",
+    "type": "integer",
+    "unit": null,
+    "meaning": "All rows of this group.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.solids in flow duct",
+    "type": "object",
+    "unit": null,
+    "meaning": "Counts for the solids in flow duct family.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.solids in flow duct.not_plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group without both recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.solids in flow duct.plotted",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Rows of this group with oxygen and pressure recorded.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_family.solids in flow duct.total",
+    "type": "integer",
+    "unit": null,
+    "meaning": "All rows of this group.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_reason",
+    "type": "object",
+    "unit": null,
+    "meaning": "Unplotted counts per reason in words.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_reason.no oxygen or pressure recorded",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Tests not plotted for this reason.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_reason.no oxygen recorded",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Tests not plotted for this reason.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_reason.no pressure recorded",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Tests not plotted for this reason.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "by_reason.not microgravity",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Tests not plotted for this reason.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "not_plotted",
+    "type": "integer",
+    "unit": "count",
+    "meaning": "Rows listed but not drawn.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "plotted",
+    "type": "integer",
+    "unit": "count",
+    "meaning": "Rows drawable on the stage.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "coverage.json",
+    "field": "total",
+    "type": "integer",
+    "unit": "count",
+    "meaning": "Every row in tests.json.",
+    "records": 1,
+    "non_null": 1
+  },
+  {
+    "file": "search.json",
+    "field": "acronym",
+    "type": "string",
+    "unit": null,
+    "meaning": "Short investigation name, when the entry has one.",
+    "records": 159,
+    "non_null": 22
+  },
+  {
+    "file": "search.json",
+    "field": "family",
+    "type": "string",
+    "unit": null,
+    "meaning": "Hardware family, when the entry has one.",
+    "records": 159,
+    "non_null": 22
+  },
+  {
+    "file": "search.json",
+    "field": "id",
+    "type": "string",
+    "unit": null,
+    "meaning": "Investigation, fuel or family id.",
+    "records": 159,
+    "non_null": 159
+  },
+  {
+    "file": "search.json",
+    "field": "investigations",
+    "type": "array",
+    "unit": null,
+    "meaning": "Investigations using this fuel or family.",
+    "records": 159,
+    "non_null": 131
+  },
+  {
+    "file": "search.json",
+    "field": "keywords",
+    "type": "array",
+    "unit": null,
+    "meaning": "Search words from tags and fuels.",
+    "records": 159,
+    "non_null": 22
+  },
+  {
+    "file": "search.json",
+    "field": "kind",
+    "type": "string",
+    "unit": null,
+    "meaning": "Whether the entry is an investigation, fuel or family.",
+    "records": 159,
+    "non_null": 159
+  },
+  {
+    "file": "search.json",
+    "field": "terms",
+    "type": "string",
+    "unit": null,
+    "meaning": "Lower-case text the search matches against.",
+    "records": 159,
+    "non_null": 159
+  },
+  {
+    "file": "search.json",
+    "field": "test_count",
+    "type": "integer",
+    "unit": "count",
+    "meaning": "Test rows counted for this entry.",
+    "records": 159,
+    "non_null": 159
+  },
+  {
+    "file": "search.json",
+    "field": "title",
+    "type": "string",
+    "unit": null,
+    "meaning": "Investigation title, when the entry has one.",
+    "records": 159,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "columns",
+    "type": "object",
+    "unit": null,
+    "meaning": "CSV header each field was read from.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "columns.burn_time_s",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "CSV header this field was read from, when mapped.",
+    "records": 22,
+    "non_null": 5
+  },
+  {
+    "file": "provenance.json",
+    "field": "columns.flow_cm_s",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "CSV header this field was read from, when mapped.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "columns.o2_pct",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "CSV header this field was read from, when mapped.",
+    "records": 22,
+    "non_null": 10
+  },
+  {
+    "file": "provenance.json",
+    "field": "columns.outcome",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "CSV header this field was read from, when mapped.",
+    "records": 22,
+    "non_null": 3
+  },
+  {
+    "file": "provenance.json",
+    "field": "columns.pressure_kpa",
+    "type": "null|string",
+    "unit": null,
+    "meaning": "CSV header this field was read from, when mapped.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields",
+    "type": "object",
+    "unit": null,
+    "meaning": "Per-field parse counts.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.burn_time_s",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded burn time.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.burn_time_s.empty",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells left blank in the source.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.burn_time_s.parsed",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells that yielded a recorded value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.burn_time_s.unparsable",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells present but yielding no value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.flow_cm_s",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded flow speed.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.flow_cm_s.empty",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells left blank in the source.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.flow_cm_s.parsed",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells that yielded a recorded value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.flow_cm_s.unparsable",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells present but yielding no value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.o2_pct",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded oxygen, in percent.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.o2_pct.empty",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells left blank in the source.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.o2_pct.parsed",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells that yielded a recorded value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.o2_pct.unparsable",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells present but yielding no value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.outcome",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded outcome.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.outcome.empty",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells left blank in the source.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.outcome.parsed",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells that yielded a recorded value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.outcome.unparsable",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells present but yielding no value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.pressure_kpa",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded pressure, in kPa.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.pressure_kpa.empty",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells left blank in the source.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.pressure_kpa.parsed",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells that yielded a recorded value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "fields.pressure_kpa.unparsable",
+    "type": "integer",
+    "unit": null,
+    "meaning": "Cells present but yielding no value.",
+    "records": 22,
+    "non_null": 15
+  },
+  {
+    "file": "provenance.json",
+    "field": "file",
+    "type": "string",
+    "unit": null,
+    "meaning": "CSV file name under data/psi-snapshot/.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "investigation",
+    "type": "string",
+    "unit": null,
+    "meaning": "PSI investigation the file belongs to.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "mapped",
+    "type": "boolean",
+    "unit": null,
+    "meaning": "Whether the pipeline maps this file to test rows.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "reason",
+    "type": "string",
+    "unit": null,
+    "meaning": "Why a skipped file is not mapped.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "rows_mapped",
+    "type": "integer",
+    "unit": "count",
+    "meaning": "Rows that became tests.json entries.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "rows_read",
+    "type": "integer",
+    "unit": "count",
+    "meaning": "Data rows read from the file.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "units",
+    "type": "object",
+    "unit": null,
+    "meaning": "Units seen and conversions applied.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.burn_time_s",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded burn time.",
+    "records": 22,
+    "non_null": 5
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.burn_time_s.column",
+    "type": "string",
+    "unit": null,
+    "meaning": "Header the burn time cells were read from.",
+    "records": 22,
+    "non_null": 5
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.burn_time_s.unit",
+    "type": "string",
+    "unit": null,
+    "meaning": "Unit the burn time column is recorded in.",
+    "records": 22,
+    "non_null": 5
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.flow_cm_s",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded flow speed.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.flow_cm_s.column",
+    "type": "string",
+    "unit": null,
+    "meaning": "Header the flow cells were read from.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.flow_cm_s.unit",
+    "type": "string",
+    "unit": null,
+    "meaning": "Unit the flow column is recorded in.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.o2_pct",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded oxygen, in percent.",
+    "records": 22,
+    "non_null": 10
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.o2_pct.column",
+    "type": "string",
+    "unit": null,
+    "meaning": "Header the oxygen cells were read from.",
+    "records": 22,
+    "non_null": 10
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.o2_pct.conversion",
+    "type": "string",
+    "unit": null,
+    "meaning": "Conversion applied to oxygen cells.",
+    "records": 22,
+    "non_null": 10
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.o2_pct.kind",
+    "type": "string",
+    "unit": null,
+    "meaning": "Whether oxygen was a fraction or a percent.",
+    "records": 22,
+    "non_null": 10
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.pressure_kpa",
+    "type": "object",
+    "unit": null,
+    "meaning": "Recorded pressure, in kPa.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.pressure_kpa.cell_overrides",
+    "type": "array",
+    "unit": null,
+    "meaning": "Unit words seen inside cells.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.pressure_kpa.column",
+    "type": "string",
+    "unit": null,
+    "meaning": "Header the pressure cells were read from.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.pressure_kpa.factor",
+    "type": "number",
+    "unit": "kPa per unit",
+    "meaning": "Multiplier to kPa for that unit.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "units.pressure_kpa.unit",
+    "type": "string",
+    "unit": null,
+    "meaning": "Unit the pressure column is recorded in.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "unparsable_cells",
+    "type": "array",
+    "unit": null,
+    "meaning": "Raw cells that could not be parsed, at most three.",
+    "records": 22,
+    "non_null": 22
+  },
+  {
+    "file": "provenance.json",
+    "field": "unparsable_cells.field",
+    "type": "string",
+    "unit": null,
+    "meaning": "Field the raw cell was read for.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "unparsable_cells.raw",
+    "type": "string",
+    "unit": null,
+    "meaning": "Cell text exactly as in the source file.",
+    "records": 22,
+    "non_null": 7
+  },
+  {
+    "file": "provenance.json",
+    "field": "unparsable_cells.row",
+    "type": "integer",
+    "unit": null,
+    "meaning": "One-based data row of the raw cell.",
+    "records": 22,
+    "non_null": 7
+  }
+]

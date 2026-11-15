@@ -13,9 +13,9 @@
       "investigation": "PSI-99"
     },
     "signature": "sample-wall",
-    "hook": "They lit a big fire in space on purpose to learn how fast it can grow.",
-    "reveal": "After leaving the station, Saffire set out to light samples inside a long duct where fans moved air past the flames, with cameras and heat sensors watching how fast fire grew, using Sibal fabric mixed with silicone and PMMA in flat and structure forms and with Nomex.",
-    "bridge": "Knowing how these fabrics and test samples burn in low gravity helps think about safer air for a Moon base.",
+    "hook": "They lit a large fire in space on purpose. It rode in the Cygnus resupply vehicle after it left the station while cameras watched.",
+    "reveal": "Saffire set out to test how fast a large fire grows in low-gravity, using separate pieces of Sibal fabric, silicone, structure PMMA, flat PMMA, and PMMA with Nomex in a flow duct with fans moving air past them while cameras and heat sensors watched.",
+    "bridge": "Knowing how fabric burns in moving air with low gravity helps us think about what air is safe to breathe in a Moon home.",
     "moments": [
       "PSI-98.lowest-o2-burned",
       "PSI-99.lowest-o2-burned",
@@ -32,7 +32,12 @@
     ],
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T04:15:48Z"
+      "made_at": "2026-11-15T05:55:03Z"
+    },
+    "engineer": {
+      "text": "The experiment set out to measure how rapidly a large scale fire grows in low gravity and to compare low gravity flammability limits with those from NASA normal gravity screening.",
+      "quote": "The objectives of SAFFIRE-II are to determine how rapidly a large scale fire grows in low-gravity and to investigate the low-g flammability limits compared to those obtained in NASA’s normal gravity material flammability screening test.",
+      "investigation": "PSI-99"
     }
   },
   {
@@ -56,6 +61,11 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:13:14Z"
+    },
+    "engineer": {
+      "text": "This investigation set out to bridge ground-based flammability tests and actual material flammability in microgravity by watching flames burn for longer times in flight.",
+      "quote": "Begin to bridge the gap between the normal gravity NASA-STD-6001 Test#1 method, ground-based microgravity tests, and actual material flammability in microgravity.",
+      "investigation": "PSI-26"
     }
   },
   {
@@ -80,6 +90,11 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:13:40Z"
+    },
+    "engineer": {
+      "text": "The study set out to contribute to combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth.",
+      "quote": "BASS-II results contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth.",
+      "investigation": "PSI-25"
     }
   },
   {
@@ -108,6 +123,11 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:14:49Z"
+    },
+    "engineer": {
+      "text": "This investigation aims to map when liquid fuels can burn in weightlessness and test how well different gas suppressants can put those flames out to help improve fire safety procedures for future missions.",
+      "quote": "These investigations are essential for advancing the fundamental understanding of combustion processes in microgravity and enhancing fire safety protocols for future space missions.",
+      "investigation": "PSI-69"
     }
   },
   {
@@ -167,13 +187,13 @@
     "title": "CFI-G: cool flames on demand",
     "voice": "the recipe book",
     "core": {
-      "quote": "Determine the conditions for which cool diffusion flames occur for propane, n-butane, and n-pentane; normal and inverse flames; and a broad range of Zst, Tad, and fluent flow rate.",
+      "quote": "Plan and support flight testing on the International Space Station (ISS).",
       "investigation": "PSI-159"
     },
     "signature": "condition-map",
-    "hook": "Think like a cook with a recipe book, trying different fuels and flows to find the mix that makes a cool flame.",
-    "reveal": "They made round flames on the space station with different fuels and mixes, changing flows and pressures in both normal and backward directions, and watched them with cameras and light and heat tools.",
-    "bridge": "This work is not about Moon base air, it is about the basic recipe for when cool flames show up.",
+    "hook": "Think of this like a recipe book for cool flames that the team plans to test on the space station.",
+    "reveal": "The plan is to make round flames on the space station with different fuels and air mixes, changing flow and pressure and flame direction, and watching with cameras and heat tools to learn when cool flames could form.",
+    "bridge": "This study is not about Moon base air but about the basic recipe for when cool flames might appear.",
     "moments": [
       "PSI-159.lowest-o2-burned",
       "PSI-159.highest-o2-went-out",
@@ -184,7 +204,7 @@
     ],
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:08:38Z"
+      "made_at": "2026-11-15T05:53:45Z"
     }
   },
   {
@@ -199,9 +219,9 @@
       "investigation": "PSI-10"
     },
     "signature": "condition-map",
-    "hook": "I am trying to shape a round flame that stays clean instead of making soot.",
-    "reveal": "They lit round flames while falling and on the space station, tried many mixes, flows and pressures in both directions, and watched size, color, heat and soot with cameras and sensors.",
-    "bridge": "This test is not about Moon base air, it is about learning when round flames make soot and when they fade out.",
+    "hook": "We plan to shape round flames to learn when soot begins to show.",
+    "reveal": "The team plans to try round flames in drop towers and on the space station using different flows and pressures, and to watch when soot starts and how size and color and heat change with cameras and heat sensors.",
+    "bridge": "This study is about how round flames form soot, not about the air in a Moon base.",
     "moments": [
       "PSI-10.o2-range",
       "PSI-10.pressure-range",
@@ -209,7 +229,7 @@
     ],
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:09:17Z"
+      "made_at": "2026-11-15T05:54:28Z"
     }
   },
   {
@@ -408,6 +428,11 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:13:50Z"
+    },
+    "engineer": {
+      "text": "This research set out to develop modeling techniques for flame spread to help enable prediction of flammability limits for spacecraft materials and support spacecraft safety and hazard mitigation.",
+      "quote": "Ultimately, the long-term goal was to enable accurate prediction of flammability limits for spacecraft materials and to provide a tool that could also serve as a subgrid-scale model in large-eddy simulations of fires, supporting spacecraft safety and hazard mitigation.",
+      "investigation": "PSI-62"
     }
   },
   {
