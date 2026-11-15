@@ -1177,6 +1177,14 @@ describe("tilt label placement (task 28)", () => {
     expect(css).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*white-space:\s*normal/);
   });
 
+  it("R11: every tilt label is capped at its plane width so the lunar sentence wraps centred", () => {
+    const wide = css.split("@media").filter((b) => /min-width:\s*1100px/.test(b)).join("\n");
+    expect(wide).toMatch(/\.tilt-label\s*\{[^}]*max-width:\s*26rem/);
+    expect(wide).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*max-width:\s*26rem/);
+    expect(wide).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*text-align:\s*center/);
+    expect(css).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*white-space:\s*normal/);
+  });
+
   it("the Moon box uses exactly the micro-plane mapping for the moon.json values", () => {
     const atm = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
     expect([atm.pressure_kpa, atm.o2_pct_min, atm.o2_pct_max]).toEqual([56.5, 33.7, 40]);

@@ -22,6 +22,13 @@
    The lunar label wraps at the plot edge on narrow pages instead of leaving the box. */
 .tilt-label.plane-micro, .tilt-label.plane-lunar, .tilt-label.plane-earth { font-size: var(--text-card); font-weight: 700; color: var(--ink-dark); }
 .tilt-label.plane-lunar { max-width: 100%; white-space: normal; }
+/* R11: every label is capped at its plane's drawn width (about 26rem on desktop),
+   so the lunar sentence wraps onto two lines centred over its plane instead of
+   running past the plane to the window edge. Narrow screens keep the 100 % cap. */
+@media (min-width: 1100px) {
+  .tilt-label { max-width: 26rem; }
+  .tilt-label.plane-lunar { max-width: 26rem; text-align: center; }
+}
 .tilt-label.you { color: var(--ink-dark); }
 .stage-svg text { fill: var(--muted-dark); font-size: var(--text-meta); }
 .stage-svg .axis-title { font-size: var(--text-meta); }

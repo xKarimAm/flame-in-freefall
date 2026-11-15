@@ -60,6 +60,25 @@ body[data-stage-hidden="true"] #stage { visibility: hidden; }
 }
 #panel[hidden], #sheet[hidden], #overlay[hidden] { display: none; }
 
+/* R10: from 1100px up the panel lives inside the story column (the left 40 %),
+   never over the stage: its left edge follows the story text margin and its width
+   keeps its right edge left of the 40 % line. Under 1100 px it stays the centred sheet. */
+@media (min-width: 1100px) {
+  #panel {
+    left: max(4vw, 16px);
+    right: auto;
+    transform: none;
+    width: min(420px, calc(40vw - max(4vw, 16px) - 32px));
+  }
+  /* while the panel is shown the active step's card sits at the top of its page
+     (the step is a row flex, so align-items parks it vertically) with room for the
+     sticky header, so the sources end above the panel's top edge */
+  body:has(#panel:not([hidden])) #story .step.is-active {
+    align-items: flex-start;
+    padding-top: calc(var(--chrome-h) + 16px);
+  }
+}
+
 /* tabular numbers everywhere a number can move (slider readouts already have it) */
 body { font-variant-numeric: tabular-nums; }
 

@@ -664,6 +664,17 @@ describe("ui", () => {
     expect(base).toMatch(/#panel\s*\{[^}]*width:\s*min\(420px,[^}]*max-height:\s*45vh/);
   });
 
+  it("R10: from 1100px up the panel lives in the story column and the active card moves to the top", () => {
+    const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
+    const wide = base.split("@media").filter((b) => /min-width:\s*1100px/.test(b) && /#panel/.test(b)).join("\n");
+    expect(wide.length).toBeGreaterThan(0);
+    expect(wide).not.toMatch(/translateX\(-50%\)/);
+    expect(wide).toMatch(/#panel\s*\{[^}]*left:\s*max\(4vw,\s*16px\)/);
+    expect(wide).toMatch(/#panel\s*\{[^}]*transform:\s*none/);
+    expect(wide).toMatch(/#panel\s*\{[^}]*width:[^;]*40vw/);
+    expect(wide).toMatch(/\.step\.is-active\s*\{[^}]*align-items:\s*flex-start/);
+  });
+
   it("the language picker is one compact select at the right end and switches the store locale", () => {
     const { store } = setup(null, i18nDicts);
     const chrome = roots().chrome;
