@@ -88,6 +88,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
 
   const dots = new Map<string, SVGElement>(); // test id -> circle, reused so class changes can transition
   let selectedInv: string | null = null; // the linked selection (a dot click or a sheet row), not the story
+  let nudged = false; // the dial marker nudges once per visit, not on every page turn
   let flameShown = false; // the flame fades in on first paint only, never when the dial is rebuilt
   let youO2: number | null = null; // chapter 1's oxygen handle: the visitor's value, kept across redraws
   let selectedFam: Family | null = null; // chapter 2's family tap: a local highlight, not the story
@@ -661,10 +662,11 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     notes.append(hint, result);
     side.append(notes);
     // one gentle nudge of the marker the first time the dial is on screen (CSS skips it under reduced motion)
-    if (typeof IntersectionObserver !== "undefined") {
+    if (!nudged && typeof IntersectionObserver !== "undefined") {
       const seen = new IntersectionObserver((es) => {
         if (!es.some((e) => e.isIntersecting)) return;
         seen.disconnect();
+        nudged = true;
         line.classList.add("dial-nudge");
       });
       seen.observe(dial);
