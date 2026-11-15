@@ -1,12 +1,17 @@
+// Generated with Muse Spark, SI-assisted.
 // Dictionaries and chrome text (contracts/I18N.md). en is the source of truth.
-// Skeleton by the orchestrator; coder E owns this folder from task T13.
-// Generated with Claude, SI-assisted.
 import type { Locale } from "../contract";
-import en from "./en.json";
 
-export const dicts: Partial<Record<Locale, Record<string, string>>> = { en };
+const files = import.meta.glob("./*.json", { eager: true, import: "default" }) as Record<string, Record<string, string>>;
 
-/** Chrome text: current locale, then en, then the key itself. {name} placeholders come from vars. */
+/** Every <locale>.json in this folder (<locale>.meta.json excluded); en is complete, the rest fall back to it. */
+export const dicts: Partial<Record<Locale, Record<string, string>>> = {};
+for (const [path, dict] of Object.entries(files)) {
+  const locale = path.replace(/^\.\//, "").replace(/\.json$/, "");
+  if (/^[a-z]{2}$/.test(locale)) dicts[locale as Locale] = dict;
+}
+
+/** Chrome text: current locale, then en, then the key itself. {name} placeholders are replaced from vars. */
 export function makeT(locale: () => Locale) {
   return (key: string, vars: Record<string, string | number> = {}): string => {
     const text = dicts[locale()]?.[key] ?? dicts.en?.[key] ?? key;

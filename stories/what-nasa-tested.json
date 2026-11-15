@@ -1,0 +1,303 @@
+{
+  "id": "what-nasa-tested",
+  "act": 2,
+  "title_key": "story.what-nasa-tested.title",
+  "scenes": [
+    {
+      "id": "what-nasa-tested-main",
+      "beats": [
+        {
+          "id": "why-test",
+          "kind": "hook",
+          "stage": {
+            "view": "micro-g",
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.why-test.public"
+          },
+          "sources": [
+            {
+              "label": "PSI-69 FLEX, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69"
+            },
+            {
+              "label": "PSI-68 FLEX-2, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-68"
+            },
+            {
+              "label": "PSI-39 CFI, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-39"
+            }
+          ]
+        },
+        {
+          "id": "droplets",
+          "kind": "reveal",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "droplets"
+            ],
+            "highlight": {
+              "family": "droplets"
+            },
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.droplets.public",
+            "analyst": "story.what-nasa-tested.what-nasa-tested-main.droplets.analyst"
+          },
+          "sources": [
+            {
+              "label": "PSI-69 FLEX, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69"
+            },
+            {
+              "label": "PSI-68 FLEX-2, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-68"
+            },
+            {
+              "label": "PSI-39 CFI, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-39"
+            }
+          ]
+        },
+        {
+          "id": "gas-jets",
+          "kind": "focus",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "droplets",
+              "gas jets"
+            ],
+            "highlight": {
+              "family": "gas jets"
+            },
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.gas-jets.public",
+            "analyst": "story.what-nasa-tested.what-nasa-tested-main.gas-jets.analyst"
+          },
+          "sources": [
+            {
+              "label": "PSI-159 ACME CFI-G, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159"
+            },
+            {
+              "label": "PSI-10 ACME/Flame Design, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-10"
+            },
+            {
+              "label": "PSI-107 SPICE, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-107"
+            }
+          ]
+        },
+        {
+          "id": "solids-duct",
+          "kind": "focus",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "droplets",
+              "gas jets",
+              "solids in flow duct"
+            ],
+            "highlight": {
+              "family": "solids in flow duct"
+            },
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.solids-duct.public",
+            "analyst": "story.what-nasa-tested.what-nasa-tested-main.solids-duct.analyst"
+          },
+          "sources": [
+            {
+              "label": "PSI-25 BASS-II, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-25"
+            },
+            {
+              "label": "PSI-26 BASS, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-26"
+            }
+          ]
+        },
+        {
+          "id": "large-scale",
+          "kind": "focus",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "droplets",
+              "gas jets",
+              "solids in flow duct",
+              "large-scale solids"
+            ],
+            "highlight": {
+              "family": "large-scale solids"
+            },
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.large-scale.public",
+            "astronaut": "story.what-nasa-tested.what-nasa-tested-main.large-scale.astronaut",
+            "analyst": "story.what-nasa-tested.what-nasa-tested-main.large-scale.analyst"
+          },
+          "sources": [
+            {
+              "label": "PSI-98 SAFFIRE-I, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+              "psi_row": "PSI-98#1"
+            },
+            {
+              "label": "PSI-99 SAFFIRE-II, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99"
+            },
+            {
+              "label": "PSI-100 SAFFIRE-III, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-100"
+            }
+          ]
+        },
+        {
+          "id": "smoke",
+          "kind": "focus",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "droplets",
+              "gas jets",
+              "solids in flow duct",
+              "large-scale solids",
+              "smoke detection"
+            ],
+            "highlight": {
+              "family": "smoke detection"
+            },
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.smoke.public",
+            "astronaut": "story.what-nasa-tested.what-nasa-tested-main.smoke.astronaut",
+            "analyst": "story.what-nasa-tested.what-nasa-tested-main.smoke.analyst"
+          },
+          "sources": [
+            {
+              "label": "PSI-101 SAME-R, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-101"
+            },
+            {
+              "label": "PSI-102 SAME, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-102"
+            }
+          ]
+        },
+        {
+          "id": "ground",
+          "kind": "focus",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "droplets",
+              "gas jets",
+              "solids in flow duct",
+              "large-scale solids",
+              "smoke detection",
+              "ground/modeling"
+            ],
+            "highlight": {
+              "family": "ground/modeling"
+            },
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.ground.public",
+            "analyst": "story.what-nasa-tested.what-nasa-tested-main.ground.analyst"
+          },
+          "sources": [
+            {
+              "label": "PSI-60 SPICE data analysis, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-60"
+            },
+            {
+              "label": "PSI-62 flame spread modeling, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-62"
+            },
+            {
+              "label": "PSI-117 cool flame CFD, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-117"
+            },
+            {
+              "label": "PSI-142 counterflow flames, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-142"
+            }
+          ]
+        },
+        {
+          "id": "compare",
+          "kind": "compare",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "droplets",
+              "gas jets",
+              "solids in flow duct",
+              "large-scale solids",
+              "smoke detection",
+              "ground/modeling"
+            ],
+            "coverage": true,
+            "analyst_sheet": "table"
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.compare.public",
+            "analyst": "story.what-nasa-tested.what-nasa-tested-main.compare.analyst"
+          },
+          "sources": [
+            {
+              "label": "PSI-69 FLEX, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69"
+            },
+            {
+              "label": "PSI-68 FLEX-2, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-68"
+            },
+            {
+              "label": "PSI-159 ACME CFI-G, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-159"
+            }
+          ]
+        },
+        {
+          "id": "takeaway",
+          "kind": "takeaway",
+          "stage": {
+            "view": "micro-g",
+            "show_families": [
+              "droplets",
+              "gas jets",
+              "solids in flow duct",
+              "large-scale solids",
+              "smoke detection",
+              "ground/modeling"
+            ],
+            "coverage": true
+          },
+          "text": {
+            "public": "story.what-nasa-tested.what-nasa-tested-main.takeaway.public"
+          },
+          "sources": [
+            {
+              "label": "Challenge #7 brief",
+              "url": "https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -4,14 +4,20 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import type { AtmosphereId, DataApi, Experiment, Family, IncidentsData, MoonData, NearestQuery, NotPlacedRow, PlacedTest, Story, TestRun } from "../contract";
+import type { AppState, AtmosphereId, DataApi, Experiment, Family, IncidentsData, Lens, MoonData, NearestQuery, NotPlacedRow, PlacedTest, StageState, Story, TestRun } from "../contract";
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
-import { mount } from "./index";
-import { chartScales, niceRange, overlaps, wrap } from "./layout";
+import { mountSheet } from "../ui/sheet";
+import { SELECT_INVESTIGATION, mount } from "./index";
+import * as THREE from "three";
+import { TILT_H, TILT_MS, TILT_W, TILT_Y, TILT_Z, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltLabelAnchors, tiltLabelBoxes, tiltPlaneGeometry, tiltPose, tiltProgress, tokenDefaults } from "./tilt";
+import type { TiltColors, TiltFixedLabelId, TiltLabelId, TiltLabelSpec, TiltLabels } from "./tilt";
+import { CHART_RESERVE_PX, chartHeight, chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
-import { dotKind, noPressureRows, refShape } from "./plan";
+import { chartPasses, dotKind, noPressureRows, refShape } from "./plan";
+import type { ChartFilters } from "../contract";
 import type { RefPlan } from "./plan";
+import { DIAL_IDS, flameStandPad, incidentO2, markerBottomFraction } from "./picture";
 import { layoutRefs } from "./refs";
 
 const read = <T>(rel: string): T => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf8")) as T;
@@ -71,9 +77,9 @@ function fakeApi(extra: Extra = {}): DataApi & { nearestSpy: ReturnType<typeof v
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "stage.css"), "utf8");
 const SIZE = { w: 688, h: 700 }; // the SVG fills #stage's content box; this stands in for it
-function setup(stage = initialState.stage, sliders = initialState.sliders, extra: Extra = {}, size = SIZE) {
+function setup(stage = initialState.stage, sliders = initialState.sliders, extra: Extra = {}, size = SIZE, lens: Lens = "public", beat: AppState["beat"] = null) {
   const api = fakeApi(extra);
-  const store = createStore({ ...initialState, stage, sliders });
+  const store = createStore({ ...initialState, stage, sliders, lens, beat });
   const host = document.createElement("div");
   document.body.append(host);
   mount(host, { api, store, dicts, t: makeT(() => "en") }, { size });
@@ -131,6 +137,18 @@ describe("scale helpers", () => {
   });
   it("wraps words by length", () => {
     expect(wrap("aa bb cc dd", 5)).toEqual(["aa bb", "cc dd"]);
+  });
+});
+
+describe("the chart, legend and counter fit the stage box (task 25)", () => {
+  it("derives the chart height from the box minus the measured chrome, with breathing room", () => {
+    expect(CHART_RESERVE_PX).toBe(8);
+    expect(chartHeight(744, 103)).toBe(744 - 103 - CHART_RESERVE_PX);
+    expect(chartHeight(800, 0)).toBe(800 - CHART_RESERVE_PX);
+    expect(chartHeight(100, 90)).toBe(80); // tiny box: clamped, never negative
+  });
+  it("sizes the plot box explicitly from that derivation instead of stretching it", () => {
+    expect(css).toMatch(/\.stage-plot\s*\{[^}]*flex:\s*none/);
   });
 });
 
@@ -290,7 +308,9 @@ describe("reference labels", () => {
     for (const size of [{ w: 390, h: 520 }, { w: 516, h: 760 }, { w: 688, h: 700 }, { w: 1024, h: 600 }, { w: 1440, h: 800 }]) {
       const s = chartScales(size, niceRange(Math.min(...pressures), Math.max(...pressures)), { bandH: 0, headH: 40, strip: false });
       const bounds: Rect = { x: s.plot.x0, y: s.plot.y0, w: s.plot.x1 - s.plot.x0, h: s.plot.y1 - s.plot.y0 };
-      const placed = layoutRefs(allRefs, s, annotations, t);
+      // no story attaches a note to a reference label, and the 390 px plot is full with one:
+      // there the fixture uses the production-real input (no notes)
+      const placed = layoutRefs(allRefs, s, size.w === 390 ? [] : annotations, t);
       expect(placed.length).toBe(moon.atmospheres.length + 1);
       for (const p of placed) {
         const r = p.place.rect;
@@ -353,6 +373,20 @@ describe("lunar band", () => {
       for (const l of lines) expect(l.textContent!.length * 7).toBeLessThanOrEqual(bw - 16 + 7); // wrapped to the band width
     }
   });
+  it("prints the FM2 sentence once, not once per source (task 40c)", () => {
+    const gap = {
+      view: "tilt-lunar",
+      show_families: allFamilies,
+      reference: ["heo-dm-1006" as const],
+      annotation: [
+        { id: "fm2", text_key: "story.the-gap.the-gap-main.gap.annotation-2", at: "lunar-plane" as const },
+      ],
+    } as StageState;
+    const { layer } = setup(gap, null, {}, { w: 688, h: 700 });
+    const words = texts(layer("lunar-band")).replace(/\s+/g, " ");
+    expect(words.match(/FM2 will burn/g)!.length).toBe(1);
+  });
+
   it("is labelled and holds the beat's annotation and the FM2 note, wrapped", () => {
     const { layer } = setup(compareStage, null, {}, { w: 390, h: 620 });
     const all = texts(layer("lunar-band")).replace(/\s+/g, " ");
@@ -469,5 +503,872 @@ describe("motion", () => {
     expect(css).toMatch(/\[data-layer="tests"\] \.dot\s*\{[^}]*animation:\s*stage-in 0\.3s/);
     expect(css).toMatch(/@keyframes stage-in\s*\{[^}]*scale/);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.stage-root \*[^}]*transition:\s*none !important;[^}]*animation:\s*none !important/);
+  });
+});
+
+describe("public picture", () => {
+  const apollo = incidents.incidents[0]!;
+  const mir = incidents.incidents[1]!;
+  const pictureSetup = (ids: string[], lens: Lens = "public") =>
+    setup({ view: "incident", incident_ids: ids }, initialState.sliders, {}, SIZE, lens);
+
+  it("shows the dial, the flame and the incident card in the Public lens", () => {
+    const { host } = pictureSetup([apollo.id]);
+    const dial = host.querySelector(".o2-dial")!;
+    expect(dial.getAttribute("aria-label")).toBe(en["ui.stage.dial-title"]);
+    // every dial mark comes from moon.json by id, with its own numbers on screen
+    for (const id of DIAL_IDS) {
+      const a = moon.atmospheres.find((x) => x.id === id)!;
+      const mark = dial.querySelector(`[data-atmosphere="${id}"]`)!;
+      expect(dial.textContent).toContain(String(a.o2_pct_min));
+      if (a.o2_pct_max !== null && a.o2_pct_max > a.o2_pct_min) {
+        expect(mark.tagName).toBe("rect");
+        expect(dial.textContent).toContain(String(a.o2_pct_max));
+      } else expect(mark.tagName).toBe("circle");
+    }
+    // the Apollo marker sits on the 100 % suit tick and names the incident's own oxygen words
+    const marker = dial.querySelector('[data-incident="apollo-1"]')!;
+    expect(marker.getAttribute("y1")).toBe(dial.querySelector('[data-atmosphere="suit"]')!.getAttribute("cy"));
+    expect(marker.querySelector("title")!.textContent).toBe(`${apollo.name}: ${apollo.oxygen}`);
+    // tall flame beside the card, and the card keeps every field
+    expect(host.querySelector(".flame-guide.tall")).not.toBeNull();
+    const card = host.querySelector(".incident-card")!;
+    for (const field of [apollo.name, apollo.oxygen, apollo.changed]) expect(card.textContent).toContain(field);
+    // the dial marks name their source papers
+    const src = host.querySelector(".dial-source")!;
+    expect(src.textContent).toContain(en["ui.stage.dial-source"]);
+    const srcLinks = [...src.querySelectorAll("a")];
+    expect(srcLinks.length).toBe(2);
+    for (const a of srcLinks) expect(a.getAttribute("href")).toMatch(/^https:\/\//);
+  });
+
+  it("an incident with no oxygen number has no marker and a small calm flame", () => {
+    const { host } = pictureSetup([mir.id]);
+    expect(host.querySelector(".dial-marker")).toBeNull();
+    expect(host.querySelector(".flame-guide.small")).not.toBeNull();
+    expect(host.querySelector(".flame-guide.tall")).toBeNull();
+  });
+
+  it("other lenses keep the incident cards without the picture", () => {
+    for (const lens of ["astronaut", "analyst"] as const) {
+      const { host } = pictureSetup([apollo.id, mir.id], lens);
+      expect(host.querySelector(".o2-dial")).toBeNull();
+      expect(host.querySelector(".flame-guide")).toBeNull();
+      expect(host.querySelector(".public-picture")).toBeNull();
+      expect(host.querySelectorAll(".incident-card").length).toBe(2);
+    }
+  });
+
+  it("switching lens swaps the picture in place", () => {
+    const { host, store } = pictureSetup([apollo.id]);
+    expect(host.querySelector(".o2-dial")).not.toBeNull();
+    store.set({ lens: "astronaut" });
+    expect(host.querySelector(".o2-dial")).toBeNull();
+    expect(host.querySelectorAll(".incident-card").length).toBe(1);
+    store.set({ lens: "public" });
+    expect(host.querySelector(".o2-dial")).not.toBeNull();
+  });
+
+  it("the picture is flat colour with no yellow, and the flame idles within the reduced-motion rules", () => {
+    const { host } = pictureSetup([apollo.id]);
+    const html = host.querySelector(".public-picture")!.innerHTML;
+    expect(html).not.toContain("--moon");
+    expect(html).not.toContain("#e7f434");
+    expect(css).toMatch(/@keyframes flame-sway/);
+    expect(css).toMatch(/\.flame-guide \.flame-sway\s*\{[^}]*animation:\s*flame-sway/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.stage-incidents \*/);
+  });
+});
+
+describe("chart filters (task 35)", () => {
+  const noFilters: { family: null } & ChartFilters = { family: null, search: "", fuel: null, outcome: null, plotted: "all" };
+  const dot = {
+    id: "PSI-69#2", investigation: "PSI-69", family: "droplets" as const,
+    fuel: "Methanol", outcome: "extinction" as const,
+  };
+  const placedIds = new Set(["PSI-69#2"]);
+
+  it("chartPasses keeps a row only when every set filter matches", () => {
+    const hay = "psi-69 methanol droplets";
+    expect(chartPasses(dot, noFilters, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, family: "droplets" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, family: "gas jets" }, placedIds, hay)).toBe(false);
+    expect(chartPasses(dot, { ...noFilters, fuel: "Methanol" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, fuel: "ethane" }, placedIds, hay)).toBe(false);
+    expect(chartPasses(dot, { ...noFilters, outcome: "extinction" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, outcome: "burned" }, placedIds, hay)).toBe(false);
+    expect(chartPasses(dot, { ...noFilters, search: "meth" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, search: "saffire" }, placedIds, hay)).toBe(false);
+    expect(chartPasses(dot, { ...noFilters, plotted: "plotted" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, plotted: "unplaced" }, placedIds, hay)).toBe(false);
+    expect(chartPasses({ ...dot, id: "PSI-98#1" }, { ...noFilters, plotted: "plotted" }, placedIds, hay)).toBe(false);
+    expect(chartPasses({ ...dot, id: "PSI-98#1" }, { ...noFilters, plotted: "unplaced" }, placedIds, hay)).toBe(true);
+  });
+
+  it("the chart draws only dots that pass the whole store filter set", () => {
+    const { host, store, api } = setup({ view: "micro-g", show_families: allFamilies });
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+    const dots = () => [...host.querySelectorAll('[data-layer="tests"] circle')].map((d) => d.getAttribute("data-id")!);
+    store.set({ filters: { ...noFilters, fuel: "Methanol" } });
+    expect(dots()).toEqual(["PSI-69#2"]);
+    store.set({ filters: { ...noFilters, outcome: "self-extinguished" } });
+    expect(dots()).toEqual(["PSI-159#1"]);
+    store.set({ filters: { ...noFilters, search: "ethane" } });
+    expect(dots()).toEqual(["PSI-159#1"]);
+    store.set({ filters: { ...noFilters, plotted: "unplaced" } });
+    expect(dots()).toEqual([]);
+    store.set({ filters: noFilters });
+    expect(dots().length).toBe(api.placed().length);
+  });
+
+  it("a sheet filter redraws the chart through the shared store (task 35)", () => {
+    const { host, store, api } = setup({ view: "micro-g", show_families: allFamilies });
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+    const sheetHost = document.createElement("section");
+    document.body.append(sheetHost);
+    mountSheet(sheetHost, { api, store, dicts, t: makeT(() => "en") });
+    store.set({ lens: "analyst" });
+    const sel = sheetHost.querySelector<HTMLSelectElement>("#sheet-fuel")!;
+    sel.value = "Methanol";
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(store.get().filters.fuel).toBe("Methanol");
+    expect([...host.querySelectorAll('[data-layer="tests"] circle')].map((d) => d.getAttribute("data-id")!)).toEqual([
+      "PSI-69#2",
+    ]);
+  });
+
+  it("the plotted filter switches the no-pressure strip off and on", () => {
+    const { host, store, api } = setup({ view: "micro-g", show_families: allFamilies });
+    const ticks = () => host.querySelectorAll('[data-layer="no-pressure"] line.ptick').length;
+    const all = api.notPlaced().filter((r) => r.reason === "no pressure recorded").length;
+    expect(all).toBeGreaterThan(0);
+    expect(ticks()).toBe(all);
+    store.set({ filters: { ...noFilters, plotted: "plotted" } });
+    expect(ticks()).toBe(0);
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+    store.set({ filters: { ...noFilters, plotted: "unplaced" } });
+    expect(ticks()).toBe(all);
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(0);
+    store.set({ filters: noFilters });
+    expect(ticks()).toBe(all);
+  });
+});
+
+describe("family filter", () => {
+  it("the chart shows only the filtered family's tests", () => {
+    const { host, store, api } = setup({ view: "micro-g", show_families: allFamilies });
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+    store.set({ family: "droplets" });
+    const dots = [...host.querySelectorAll('[data-layer="tests"] circle')];
+    const wanted = api.placed().filter((p) => p.family === "droplets");
+    expect(wanted.length).toBeGreaterThan(0);
+    expect(dots.length).toBe(wanted.length);
+    const ids = new Set(wanted.map((p) => p.id));
+    expect(dots.every((d) => ids.has(d.getAttribute("data-id")!))).toBe(true);
+    store.set({ family: null });
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+  });
+});
+
+describe("explainer boxes", () => {
+  const whyStage: StageState = { view: "micro-g", show_families: ["droplets"], coverage: true };
+  const whyBeat = { story: "what-nasa-tested", scene: "what-nasa-tested-main", beat: "why-test", kind: "hook" as const };
+  const revealStage: StageState = { view: "micro-g", show_families: allFamilies, reference: ["iss-air", "heo-dm-1006"] };
+  const revealBeat = { story: "moon-air", scene: "moon-air-main", beat: "reveal", kind: "reveal" as const };
+
+  it("explains the axes, a dot and the coverage once on the introducing page", () => {
+    const { host, api } = setup(whyStage, initialState.sliders, {}, SIZE, "public", whyBeat);
+    const boxes = [...host.querySelectorAll(".stage-explainers .exp")];
+    expect(boxes.map((b) => b.getAttribute("data-for"))).toEqual(["axis", "dot", "coverage"]);
+    const text = host.querySelector(".stage-explainers")!.textContent!;
+    const { plotted, total } = api.coverage();
+    expect(text).toContain(`${plotted} of ${total} tests`);
+    for (const b of boxes) {
+      expect(b.querySelector("h4")!.textContent!.length).toBeGreaterThan(0);
+      expect(b.querySelectorAll("p").length).toBe(2);
+    }
+  });
+
+  it("explains the Moon box and Earth air with moon.json numbers on the reveal", () => {
+    const { host } = setup(revealStage, initialState.sliders, {}, SIZE, "public", revealBeat);
+    const boxes = [...host.querySelectorAll(".stage-explainers .exp")];
+    expect(boxes.map((b) => b.getAttribute("data-for"))).toEqual(["moon-box", "iss-air"]);
+    const heo = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    const iss = moon.atmospheres.find((a) => a.id === "iss-air")!;
+    const text = host.querySelector(".stage-explainers")!.textContent!;
+    for (const v of [heo.pressure_kpa, heo.o2_pct_min, heo.o2_pct_max!, iss.pressure_kpa, iss.o2_pct_min]) {
+      expect(text).toContain(String(v));
+    }
+  });
+
+  it("links every explainer number with its unit to its moon.json source (task 32)", () => {
+    const { host } = setup(revealStage, initialState.sliders, {}, SIZE, "public", revealBeat);
+    const heo = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    const iss = moon.atmospheres.find((a) => a.id === "iss-air")!;
+    const link = (box: string, text: string): HTMLAnchorElement => {
+      const el = [...host.querySelectorAll(`.stage-explainers .exp[data-for="${box}"] .exp-what a`)].find(
+        (a) => a.textContent === text,
+      );
+      expect(el, `${box} links ${text}`).not.toBeUndefined();
+      return el as HTMLAnchorElement;
+    };
+    // the unit is inside the link, and the href is the atmosphere's own moon.json url
+    expect(link("moon-box", `${heo.pressure_kpa} kPa`).getAttribute("href")).toBe(heo.url);
+    expect(link("moon-box", String(heo.o2_pct_min)).getAttribute("href")).toBe(heo.url);
+    expect(link("moon-box", String(heo.o2_pct_max)).getAttribute("href")).toBe(heo.url);
+    expect(link("iss-air", `${iss.pressure_kpa} kPa`).getAttribute("href")).toBe(iss.url);
+    expect(link("iss-air", String(iss.o2_pct_min)).getAttribute("href")).toBe(iss.url);
+  });
+
+  it("stays silent on other pages and lenses", () => {
+    const otherBeat = { story: "what-nasa-tested", scene: "what-nasa-tested-main", beat: "droplets", kind: "reveal" as const };
+    for (const [stage, beat, lens] of [
+      [whyStage, otherBeat, "public"],
+      [whyStage, whyBeat, "astronaut"],
+      [revealStage, revealBeat, "analyst"],
+    ] as const) {
+      const { host } = setup(stage, initialState.sliders, {}, SIZE, lens, beat);
+      expect(host.querySelector(".stage-explainers")!.hasAttribute("hidden")).toBe(true);
+      expect(host.querySelectorAll(".stage-explainers .exp").length).toBe(0);
+    }
+  });
+});
+
+describe("linked selection", () => {
+  const linkedSetup = () => setup({ view: "micro-g", show_families: allFamilies });
+  const testDot = (host: HTMLElement, id: string) =>
+    [...host.querySelectorAll('[data-layer="tests"] [data-id]')].find((d) => d.getAttribute("data-id") === id)!;
+
+  it("clicking a dot selects its investigation and highlights its dots", () => {
+    const { host, api } = linkedSetup();
+    const placed = api.placed();
+    const a = placed[0]!;
+    const other = placed.find((p) => p.investigation !== a.investigation)!;
+    const seen: (string | null)[] = [];
+    window.addEventListener(SELECT_INVESTIGATION, (e) =>
+      seen.push((e as CustomEvent<{ investigation: string | null }>).detail.investigation));
+    const cls = (id: string) => testDot(host, id).getAttribute("class");
+    expect(cls(a.id)).toBe("dot");
+    testDot(host, a.id).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(seen).toEqual([a.investigation]);
+    expect(cls(a.id)).not.toBe("dot");
+    expect(cls(other.id)).toBe("dot");
+    testDot(host, a.id).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(seen).toEqual([a.investigation, null]);
+    expect(cls(a.id)).toBe("dot");
+  });
+
+  it("an incoming selection highlights dots without a store change", () => {
+    const { host, store, api } = linkedSetup();
+    const a = api.placed()[0]!;
+    const before = store.get();
+    window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: a.investigation } }));
+    expect(store.get()).toBe(before);
+    const dots = [...host.querySelectorAll('[data-layer="tests"] circle')];
+    const same = dots.filter((d) => {
+      const id = d.getAttribute("data-id")!;
+      return id === a.id || id.startsWith(`${a.investigation}#`);
+    });
+    expect(same.length).toBeGreaterThan(0);
+    expect(same.every((d) => d.getAttribute("class") !== "dot")).toBe(true);
+    expect(dots.filter((d) => !same.includes(d)).every((d) => d.getAttribute("class") === "dot")).toBe(true);
+  });
+});
+
+describe("tilt assistive chart and keyboard dots (task 36)", () => {
+  it("the SVG chart is clipped aside when the tilt runs, never display:none (task 36a)", () => {
+    // the canvas stays the decorative duplicate (aria-hidden); the SVG stays the accessible chart
+    expect(css).toMatch(/\.stage-svg\.behind-tilt\s*\{[^}]*clip-path/);
+    expect(css).not.toMatch(/\.stage-svg\.behind-tilt\s*\{[^}]*display:\s*none/);
+    const { host } = setup({ view: "micro-g", show_families: allFamilies });
+    expect((host.querySelector(".stage-svg") as SVGSVGElement).style.display).not.toBe("none");
+    expect(host.querySelector(".stage-svg.behind-tilt")).toBeNull(); // no tilt without WebGL here
+  });
+
+  it("dots and listed ticks activate from the keyboard exactly like a click (task 36e)", () => {
+    const { host } = setup({ view: "micro-g", show_families: allFamilies });
+    const seen: (string | null)[] = [];
+    window.addEventListener(SELECT_INVESTIGATION, (e) =>
+      seen.push((e as CustomEvent<{ investigation: string | null }>).detail.investigation));
+    const dot = host.querySelector<SVGCircleElement>('[data-layer="tests"] circle[data-id="PSI-69#2"]')!;
+    expect(dot.getAttribute("tabindex")).toBe("0");
+    dot.focus();
+    dot.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(seen).toEqual(["PSI-69"]);
+    dot.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }));
+    expect(seen).toEqual(["PSI-69", null]);
+    const tick = host.querySelector('[data-layer="no-pressure"] line.ptick')!;
+    expect(tick.getAttribute("tabindex")).toBe("0");
+    tick.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(seen.at(-1)).toBe(tick.getAttribute("data-id")!.split("#")[0]);
+  });
+});
+
+describe("tilt colours come from tokens.css (task 40d)", () => {
+  it("resolves every tilt colour from the token file, and tilt.ts holds no hex", () => {
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/tokens.css"), "utf8");
+    const tokens = tokenDefaults(css);
+    expect(tokens["--space-black"]).toBe("#1b1b1b");
+    expect(tokens["--muted-dark"]).toBe("#dfe1e2");
+    expect(tokens["--data-on-dark"]).toBe("#2491ff");
+    expect(tokens["--flame"]).toBe("#ff5804");
+    expect(tokens["--moon"]).toBe("#e7f434");
+    expect(tokens["--ink-dark"]).toBe("#ffffff");
+    const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "tilt.ts"), "utf8");
+    expect(src).not.toMatch(/#[0-9a-fA-F]{6}/);
+  });
+
+  it("leaves the light header controls on tokens (ui.css has no raw black)", () => {
+    const ui = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../ui/ui.css"), "utf8");
+    expect(ui).not.toMatch(/#000/);
+  });
+});
+
+describe("three.js tilt", () => {
+  it("stays on the SVG chart when WebGL is missing", () => {
+    const host = document.createElement("div");
+    mount(host, { api: fakeApi(), store: createStore(), dicts, t: makeT(() => "en") }, { size: SIZE });
+    const ctx = { api: fakeApi(), store: createStore(), dicts, t: makeT(() => "en") };
+    expect(mountTilt(host, ctx, () => {})).toBeNull();
+  });
+
+  it("stays on the SVG chart under reduced motion", () => {
+    const real = (window as unknown as Record<string, unknown>)["matchMedia"];
+    (window as unknown as Record<string, unknown>)["matchMedia"] = () => ({ matches: true });
+    try {
+      const host = document.createElement("div");
+      const ctx = { api: fakeApi(), store: createStore(), dicts, t: makeT(() => "en") };
+      expect(mountTilt(host, ctx, () => {})).toBeNull();
+    } finally {
+      if (real !== undefined) (window as unknown as Record<string, unknown>)["matchMedia"] = real;
+      else delete (window as unknown as Record<string, unknown>)["matchMedia"];
+    }
+  });
+
+  it("eases the camera over 600 ms from flat to tilted", () => {
+    expect(TILT_MS).toBe(600);
+    expect(easeOutCubic(0)).toBe(0);
+    expect(easeOutCubic(1)).toBe(1);
+    expect(easeOutCubic(0.5)).toBeCloseTo(0.875);
+    // flat: straight at the microgravity plane, chart-like; tilted: tipped to show all three planes
+    const geo = tiltPlaneGeometry();
+    const flat = tiltPose(0);
+    const tilted = tiltPose(1);
+    expect(flat.pos[0]).toBe(0);
+    expect(flat.look).toEqual([0, geo.micro.center[1], geo.micro.center[2]]);
+    expect(tilted.pos[1]).toBeLessThan(flat.pos[1]);
+    expect(tilted.pos[2]).toBeGreaterThan(flat.pos[2]);
+    expect(tilted.look).not.toEqual(flat.look);
+  });
+
+  it("runs the ease on the TILT_MS clock: halfway at 300 ms, done from 600 ms on", () => {
+    expect(tiltProgress(0, 1, 0)).toBe(0);
+    expect(tiltProgress(0, 1, 300)).toBe(0.5);
+    expect(tiltProgress(0, 1, TILT_MS)).toBe(1);
+    expect(tiltProgress(0, 1, TILT_MS + 400)).toBe(1);
+    expect(tiltProgress(1, 0, 300)).toBe(0.5);
+    expect(tiltProgress(1, 0, TILT_MS)).toBe(0);
+  });
+
+  it("keeps the SVG lunar band and a visible chart on tilt pages without WebGL", () => {
+    const { host, layer } = setup(compareStage, null, {}, SIZE);
+    expect(layer("lunar-band").querySelector("rect.lunar-band")).not.toBeNull();
+    expect(host.querySelector(".stage-tilt")!.hasAttribute("hidden")).toBe(true);
+    expect((host.querySelector(".stage-svg") as SVGSVGElement).style.display).not.toBe("none");
+    expect(en["ui.stage.earth-line"]).toBe("Earth gravity (1 g)");
+  });
+});
+
+describe("three.js tilt rebuild (task 20)", () => {
+  it("the Analyst lens never gets the tilt: only public and astronaut on lunar pages", () => {
+    expect(tiltAllowed("analyst", "tilt-lunar")).toBe(false);
+    expect(tiltAllowed("public", "tilt-lunar")).toBe(true);
+    expect(tiltAllowed("astronaut", "tilt-lunar")).toBe(true);
+    expect(tiltAllowed("public", "micro-g")).toBe(false);
+    expect(tiltAllowed("public", "empty")).toBe(false);
+    expect(tiltAllowed("analyst", "micro-g")).toBe(false);
+  });
+
+  it("the Moon label comes from the beat annotation, with the plane label as fallback", () => {
+    const t = (k: string) => `[${k}]`;
+    expect(lunarLabelFor([{ id: "a", text_key: "story.x.annotation", at: "lunar-plane" }], t, "fallback")).toBe("[story.x.annotation]");
+    expect(lunarLabelFor([], t, "fallback")).toBe("fallback");
+    expect(lunarLabelFor([{ id: "b", text_key: "story.x.other", at: "moon-box" }], t, "fallback")).toBe("fallback");
+  });
+
+  it("colours dots exactly as the SVG chart: grey, blue for nearest, orange for kept burning", () => {
+    expect(dotFill("burned", false)).toBe("burned");
+    expect(dotFill("completion", false)).toBe("burned");
+    expect(dotFill("flow-terminated", false)).toBe("burned");
+    expect(dotFill("extinction", false)).toBe("muted");
+    expect(dotFill("self-extinguished", false)).toBe("muted");
+    expect(dotFill("disruption", false)).toBe("muted");
+    expect(dotFill("no-ignition", false)).toBe("muted");
+    expect(dotFill("unknown", false)).toBe("muted");
+    expect(dotFill("burned", true)).toBe("near");
+    expect(dotFill("extinction", true)).toBe("near");
+  });
+
+  it("draws every dot at least 5 px on screen, nearest larger", () => {
+    expect(dotSizePx(false)).toBeGreaterThanOrEqual(5);
+    expect(dotSizePx(true)).toBeGreaterThan(dotSizePx(false));
+  });
+
+  it("puts the Moon box at the moon.json pressure and across the whole oxygen band", () => {
+    const s = chartScales({ w: 500, h: 464 }, { min: 0, max: 100, ticks: [0, 100] }, { bandH: 0, headH: 20, strip: false });
+    const atm = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    expect([atm.pressure_kpa, atm.o2_pct_min, atm.o2_pct_max]).toEqual([56.5, 33.7, 40]);
+    const toWorld = chartToWorld(s);
+    const box = moonBoxWorld(atm, s);
+    expect(box.w).toBeGreaterThan(0);
+    expect(box.top).toBeGreaterThan(box.bottom);
+    expect(box.cx).toBeCloseTo(toWorld(s.x(56.5), 0)[0], 10);
+    expect(box.top).toBeCloseTo(toWorld(0, s.y(40))[1], 10);
+    expect(box.bottom).toBeCloseTo(toWorld(0, s.y(33.7))[1], 10);
+  });
+
+  it("frames all three planes inside the stage box with the Moon plane in the middle", () => {
+    for (const size of [{ w: 900, h: 600 }, { w: 688, h: 700 }, { w: 600, h: 800 }]) {
+      const camera = tiltCamera(tiltPose(1, size.w / size.h), size.w / size.h);
+      camera.updateMatrixWorld();
+      const ndc = (p: readonly [number, number, number]): THREE.Vector3 => new THREE.Vector3(...p).project(camera);
+      const geo = tiltPlaneGeometry();
+      for (const plane of Object.values(geo)) {
+        for (const c of [...plane.corners, plane.center]) {
+          const v = ndc(c);
+          expect(v.x).toBeGreaterThanOrEqual(-1);
+          expect(v.x).toBeLessThanOrEqual(1);
+          expect(v.y).toBeGreaterThanOrEqual(-1);
+          expect(v.y).toBeLessThanOrEqual(1);
+        }
+      }
+      // the Moon plane sits in the middle of the frame, the micro plane above it
+      expect(Math.abs(ndc(geo.lunar.center).y)).toBeLessThan(0.4);
+      expect(ndc(geo.micro.center).y).toBeGreaterThan(ndc(geo.lunar.center).y);
+      expect(ndc(geo.earth.center).y).toBeLessThan(ndc(geo.lunar.center).y);
+      // labels sit just outside their plane corners: keep room so they are not clipped
+      for (const plane of [geo.micro, geo.lunar, geo.earth]) {
+        expect(ndc(plane.corners[3]).y).toBeLessThan(0.85); // top-left corner, label above
+        expect(ndc(plane.corners[0]).y).toBeGreaterThan(-0.85); // bottom-left corner, labels below
+      }
+    }
+  });
+
+  const tiltColors: TiltColors = { ground: "#111111", edge: "#222222", muted: "#333333", near: "#444444", burned: "#555555", moon: "#666666", ink: "#777777" };
+  const tiltTexts: TiltLabels = { micro: "Every NASA test so far", lunar: "No fire test has run in Moon gravity.", earth: "Earth gravity (1 g)", x: "Air pressure (kPa)", y: "Oxygen in the air (%)", you: "Your air" };
+  const tiltScales = () => chartScales({ w: 500, h: 464 }, { min: 0, max: 100, ticks: [0, 100] }, { bandH: 0, headH: 20, strip: false });
+
+  it("builds three filled planes with clear edges, dots only on the micro plane, the Moon box alone on the lunar plane", () => {
+    const view = buildTiltScene(tiltColors, tiltTexts);
+    try {
+      const mesh = (name: string): THREE.Mesh => {
+        const o = view.scene.getObjectByName(name);
+        expect(o).toBeTruthy();
+        return o as THREE.Mesh;
+      };
+      expect(mesh("plane-micro").geometry.type).toBe("PlaneGeometry");
+      expect(mesh("plane-lunar").geometry.type).toBe("PlaneGeometry");
+      expect(mesh("plane-earth").geometry.type).toBe("PlaneGeometry");
+      expect(view.scene.getObjectByName("edge-micro")).toBeTruthy();
+      expect(view.scene.getObjectByName("edge-lunar")).toBeTruthy();
+      expect(view.scene.getObjectByName("edge-earth")).toBeTruthy();
+      // Earth is a thin reference strip, not a full plane
+      const earthH = (mesh("plane-earth").geometry as THREE.PlaneGeometry).parameters.height;
+      const microH = (mesh("plane-micro").geometry as THREE.PlaneGeometry).parameters.height;
+      expect(earthH).toBeLessThan(microH);
+      const s = tiltScales();
+      const cw = chartToWorld(s);
+      const dataToWorld = (p: number, o: number): [number, number] => cw(s.x(p), s.y(o));
+      const atm = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+      view.setDots(
+        [
+          { id: "a", outcome: "burned", pressure_kpa: 60, o2_pct: 30 } as PlacedTest,
+          { id: "b", outcome: "extinction", pressure_kpa: 50, o2_pct: 25 } as PlacedTest,
+        ],
+        new Set(["b"]),
+        { toWorld: dataToWorld, box: moonBoxWorld(atm, s), you: null },
+        tiltTexts,
+      );
+      const kids = (name: string): string[] => (view.scene.getObjectByName(name)?.children ?? []).map((c) => c.name);
+      // the real tests live on the micro plane: one orange kept-burning dot, one blue nearest dot
+      expect(kids("group-micro")).toEqual(expect.arrayContaining(["plane-micro", "edge-micro", "dots-muted", "dots-burned", "dots-near"]));
+      const count = (name: string): number => (view.scene.getObjectByName(name) as THREE.Points).geometry.getAttribute("position").count;
+      expect(count("dots-burned")).toBe(1);
+      expect(count("dots-near")).toBe(1);
+      expect(count("dots-muted")).toBe(0);
+      expect(((view.scene.getObjectByName("dots-burned") as THREE.Points).material as THREE.PointsMaterial).color.getStyle()).toBe(new THREE.Color(tiltColors.burned).getStyle());
+      expect(((view.scene.getObjectByName("dots-near") as THREE.Points).material as THREE.PointsMaterial).color.getStyle()).toBe(new THREE.Color(tiltColors.near).getStyle());
+      // the Moon box is the ONLY thing on the lunar plane: no dots, no marks
+      expect(kids("group-lunar")).toEqual(expect.arrayContaining(["plane-lunar", "edge-lunar", "moon-box"]));
+      expect(view.scene.getObjectByName("group-lunar")!.children.filter((c) => c.type === "Points")).toEqual([]);
+      expect(((view.scene.getObjectByName("moon-box") as THREE.Mesh).material as THREE.MeshBasicMaterial).color.getStyle()).toBe(new THREE.Color(tiltColors.moon).getStyle());
+      // every plane carries a large HTML label fixed to it, plus the axis titles
+      const label = (cls: string): HTMLElement => {
+        const el = view.element.querySelector(`.tilt-label.${cls}`) as HTMLElement | null;
+        expect(el).not.toBeNull();
+        return el!;
+      };
+      expect(label("plane-micro").textContent).toBe(tiltTexts.micro);
+      expect(label("plane-lunar").textContent).toBe(tiltTexts.lunar);
+      expect(label("plane-earth").textContent).toBe(tiltTexts.earth);
+      expect(label("axis-x").textContent).toBe(tiltTexts.x);
+      expect(label("axis-y").textContent).toBe(tiltTexts.y);
+      view.setFrame(800, 600);
+      view.setPose(1);
+      for (const cls of ["plane-micro", "plane-lunar", "plane-earth", "axis-x", "axis-y"]) {
+        const el = label(cls);
+        expect(el.style.left).toMatch(/px$/);
+        expect(el.style.top).toMatch(/px$/);
+        expect(Number.isFinite(parseFloat(el.style.left))).toBe(true);
+      }
+      // without sliders there is no "your air" mark
+      expect(view.scene.getObjectByName("you-mark")).toBeUndefined();
+      expect(label("you").hidden).toBe(true);
+    } finally {
+      view.dispose();
+    }
+  });
+
+  it("draws the your-air mark on the micro plane when the sliders are live", () => {
+    const view = buildTiltScene(tiltColors, tiltTexts);
+    try {
+      const s = tiltScales();
+      const cw = chartToWorld(s);
+      view.setDots([], new Set(), { toWorld: (p, o) => cw(s.x(p), s.y(o)), box: null, you: cw(s.x(56.5), s.y(34)) }, tiltTexts);
+      expect(view.scene.getObjectByName("you-mark")).not.toBeUndefined();
+      const you = view.element.querySelector(".tilt-label.you") as HTMLElement;
+      expect(you.hidden).toBe(false);
+      expect(you.textContent).toBe(tiltTexts.you);
+    } finally {
+      view.dispose();
+    }
+  });
+});
+
+describe("tilt label placement (task 28)", () => {
+  // the real words on the tilt pages (en); sizes stand in for offsetWidth/offsetHeight,
+  // which jsdom cannot measure (20 px bold plane labels, 12 px axis titles).
+  // The lunar label wraps at the plot edge (max-width: 100%): model the wrapped box.
+  const specsFor = (project: (group: "micro" | "lunar" | "earth", local: readonly [number, number, number]) => { x: number; y: number }, frameW: number): TiltLabelSpec[] => {
+    const defs = tiltLabelAnchors();
+    const lunarW = Math.min(frameW, 650);
+    const words: Record<TiltLabelId, { text: string; w: number; h: number }> = {
+      micro: { text: "NASA tests with the air recorded", w: 360, h: 30 },
+      lunar: { text: "None of the tests in NASA's PSI archive ran in Moon gravity.", w: lunarW, h: 30 * Math.ceil(650 / lunarW) },
+      earth: { text: "Earth gravity (1 g)", w: 200, h: 30 },
+      x: { text: "Air pressure (kPa)", w: 130, h: 22 },
+      y: { text: "Oxygen in the air (%)", w: 150, h: 22 },
+      you: { text: "Your air", w: 60, h: 22 },
+    };
+    return (Object.keys(words) as TiltLabelId[])
+      .filter((id): id is TiltFixedLabelId => id !== "you") // hidden without live sliders: placed nowhere
+      .map((id) => ({ id, anchor: project(defs[id].group, defs[id].local), ...words[id] }));
+  };
+  const projectAt = (w: number, h: number) => {
+    const camera = tiltCamera(tiltPose(1, w / h), w / h);
+    camera.updateMatrixWorld();
+    const off = { micro: TILT_Y.micro, lunar: TILT_Y.lunar, earth: TILT_Y.earth };
+    const offZ = { micro: TILT_Z.micro, lunar: TILT_Z.lunar, earth: TILT_Z.earth };
+    return (group: "micro" | "lunar" | "earth", local: readonly [number, number, number]): { x: number; y: number } => {
+      const v = new THREE.Vector3(local[0], off[group] + local[1], offZ[group] + local[2]).project(camera);
+      return { x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h };
+    };
+  };
+  const inside = (frame: { w: number; h: number }, b: { x: number; y: number; w: number; h: number }): boolean =>
+    b.x >= 0 && b.y >= 0 && b.x + b.w <= frame.w && b.y + b.h <= frame.h;
+  const disjoint = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }): boolean =>
+    a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y;
+
+  for (const frame of [{ w: 900, h: 600 }, { w: 688, h: 700 }, { w: 600, h: 800 }]) {
+    it(`gives every label its own place inside ${frame.w}x${frame.h}: none clipped, none overlapping`, () => {
+      const boxes = tiltLabelBoxes(frame, specsFor(projectAt(frame.w, frame.h), frame.w));
+      expect(boxes.map((b) => b.id).sort()).toEqual(["earth", "micro", "x", "y", "lunar"].sort());
+      for (const b of boxes) expect(inside(frame, b)).toBe(true);
+      for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) expect(disjoint(boxes[i]!, boxes[j]!)).toBe(true);
+      // the two reported defects: the Moon-plane label cut off on the right, the oxygen title clipped on the left
+      const lunar = boxes.find((b) => b.id === "lunar")!;
+      expect(lunar.x + lunar.w).toBeLessThanOrEqual(frame.w);
+      const yAxis = boxes.find((b) => b.id === "y")!;
+      expect(yAxis.x).toBeGreaterThanOrEqual(0);
+    });
+  }
+
+  it("the scene puts its HTML labels exactly where the placement says (jsdom: zero-size boxes)", () => {
+    const colors: TiltColors = { ground: "#111111", edge: "#222222", muted: "#333333", near: "#444444", burned: "#555555", moon: "#666666", ink: "#777777" };
+    const texts: TiltLabels = { micro: "m", lunar: "l", earth: "e", x: "x", y: "y", you: "you" };
+    const view = buildTiltScene(colors, texts);
+    try {
+      view.setDots([], new Set(), { toWorld: () => [0, 0], box: null, you: null }, texts);
+      view.setFrame(800, 600);
+      view.setPose(1);
+      const frame = { w: 800, h: 600 };
+      const expected = tiltLabelBoxes(frame, specsFor(projectAt(800, 600), 800).map((s) => ({ ...s, w: 0, h: 0 })));
+      for (const box of expected) {
+        const cls = box.id === "micro" ? "plane-micro" : box.id === "lunar" ? "plane-lunar" : box.id === "earth" ? "plane-earth" : box.id === "x" ? "axis-x" : "axis-y";
+        const el = view.element.querySelector(`.tilt-label.${cls}`) as HTMLElement;
+        // the scene writes toFixed(1) and jsdom normalises "400.0px" to "400px": compare the rounded numbers
+        expect(parseFloat(el.style.left)).toBe(parseFloat(box.x.toFixed(1)));
+        expect(parseFloat(el.style.top)).toBe(parseFloat(box.y.toFixed(1)));
+      }
+    } finally {
+      view.dispose();
+    }
+  });
+
+  it("the Moon box uses exactly the micro-plane mapping for the moon.json values", () => {
+    const atm = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    expect([atm.pressure_kpa, atm.o2_pct_min, atm.o2_pct_max]).toEqual([56.5, 33.7, 40]);
+    for (const dom of [
+      { min: 0, max: 350, ticks: [0, 350] }, // the real span: slider range plus the 331 kPa tests
+      { min: 0, max: 120, ticks: [0, 120] }, // slider widening only
+      { min: 40, max: 80, ticks: [40, 80] }, // a narrow zoom: agreement must not depend on the domain
+    ]) {
+      const s = chartScales({ w: 688, h: 700 }, dom, { bandH: 0, headH: 20, strip: false });
+      const toWorld = chartToWorld(s);
+      const box = moonBoxWorld(atm, s);
+      // a dot at the Moon air's own numbers lands exactly on the box corners
+      expect(box.cx).toBeCloseTo(toWorld(s.x(56.5), 0)[0], 10);
+      expect(box.top).toBeCloseTo(toWorld(0, s.y(40))[1], 10);
+      expect(box.bottom).toBeCloseTo(toWorld(0, s.y(33.7))[1], 10);
+      // the box sits on the lunar plane itself, clear of every edge
+      expect(box.cx - box.w / 2).toBeGreaterThan(-TILT_W / 2);
+      expect(box.cx + box.w / 2).toBeLessThan(TILT_W / 2);
+      expect(box.bottom).toBeGreaterThan(-TILT_H / 2 + 1);
+      expect(box.top).toBeLessThan(TILT_H / 2 - 1);
+    }
+  });
+});
+
+describe("every plotted count links to the data file", () => {
+  const full: StageState = { view: "micro-g", show_families: allFamilies, coverage: true };
+
+  it("the coverage line links its numbers to the tests file", () => {
+    const { host, api } = setup(full);
+    const { plotted, total } = api.coverage();
+    const links = [...host.querySelectorAll(".stage-legend .coverage a")];
+    expect(links.map((a) => a.textContent)).toEqual([String(plotted), String(total)]);
+    for (const a of links) {
+      expect((a as HTMLAnchorElement).getAttribute("href")).toBe("data/tests.json");
+      expect(a.hasAttribute("download")).toBe(true);
+    }
+  });
+
+  it("the parade counts link to the data file", () => {
+    const { host } = setup(full);
+    const num = host.querySelector(".parade-num")!;
+    expect(num.tagName).toBe("A");
+    expect((num as HTMLAnchorElement).getAttribute("href")).toBe("data/tests.json");
+    const rows = [...host.querySelectorAll(".parade-families li")];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) {
+      const a = r.querySelector("a.parade-n")!;
+      expect(a.getAttribute("href")).toBe("data/tests.json");
+    }
+  });
+});
+
+describe("act 1 public picture layout (task 21)", () => {
+  const hook = { view: "incident", incident_ids: ["apollo-1"] } as StageState;
+  const reveal = { view: "incident", incident_ids: ["apollo-1", "mir-1997"] } as StageState;
+
+  it("maps a dial marker to the flame's standing height: Apollo's 100 % mark stands the flame at the top", () => {
+    // dial viewBox is 560 high with y(100) = 28: (560 - 28) / 560 = 0.95
+    expect(markerBottomFraction(100)).toBeCloseTo(0.95, 10);
+    expect(markerBottomFraction(0)).toBeCloseTo((560 - 524) / 560, 10);
+  });
+
+  it("reserves headroom for the flame's overhang: a tall flame at the 100 % mark needs 179 px", () => {
+    // tall flame 190, dial 224 high, mark at 0.95: 190 - 0.05 * 224 = 178.8, rounded up
+    expect(flameStandPad(100, true)).toBe(179);
+    expect(flameStandPad(0, true)).toBe(0);
+    expect(flameStandPad(undefined, false)).toBe(0);
+  });
+
+  it("the hook page shows Apollo 1 alone with the flame standing at the dial's 100 % mark", () => {
+    const { host } = setup(hook, null, {}, SIZE);
+    const cards = [...host.querySelectorAll(".stage-incidents article.incident-card")];
+    expect(cards.map((c) => c.querySelector("h3")!.textContent)).toEqual(["Apollo 1"]);
+    const flame = host.querySelector(".flame-at-mark") as HTMLElement;
+    expect(flame).not.toBeNull();
+    expect(flame.style.bottom).toBe("95%");
+    expect((host.querySelector(".picture-side") as HTMLElement).style.getPropertyValue("--flame-overhang")).toBe("179px");
+  });
+
+  it("the reveal page shows both incidents as two compact cards, flame still at Apollo's mark", () => {
+    const { host } = setup(reveal, null, {}, SIZE);
+    expect(host.querySelector('.stage-incidents')!.getAttribute("data-count")).toBe("2");
+    const cards = [...host.querySelectorAll(".stage-incidents article.incident-card")];
+    expect(cards.map((c) => c.querySelector("h3")!.textContent)).toEqual(["Apollo 1", "Mir oxygen generator fire"]);
+    expect((host.querySelector(".flame-at-mark") as HTMLElement).style.bottom).toBe("95%");
+  });
+
+  it("an incident with no oxygen number leaves the flame on the ground", () => {
+    const { host } = setup({ view: "incident", incident_ids: ["mir-1997"] } as StageState, null, {}, SIZE);
+    expect((host.querySelector(".flame-at-mark") as HTMLElement).style.bottom).toBe("0%");
+  });
+
+  it("on narrow screens the incident cards move into the story card, the dial stays (task 41b)", () => {
+    const real = (window as unknown as Record<string, unknown>)["matchMedia"];
+    (window as unknown as Record<string, unknown>)["matchMedia"] = (q: string) => ({ matches: q.includes("1099") });
+    const beat = { story: "why-oxygen", scene: "why-oxygen-main", beat: "hook", kind: "hook" as const };
+    const step = document.createElement("div");
+    step.id = "beat-why-oxygen-why-oxygen-main-hook";
+    step.className = "step is-active";
+    const card = document.createElement("div");
+    card.className = "step-card";
+    card.textContent = "beat words";
+    step.append(card);
+    document.body.append(step);
+    try {
+      const { host } = setup({ view: "incident", incident_ids: ["apollo-1"] } as StageState, null, {}, SIZE, "public", beat);
+      expect(card.querySelectorAll("article.incident-card").length).toBe(1);
+      expect(card.textContent).toContain("beat words");
+      expect(host.querySelectorAll(".stage-incidents article.incident-card").length).toBe(0);
+      expect(host.querySelector(".stage-incidents .picture-side")).not.toBeNull();
+    } finally {
+      if (real !== undefined) (window as unknown as Record<string, unknown>)["matchMedia"] = real;
+      else delete (window as unknown as Record<string, unknown>)["matchMedia"];
+      step.remove();
+    }
+  });
+
+  it("other lenses keep the plain cards with no picture side", () => {
+    const { host } = setup(hook, null, {}, SIZE, "astronaut");
+    expect(host.querySelector(".picture-side")).toBeNull();
+    expect(host.querySelector(".flame-at-mark")).toBeNull();
+    expect(host.querySelector("article.incident-card h3")!.textContent).toBe("Apollo 1");
+  });
+
+  it("stylesheet lays the picture out inside the stage box: narrow dial, side column with room for the flame, compact cards", () => {
+    expect(css).toMatch(/\.public-picture \.o2-dial\s*\{[^}]*width:\s*120px/);
+    expect(css).toMatch(/\.picture-side\s*\{[^}]*width:\s*251px/);
+    expect(css).toMatch(/\.flame-at-mark\s*\{[^}]*position:\s*absolute/);
+    expect(css).toMatch(/\.public-picture \.incident-card\s*\{[^}]*font-size:\s*var\(--text-body\)/);
+    expect(css).toMatch(/\.stage-incidents\.public-picture\[data-count="2"\]\s*\{[^}]*251px minmax\(0,\s*1fr\) minmax\(0,\s*1fr\)/);
+    expect(css).toMatch(/\.picture-side\s*\{[^}]*padding-top:\s*var\(--flame-overhang/);
+  });
+});
+
+describe("plain air names (task 22)", () => {
+  const moonRef = { view: "micro-g", show_families: allFamilies, reference: ["heo-dm-1006"] } as StageState;
+  it("the dial marks speak plain words in Public; other lenses show no dial", () => {
+    const pub = setup({ view: "incident", incident_ids: ["apollo-1"] } as StageState, null, {}, SIZE);
+    const marks = [...pub.host.querySelectorAll(".dial-mark")].map((n) => n.textContent);
+    expect(marks.some((m) => m!.includes("Planned Moon-base air"))).toBe(true);
+    expect(marks.some((m) => m!.includes("HEO-DM-1006"))).toBe(false);
+    const astro = setup({ view: "incident", incident_ids: ["apollo-1"] } as StageState, null, {}, SIZE, "astronaut");
+    expect(astro.host.querySelectorAll(".dial-mark").length).toBe(0);
+  });
+  it("names the second exploration air without claiming a sequence (task 33)", () => {
+    // moon.json and STORY.md do not support "earlier stage": it is just another planned air
+    expect(en["ui.air.exp-10-2"]).toBe("A second planned exploration air");
+  });
+  it("the legend names the Moon box plainly in Public and from moon.json for Analyst", () => {
+    const pub = setup(moonRef, null, {}, SIZE);
+    expect(pub.host.querySelector(".stage-legend")!.textContent).toContain("Planned Moon-base air");
+    expect(pub.host.querySelector(".stage-legend")!.textContent).not.toContain("HEO-DM-1006");
+    const ana = setup(moonRef, null, {}, SIZE, "analyst");
+    expect(ana.host.querySelector(".stage-legend")!.textContent).toContain("Exploration atmosphere HEO-DM-1006 (8.2 psia)");
+  });
+});
+
+describe("incidentO2", () => {
+  it("reads the leading oxygen number of the incident's own words, else null", () => {
+    expect(incidentO2("100% oxygen at pressure")).toBe(100);
+    expect(incidentO2("26.5% nominal")).toBe(26.5);
+    expect(incidentO2("Chemical oxygen generator (lithium perchlorate candle)")).toBeNull();
+    expect(incidentO2("120% oxygen")).toBeNull();
+  });
+});
+
+describe("family parade", () => {
+  const act2 = (show_families: Family[]): StageState => ({ view: "micro-g", show_families, coverage: true });
+  const full: StageState = { view: "micro-g", show_families: allFamilies, coverage: true };
+
+  it("lists one pictogram and plain-word name per shown family, with its plotted count", () => {
+    const { host, api } = setup(act2(["droplets"]));
+    const parade = host.querySelector(".stage-parade")!;
+    expect((parade as HTMLElement).hidden).toBe(false);
+    const rows = [...parade.querySelectorAll(".parade-families li")];
+    expect(rows.length).toBe(1);
+    expect(rows[0]!.querySelector("svg")).not.toBeNull();
+    expect(rows[0]!.textContent).toContain(en["ui.family.droplets"]);
+    const n = api.placed().filter((p) => p.family === "droplets").length;
+    expect(n).toBeGreaterThan(0);
+    expect(rows[0]!.textContent).toContain(en["ui.stage.parade.plotted"]!.replace("{n}", String(n)));
+  });
+
+  it("counts up to the shown plotted count, the real total once every family has arrived", async () => {
+    const one = setup(act2(["droplets"]));
+    const oneTarget = one.api.placed().filter((p) => p.family === "droplets").length;
+    expect(one.host.querySelector(".parade-num")!.getAttribute("data-count")).toBe(String(oneTarget));
+    const all = setup(full);
+    expect(all.host.querySelector(".parade-num")!.getAttribute("data-count")).toBe(String(all.api.coverage().plotted));
+    await new Promise((r) => setTimeout(r, 900));
+    expect(one.host.querySelector(".parade-num")!.textContent).toBe(String(oneTarget));
+    expect(all.host.querySelector(".parade-num")!.textContent).toBe(String(all.api.coverage().plotted));
+  });
+
+  it("the counter counts what the filters draw, not the unfiltered total (task 35)", () => {
+    const { host, store, api } = setup(act2(["droplets", "gas jets"]));
+    const num = () => host.querySelector(".parade-num")!;
+    const drawn = (fuel: string | null) =>
+      api.placed().filter((p) => (p.family === "droplets" || p.family === "gas jets") && (!fuel || p.fuel === fuel)).length;
+    expect(num().getAttribute("data-count")).toBe(String(drawn(null)));
+    store.set({ filters: { search: "", fuel: "Methanol", outcome: null, plotted: "all" } });
+    expect(num().getAttribute("data-count")).toBe(String(drawn("Methanol")));
+    expect(drawn("Methanol")).toBe(1);
+    store.set({ filters: { search: "", fuel: "no-such-fuel", outcome: null, plotted: "all" } });
+    expect(num().getAttribute("data-count")).toBe("0");
+    store.set({ filters: { search: "", fuel: null, outcome: null, plotted: "all" } });
+    expect(num().getAttribute("data-count")).toBe(String(drawn(null)));
+  });
+
+  it("families with no pressure recorded show their listed count, never dots", () => {
+    const smokeRow: NotPlacedRow = {
+      id: "PSI-101#1", investigation: "PSI-101", family: "smoke detection", fuel: null,
+      o2_pct: null, pressure_kpa: null, outcome: "unknown", url: "https://example.test", reason: "no oxygen or pressure recorded",
+    };
+    const { host, api } = setup(act2(["droplets", "smoke detection"]), initialState.sliders, { notPlaced: [smokeRow] });
+    const rows = [...host.querySelectorAll(".parade-families li")];
+    expect(rows.length).toBe(2);
+    const smoke = rows.find((r) => r.textContent!.includes(en["ui.family.smoke detection"]!))!;
+    expect(api.placed().filter((p) => p.family === "smoke detection").length).toBe(0);
+    const listed = api.notPlaced("smoke detection").length;
+    expect(listed).toBeGreaterThan(0);
+    expect(smoke.textContent).toContain(en["ui.stage.parade.listed"]!.replace("{n}", String(listed)));
+  });
+
+  it("stays off the Moon-box and slider pages, and off other lenses", () => {
+    for (const stage of [
+      { ...full, reference: ["heo-dm-1006" as const] },
+      { ...full, sliders: { pressure_kpa: 56.5, o2_pct: 34 } },
+    ]) {
+      expect(setup(stage).host.querySelector(".stage-parade")!.hasAttribute("hidden")).toBe(true);
+      expect(setup(stage).host.querySelector(".stage-parade")!.children.length).toBe(0);
+    }
+    expect(setup(full, initialState.sliders, {}, SIZE, "astronaut").host.querySelector(".parade-num")).toBeNull();
+  });
+
+  it("is still and complete under reduced motion", () => {
+    const real = (window as unknown as Record<string, unknown>)["matchMedia"];
+    (window as unknown as Record<string, unknown>)["matchMedia"] = () => ({ matches: true });
+    try {
+      const { host, api } = setup(full);
+      const target = api.coverage().plotted;
+      expect(host.querySelector(".parade-num")!.textContent).toBe(String(target));
+    } finally {
+      if (real !== undefined) (window as unknown as Record<string, unknown>)["matchMedia"] = real;
+      else delete (window as unknown as Record<string, unknown>)["matchMedia"];
+    }
+  });
+
+  it("uses flat token colour, never yellow", () => {
+    const { host } = setup(full);
+    expect(host.querySelector(".stage-parade")!.innerHTML).not.toContain("--moon");
+    expect(host.querySelector(".stage-parade")!.innerHTML).not.toContain("#e7f434");
+    const rules = css.match(/\.(stage-parade|parade-[a-z-]+)[^{]*\{[^}]*\}/g) ?? [];
+    expect(rules.length).toBeGreaterThan(0);
+    expect(rules.join("")).not.toContain("--moon");
   });
 });

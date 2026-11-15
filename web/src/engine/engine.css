@@ -14,9 +14,12 @@
 .cover-title {
   max-width: 20ch;
   margin: 0;
-  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-size: var(--text-cover);
   font-weight: 700;
   line-height: 1.1;
+}
+@media (max-width: 767px) {
+  .cover-title { font-size: 40px; }
 }
 .cover-title::before {
   content: "";
@@ -29,14 +32,14 @@
 .cover-lead {
   max-width: 44ch;
   margin: 24px 0 0;
-  font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  font-size: var(--text-card);
   line-height: 1.4;
 }
-.cover-cue { margin: 40px 0 0; color: var(--muted-dark); font-size: 0.875rem; font-weight: 500; }
+.cover-cue { margin: 40px 0 0; color: var(--muted-dark); font-size: var(--text-meta); font-weight: 500; }
 
-/* chapter page: full-width electric-blue field between acts */
+/* chapter page: a full viewport tall electric-blue field between acts */
 .chapter {
-  min-height: 70vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -45,16 +48,15 @@
   color: var(--ink-dark);
   pointer-events: auto;
 }
-.chapter-label { margin: 0 0 12px; font-size: 0.875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted-dark); }
 .story-title {
   max-width: 24ch;
   margin: 0;
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-size: var(--text-chapter);
   font-weight: 700;
   line-height: 1.1;
   color: var(--ink-dark);
 }
-.chapter-question { max-width: 44ch; margin: 20px 0 0; font-size: clamp(1.125rem, 1.6vw, 1.5rem); line-height: 1.4; }
+.chapter-question { max-width: 44ch; margin: 20px 0 0; font-size: var(--text-card); line-height: 1.4; }
 
 /* beat pages */
 #story .step {
@@ -63,31 +65,81 @@
   align-items: center;
 }
 #story .story:last-child .step:last-child { margin-bottom: 40vh; }
+/* cards are opaque: nothing shows through them. Inactive cards dim by text colour. */
 .step-card {
-  width: min(26rem, 92vw);
+  width: min(30rem, 92vw);
   margin-left: 4vw;
   padding: 28px;
   background: var(--space-black);
-  color: var(--ink-dark);
+  color: var(--muted-dark);
   border-left: 4px solid var(--data-on-dark);
-  opacity: 0.45;
-  transition: opacity 200ms;
 }
 .step[data-kind="hook"] .step-card,
 .step[data-kind="takeaway"] .step-card { border-left-color: var(--flame); }
-.step.is-active .step-card { opacity: 1; }
-.step-page { margin: 0 0 12px; font-size: 0.875rem; color: var(--muted-dark); }
+.step.is-active .step-card { color: var(--ink-dark); }
+/* desktop: cards fill the 40 % story column */
+@media (min-width: 1100px) {
+  #story .step { padding: 0 24px; }
+  .step-card { flex: 1; margin-left: 0; }
+}
+.step-page { margin: 0 0 12px; font-size: var(--text-meta); color: var(--muted-dark); }
 .step-text {
   margin: 0;
-  font-size: clamp(1.25rem, 1.05rem + 0.9vw, 1.75rem);
+  font-size: var(--text-card);
   line-height: 1.3;
   font-weight: 500;
 }
 #story[data-lens="astronaut"] .step-text,
-#story[data-lens="analyst"] .step-text { font-size: 1.0625rem; line-height: 1.5; font-weight: 400; }
-.step-sources-label { margin: 12px 0 4px; font-size: 0.875rem; font-weight: 500; color: var(--muted-dark); }
-.step-sources { margin: 0; padding-left: 1.2em; font-size: 0.875rem; }
+#story[data-lens="analyst"] .step-text { font-size: var(--text-body); line-height: 1.5; font-weight: 400; }
+.step-sources-label { margin: 12px 0 4px; font-size: var(--text-meta); font-weight: 500; color: var(--muted-dark); }
+.step-sources { margin: 0; padding-left: 1.2em; font-size: var(--text-meta); overflow-wrap: anywhere; } /* long PSI URLs must not widen the page */
 .step-sources a { color: var(--muted-dark); text-decoration: underline; }
+
+/* ending card: what the visitor just saw, and three ways to go on */
+.ending { min-height: 90vh; display: flex; align-items: center; }
+.end-card {
+  width: min(30rem, 92vw);
+  margin-left: 4vw;
+  padding: 28px;
+  background: var(--space-black);
+  color: var(--ink-dark);
+  border-left: 4px solid var(--flame);
+}
+.end-title { margin: 0; font-size: var(--text-card); line-height: 1.1; font-weight: 700; }
+.end-summary { max-width: 44ch; margin: 16px 0 0; font-size: var(--text-card); line-height: 1.4; }
+.end-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.end-btn {
+  font: inherit; line-height: 1.2;
+  min-height: 40px; padding: 8px 14px; border-radius: var(--radius);
+  background: transparent; color: var(--ink-dark);
+  border: 1px solid var(--rule); cursor: pointer;
+}
+.end-btn:hover { border-color: var(--ink-dark); }
+.end-btn.primary { background: var(--moon); color: var(--ink); border-color: var(--moon); font-weight: 700; }
+.end-btn.primary:hover { border-color: var(--ink-dark); }
+
+/* page turning: gentle proximity snap, one page at a time.
+   Under 1100 px pages snap below the pinned 45 vh stage, never under it. */
+html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) + 8px); }
+@media (max-width: 1099px) {
+  html { scroll-padding-top: calc(var(--chrome-h) + 45vh + 8px); }
+}
+.cover, .chapter, #story .step, .ending { scroll-snap-align: start; }
+
+/* page dots: progress through the steps, fixed where the cards never sit */
+.page-dots {
+  position: fixed; left: 10px; top: 50%; transform: translateY(-50%); z-index: 15;
+  display: flex; flex-direction: column; gap: 7px; margin: 0; padding: 0; border: 0; background: none;
+  pointer-events: auto;
+}
+.page-dot {
+  width: 10px; height: 10px; padding: 0; font-size: 0;
+  border: 1px solid var(--muted-dark); border-radius: 50%; background: transparent; cursor: pointer;
+}
+.page-dot[aria-current="true"] { background: var(--ink-dark); border-color: var(--ink-dark); }
+@media (max-width: 1099px) {
+  .page-dots { left: 50%; top: calc(var(--chrome-h) + 6px); transform: translateX(-50%); flex-direction: row; }
+}
 
 /* narrow screens: cards sit at the bottom so the chart above stays readable */
 @media (max-width: 1099px) {

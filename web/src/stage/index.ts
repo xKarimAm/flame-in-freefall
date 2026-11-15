@@ -3,16 +3,25 @@
 // reserves space for them. Generated with Claude, SI-assisted.
 import "./stage.css";
 import { SLIDER_RANGE } from "../contract";
-import type { AppState, Ctx, Incident, NearestRow, PlacedTest } from "../contract";
+import type { AppState, Ctx, Incident, NearestRow, NotPlacedRow, PlacedTest } from "../contract";
 import { queryFromState } from "../store";
-import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartScales, niceRange, wrap } from "./layout";
+import { dataLink, safeHref } from "../ui/dom";
+import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartHeight, chartScales, niceRange, wrap } from "./layout";
 import type { Size } from "./layout";
 import type { Scales } from "./layout";
-import { dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
+import { chartPasses, dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
+import { DIAL_IDS, dialSVG, flameStandPad, flameSVG, incidentO2, markerBottomFraction } from "./picture";
+import { renderExplainers } from "./explain";
+import { renderParade } from "./parade";
+import { TILT_MS, lunarLabelFor, mountTilt, tiltAllowed, type TiltView } from "./tilt";
 import { DIAMOND, layoutRefs } from "./refs";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Dot clicks and sheet rows select an investigation through this event (detail: { investigation: string | null }).
+ *  The stage highlights that investigation's dots; the sheet opens its row. See ui/sheet.ts. */
+export const SELECT_INVESTIGATION = "firebreak:select-investigation";
 
 type Attrs = Record<string, string | number>;
 
@@ -64,12 +73,22 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   chart.append(gAxes, gHead, gBand, gStrip, gTests, gRefs, gNearest, gYou);
   plotBox.append(chart);
   const legend = html("ul", "stage-legend");
-  root.append(plotBox, legend);
+  const parade = html("div", "stage-parade");
+  parade.hidden = true;
+  const explainers = html("div", "stage-explainers");
+  explainers.hidden = true;
+  root.append(plotBox, legend, parade, explainers);
   const incidents = html("div", "stage-incidents");
   incidents.hidden = true;
   el.append(root, incidents);
 
   const dots = new Map<string, SVGElement>(); // test id -> circle, reused so class changes can transition
+  let selectedInv: string | null = null; // the linked selection (a dot click or a sheet row), not the story
+  const tiltBox = html("div", "stage-tilt");
+  tiltBox.hidden = true;
+  plotBox.append(tiltBox);
+  let tilt: TiltView | null | undefined; // undefined = not tried yet
+  let tiltOn = false;
   let size: Size | null = opts.size ?? null;
   // what the last full draw decided; the live draw (sliders) reuses it
   let scales: Scales | null = null;
@@ -93,10 +112,28 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     });
   }
 
+  /** Dots and listed ticks select an investigation on click; Enter and Space do the
+   *  same from the keyboard (stopping Space before it turns the story page). */
+  function selectable(el: SVGElement, investigation: string): void {
+    const toggle = (): void => {
+      window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: selectedInv === investigation ? null : investigation } }));
+    };
+    el.setAttribute("tabindex", "0");
+    el.addEventListener("click", toggle);
+    el.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      e.stopPropagation();
+      toggle();
+    });
+  }
+
   // ---------- full draw: axes, grey dots, references, lunar band, no-pressure strip, caption ----------
   function drawAll(): void {
     const state = store.get();
     const stage = state.stage;
+    renderParade(parade, ctx);
+    renderExplainers(explainers, ctx);
     const chartView = stage.view === "micro-g" || stage.view === "tilt-lunar" || stage.view === "empty";
     root.hidden = !chartView;
     incidents.hidden = chartView;
@@ -105,18 +142,34 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       drawIncidents(stage.incident_ids ?? []);
       return;
     }
-    if (!size || size.w <= 0 || size.h <= 0) return;
-
-    chart.setAttribute("viewBox", `0 0 ${size.w} ${size.h}`);
-    chart.setAttribute("aria-label", t("ui.stage.title"));
 
     const empty = stage.view === "empty";
     const lunar = stage.view === "tilt-lunar";
     const placed = api.placed();
     refs = empty ? { bands: [], paper: [] } : planReferences(stage, api);
-    const wanted = empty ? [] : drawnTests(stage, placed);
-    const strip = empty ? [] : noPressureRows(stage, api.notPlaced());
+    // the store's whole filter set (panel or sheet) narrows the chart to the same rows
+    const placedIds = new Set(placed.map((t) => t.id));
+    const f = { family: state.family ?? null, ...state.filters };
+    const hayOf = (p: PlacedTest | NotPlacedRow): string => {
+      const e = api.experiment(p.investigation);
+      return `${p.investigation} ${e?.acronym ?? ""} ${e?.title ?? ""} ${p.family ?? ""} ${p.fuel ?? ""}`;
+    };
+    const wanted = empty ? [] : drawnTests(stage, placed).filter((w) => chartPasses(w, f, placedIds, hayOf(w)));
+    const strip = empty ? [] : noPressureRows(stage, api.notPlaced()).filter((r) => chartPasses(r, f, placedIds, hayOf(r)));
     noPressure = strip.length;
+    // A linked selection (dot click or sheet row) joins the beat highlight as the investigation.
+    const hl = selectedInv ? { ...stage.highlight, investigation: selectedInv } : stage.highlight;
+    // the legend (with the counter line) renders before the chart: the chart height is derived
+    // from the stage box minus this measured chrome
+    const kindSet = new Set<DotKind>();
+    for (const test of wanted) kindSet.add(dotKind(test, hl));
+    for (const row of strip) kindSet.add(dotKind(row, hl));
+    kinds = kindSet;
+    legend.replaceChildren(...legendHTML(nearestRows(state)));
+    if (!opts.size) fit();
+    if (!size || size.w <= 0 || size.h <= 0) return;
+    chart.setAttribute("viewBox", `0 0 ${size.w} ${size.h}`);
+    chart.setAttribute("aria-label", t("ui.stage.title"));
 
     // x domain: computed from the tests and references shown (see pressuresForDomain).
     // Every placed test in a shown family stays on the chart, high-pressure ones included: the axis grows
@@ -131,18 +184,69 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const plotW = Math.max(40, size.w - MARGIN.right - x0);
     const headChars = Math.max(8, Math.floor((size.w - MARGIN.left - MARGIN.right) / (CHAR_PX + 0.5)));
     const planeLines = wrap(t("ui.stage.microg-plane"), headChars);
-    const caption = captionOf(wanted, stage.highlight);
+    const caption = captionOf(wanted, hl);
     const captionLines = caption ? wrap(caption, headChars) : [];
     const headH = empty ? 20 : (planeLines.length + captionLines.length) * LINE_PX + 8;
+    // the FM2 sentence lives in gap.text and may repeat an annotation word for word:
+    // keep each sentence once so the band never prints it twice
+    const annotationTexts = (stage.annotation ?? []).filter((a) => a.at === "lunar-plane").map((a) => t(a.text_key));
+    const fm2 = fm2Sentences(api.data.moon.gap.text).filter((s) => !annotationTexts.some((a) => a.includes(s)));
     const noteLines = lunar
-      ? [
-          ...(stage.annotation ?? []).filter((a) => a.at === "lunar-plane").map((a) => t(a.text_key)),
-          ...fm2Sentences(api.data.moon.gap.text),
-        ].flatMap((line) => wrap(line, Math.max(8, Math.floor((plotW - 16) / CHAR_PX))))
+      ? [...annotationTexts, ...fm2].flatMap((line) => wrap(line, Math.max(8, Math.floor((plotW - 16) / CHAR_PX))))
       : [];
     const bandH = lunar ? 28 + noteLines.length * LINE_PX + 10 : 0;
     scales = chartScales(size, dom, { bandH, headH, strip: strip.length > 0 });
     const { plot, x, y } = scales;
+
+    // the three.js tilt replaces the SVG chart on the lunar-gravity pages when it can run;
+    // otherwise the SVG lunar band below stays the chart (and the accessible version).
+    // Any tilt failure falls back the same way, so a broken tilt can never break the stage.
+    const disableTilt = (): void => {
+      tiltOn = false;
+      try {
+        tilt?.dispose();
+      } catch {
+        /* already broken */
+      }
+      tilt = null;
+      tiltBox.replaceChildren();
+      tiltBox.hidden = true;
+      chart.style.display = "";
+    };
+    if (tiltAllowed(state.lens, stage.view) && tilt === undefined) {
+      try {
+        tilt = mountTilt(tiltBox, ctx, disableTilt);
+      } catch {
+        tilt = null;
+      }
+      if (!tilt) tilt = null;
+    }
+    const useTilt = tiltAllowed(state.lens, stage.view) && tilt != null;
+    if (useTilt !== tiltOn) {
+      tiltOn = useTilt;
+      if (useTilt) {
+        tiltBox.hidden = false;
+        tilt!.setTilted(true);
+      } else {
+        tilt!.setTilted(false);
+        window.setTimeout(() => { if (!tiltOn) tiltBox.hidden = true; }, TILT_MS);
+      }
+    }
+    chart.classList.toggle("behind-tilt", useTilt);
+    if (useTilt && size) {
+      try {
+        tilt!.resize(size.w, size.h);
+        tilt!.update(wanted, new Set(nearestRows(state).map((r) => r.id)), scales, {
+          refs,
+          sliders: state.sliders,
+          microLabel: t("ui.stage.tilt.micro"),
+          lunarLabel: lunarLabelFor(stage.annotation ?? [], (k) => t(k), t("ui.stage.lunar-plane")),
+          earthLabel: t("ui.stage.earth-line"),
+        });
+      } catch {
+        disableTilt();
+      }
+    }
 
     // axes, quiet gridlines, titles in words
     gAxes.replaceChildren();
@@ -187,13 +291,12 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     }
 
     // dots, one circle per drawn test; the highlight colours only the ones it names
-    const kindSet = new Set<DotKind>();
     for (const test of wanted) {
-      const kind = dotKind(test, stage.highlight);
-      kindSet.add(kind);
+      const kind = dotKind(test, hl);
       let c = dots.get(test.id);
       if (!c) {
         c = svg("circle", { "data-id": test.id });
+        selectable(c, test.investigation);
         dots.set(test.id, c);
         gTests.append(c);
       }
@@ -211,14 +314,13 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       rect.append(svg("title", {}, `${t("ui.stage.no-pressure")}: ${strip.length}`));
       gStrip.append(rect);
       for (const row of strip) {
-        const kind = dotKind(row, stage.highlight);
-        kindSet.add(kind);
+        const kind = dotKind(row, hl);
         const tick = svg("line", { class: kind === "default" ? "ptick" : `ptick ${kind}`, x1: sx + 4, x2: sx + sw - 4, y1: y(row.o2_pct), y2: y(row.o2_pct), "data-id": row.id });
         tick.append(svg("title", {}, t("ui.stage.tick-title", { fuel: row.fuel ?? t("ui.stage.no-fuel"), o2: row.o2_pct, outcome: row.outcome })));
+        selectable(tick, row.investigation);
         gStrip.append(tick);
       }
     }
-    kinds = kindSet;
 
     drawRefs(stage.annotation ?? []);
     drawLive();
@@ -278,6 +380,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       ...rows.map((row) => {
         const c = svg("circle", { class: "dot nearest", cx: x(row.pressure_kpa), cy: y(row.o2_pct), r: 5, "data-id": row.id });
         c.append(svg("title", {}, dotTitle(row)));
+        selectable(c, row.investigation);
         return c;
       }),
     );
@@ -295,67 +398,155 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       const left = px - scales.plot.x0 >= label.length * CHAR_PX + arm + 8;
       gYou.append(svg("text", { class: "you-label", x: left ? px - arm - 4 : px + arm + 4, y: py - arm, "text-anchor": left ? "end" : "start" }, label));
     }
-    const items = legendItems(t, { kinds, nearest: rows.length > 0, refs, you: state.sliders !== null, noPressure });
-    legend.replaceChildren(
-      ...items.map((item) => {
-        const li = html("li");
-        const sw = html("span", `sw sw-${item.swatch}`);
-        sw.setAttribute("aria-hidden", "true");
-        li.append(sw, item.text);
-        return li;
-      }),
-    );
+    legend.replaceChildren(...legendHTML(rows));
+  }
+
+  /** Legend in words plus the "Plotted N of M" counter line; needs no scales, so the full
+   *  draw renders it before fitting the chart height to the box minus this chrome. */
+  function legendHTML(rows: NearestRow[]): HTMLElement[] {
+    const state = store.get();
+    const items = legendItems(t, { kinds, nearest: rows.length > 0, refs, you: state.sliders !== null, noPressure }, state.lens);
+    const out = items.map((item) => {
+      const li = html("li");
+      const sw = html("span", `sw sw-${item.swatch}`);
+      sw.setAttribute("aria-hidden", "true");
+      li.append(sw, item.text);
+      return li;
+    });
     if (state.stage.coverage) {
       const { plotted, total } = api.coverage();
-      legend.append(html("li", "coverage", t("ui.stage.coverage", { plotted, total })));
+      const kids: (Node | string)[] = [];
+      for (const bit of t("ui.stage.coverage").split(/(\{\w+\})/g)) {
+        const m = bit.match(/^\{(\w+)\}$/);
+        if (!m) kids.push(bit);
+        else if (m[1] === "plotted") kids.push(dataLink(String(plotted)));
+        else if (m[1] === "total") kids.push(dataLink(String(total)));
+        else kids.push(bit);
+      }
+      const li = html("li", "coverage");
+      li.append(...kids);
+      out.push(li);
     }
+    return out;
+  }
+
+  /** Chart height derived from the stage box minus the measured legend, parade and explainer
+   *  heights, with breathing room so the counter line is never cut at the stage edge. */
+  function fit(): void {
+    const chrome = legend.offsetHeight + (parade.hidden ? 0 : parade.offsetHeight) + (explainers.hidden ? 0 : explainers.offsetHeight);
+    const w = Math.max(40, root.clientWidth);
+    size = { w, h: chartHeight(root.clientHeight, chrome) };
+    plotBox.style.height = `${size.h}px`;
   }
 
   // ---------- incident view: one large page per incident ----------
+  // In the Public lens the pages also get the oxygen dial and the flame guide beside the card.
+  function incidentCard(i: Incident): HTMLElement {
+    const card = html("article", "incident-card");
+    const line = (label: string, text: string): HTMLElement => {
+      const p = html("p");
+      p.append(html("strong", undefined, `${label}: `), text);
+      return p;
+    };
+    const link = html("a", undefined, i.source);
+    link.href = safeHref(i.url);
+    link.rel = "noopener";
+    const src = html("p", "incident-source");
+    src.append(link);
+    card.append(
+      html("h3", undefined, i.name),
+      html("p", "incident-meta", `${i.date} · ${i.setting}`),
+      html("p", "incident-lead", i.what_happened),
+      line(t("ui.stage.incident.oxygen"), i.oxygen),
+      line(t("ui.stage.incident.changed"), i.changed),
+      src,
+    );
+    return card;
+  }
+  /** Incident cards moved into a story card on narrow screens, so they can be put back. */
+  let placedCards: HTMLElement[] = [];
+  /** The small-screen stage holds the picture; the story card holds the words. */
+  const narrowStage = (): boolean =>
+    typeof matchMedia === "function" && matchMedia("(max-width: 1099px)").matches;
+
   function drawIncidents(ids: string[]): void {
+    for (const c of placedCards) c.remove();
+    placedCards = [];
     const all = api.data.incidents.incidents;
     const pages = ids.map((id) => all.find((i) => i.id === id)).filter((i): i is Incident => !!i);
-    incidents.replaceChildren(
-      ...pages.map((i) => {
-        const card = html("article", "incident-card");
-        const line = (label: string, text: string): HTMLElement => {
-          const p = html("p");
-          p.append(html("strong", undefined, `${label}: `), text);
-          return p;
-        };
-        const link = html("a", undefined, i.source);
-        link.href = i.url;
-        link.rel = "noopener";
-        const src = html("p", "incident-source");
-        src.append(link);
-        card.append(
-          html("h3", undefined, i.name),
-          html("p", "incident-meta", `${i.date} · ${i.setting}`),
-          html("p", "incident-lead", i.what_happened),
-          line(t("ui.stage.incident.oxygen"), i.oxygen),
-          line(t("ui.stage.incident.changed"), i.changed),
-          src,
-        );
-        return card;
-      }),
-    );
+    const cards = pages.map(incidentCard);
+    if (store.get().lens !== "public") {
+      incidents.classList.remove("public-picture");
+      incidents.replaceChildren(...cards);
+      return;
+    }
+    incidents.classList.add("public-picture");
+    if (narrowStage()) {
+      // the stage keeps the dial picture; the incident cards move into the active story card
+      const beat = store.get().beat;
+      const stepCard = beat ? document.querySelector(`#beat-${beat.story}-${beat.scene}-${beat.beat} .step-card`) : null;
+      const { side, src } = dialSide(pages);
+      incidents.replaceChildren(side, src);
+      if (stepCard) {
+        stepCard.append(...cards);
+        placedCards = cards;
+      } else {
+        incidents.append(...cards);
+      }
+      return;
+    }
+    const { side, src } = dialSide(pages);
+    incidents.replaceChildren(side, src, ...cards);
+  }
+
+  /** The oxygen dial with its flame and source line (the public picture beside the cards). */
+  function dialSide(pages: Incident[]): { side: HTMLElement; src: HTMLElement } {
+    const side = html("div", "picture-side");
+    const dial = dialSVG(ctx, pages);
+    // the flame stands with its base at the dial's current oxygen mark (the ground when there is none)
+    const mark = pages.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== null);
+    const flameWrap = html("span", "flame-at-mark");
+    flameWrap.style.bottom = `${((mark === undefined ? 0 : markerBottomFraction(mark)) * 100).toFixed(1).replace(/\.0$/, "")}%`;
+    flameWrap.append(flameSVG(mark !== undefined));
+    // the flame stands against the dial (its % height is the dial's); the side keeps
+    // headroom above the dial for the flame's overhang (wide screens only, via CSS)
+    const dialWrap = html("span", "dial-wrap");
+    dialWrap.append(dial, flameWrap);
+    side.style.setProperty("--flame-overhang", `${flameStandPad(mark, mark !== undefined)}px`);
+    side.append(dialWrap);
+    const seen = new Set<string>();
+    const src = html("p", "dial-source");
+    src.append(`${t("ui.stage.dial-source")}: `);
+    for (const id of DIAL_IDS) {
+      const a = api.atmosphere(id);
+      if (seen.has(a.url)) continue;
+      seen.add(a.url);
+      if (src.querySelectorAll("a").length) src.append(", ");
+      const link = html("a", undefined, a.source);
+      link.href = safeHref(a.url);
+      link.rel = "noopener";
+      src.append(link);
+    }
+    return { side, src };
   }
 
   // ---------- wiring ----------
+  window.addEventListener(SELECT_INVESTIGATION, (e) => {
+    selectedInv = (e as CustomEvent<{ investigation: string | null }>).detail.investigation;
+    drawAll();
+  });
   store.subscribe((state, prev) => {
-    const full = state.stage !== prev.stage || state.locale !== prev.locale || (state.sliders === null) !== (prev.sliders === null);
+    const full = state.stage !== prev.stage || state.locale !== prev.locale || state.lens !== prev.lens || state.family !== prev.family || state.filters !== prev.filters || (state.sliders === null) !== (prev.sliders === null);
     if (state.stage !== prev.stage) extra = [];
     if (full) drawAll();
     else if (state.sliders !== prev.sliders || state.family !== prev.family) drawLive();
   });
 
   if (!opts.size) {
-    const measure = (): void => {
-      const r = plotBox.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) size = { w: r.width, h: r.height };
-      drawAll();
-    };
-    if (typeof ResizeObserver !== "undefined") new ResizeObserver(measure).observe(plotBox);
+    // the chart height is derived inside drawAll from the stage box minus the measured
+    // legend, parade and explainer heights, so measuring here only means a full redraw
+    const measure = (): void => drawAll();
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(measure).observe(root);
     else window.addEventListener("resize", measure);
     measure();
   } else drawAll();

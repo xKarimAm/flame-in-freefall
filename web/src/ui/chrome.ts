@@ -1,6 +1,6 @@
-// Header bar: Firebreak mark and name, chapter rail, lens switch, Stories, Skip to Moon air.
+// Header bar: Firebreak mark and name, chapter rail, lens switch, language picker, Stories, Skip to Moon air.
 // Generated with Claude, SI-assisted.
-import { LENSES, MOON_STORY_ID, type Ctx } from "../contract";
+import { LENSES, MOON_STORY_ID, type Ctx, type Locale } from "../contract";
 import { stories } from "../engine/stories";
 import { h, prefersReducedMotion } from "./dom";
 import markSvg from "./logo-mark.svg?raw";
@@ -8,7 +8,10 @@ import markSvg from "./logo-mark.svg?raw";
 export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: HTMLElement) => void): void {
   const { store, t } = ctx;
   let lensButtons: [string, HTMLButtonElement][] = [];
+  let localeSelect: HTMLSelectElement | null = null;
   let chips: [string, HTMLButtonElement][] = [];
+  // autonyms: a language name in its own language is never translated, like the μg mark
+  const localeNames: Record<string, string> = { en: "English", es: "Español", hi: "हिन्दी", ar: "العربية" };
 
   const behavior = (): ScrollBehavior => (prefersReducedMotion() ? "auto" : "smooth");
 
@@ -53,13 +56,22 @@ export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: H
       return [lens, b];
     });
     const group = h("div", { class: "lens-switch", role: "group", "aria-label": t("ui.chrome.lens-label") }, ...lensButtons.map(([, b]) => b));
-    root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, storiesBtn, skipBtn));
+    const locales = (Object.keys(ctx.dicts).length ? Object.keys(ctx.dicts) : ["en"]).filter((l) => l in localeNames);
+    localeSelect = h("select", { class: "locale-select", "aria-label": t("ui.chrome.locale-label") },
+      ...locales.map((locale) => h("option", { value: locale, selected: locale === store.get().locale ? true : undefined }, localeNames[locale]!)));
+    // a locale change rebuilds the bar: keep focus on the new picker
+    localeSelect.addEventListener("change", () => {
+      store.set({ locale: localeSelect!.value as Locale });
+      root.querySelector<HTMLSelectElement>(".locale-select")?.focus();
+    });
+    root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, storiesBtn, skipBtn, localeSelect));
     sync();
   }
 
   function sync(): void {
-    const { lens, beat } = store.get();
+    const { lens, locale, beat } = store.get();
     for (const [l, b] of lensButtons) b.setAttribute("aria-pressed", String(l === lens));
+    if (localeSelect && localeSelect.value !== locale) localeSelect.value = locale;
     for (const [id, c] of chips) {
       if (id === beat?.story) c.setAttribute("aria-current", "true");
       else c.removeAttribute("aria-current");
