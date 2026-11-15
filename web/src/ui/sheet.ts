@@ -31,6 +31,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   let fuelSelEl: HTMLSelectElement | null = null;
   let outcomeSelEl: HTMLSelectElement | null = null;
   let plottedSelEl: HTMLSelectElement | null = null;
+  let countEl: HTMLElement | null = null;
 
   const table = (cls: string, caption: Node, head: string[], rows: Node[][]): HTMLElement =>
     h("table", { class: cls },
@@ -221,16 +222,16 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     return sel;
   }
 
-  function labeled(id: string, labelKey: string, control: HTMLElement): HTMLElement {
-    return h("div", { class: "sheet-filter" }, h("label", { for: id }, t(labelKey)), control);
+  function filter(id: string, labelKey: string, control: HTMLElement, grow = false): HTMLElement {
+    return h("div", { class: grow ? "sheet-filter grow" : "sheet-filter" }, h("label", { for: id }, t(labelKey)), control);
   }
 
-  /** One search box and four filters for both tables; the family one is shared with the panel. */
+  /** One toolbar row: the search grows, the four selects sit inline, the result count ends the row. */
   function controls(): HTMLElement {
-    const bar = h("div", { class: "sheet-controls" });
+    const bar = h("div", { class: "sheet-toolbar" });
     searchEl = h("input", { type: "search", id: "sheet-search", value: query });
     searchEl.addEventListener("input", () => { query = searchEl!.value.trim().toLowerCase(); render(); });
-    bar.append(labeled("sheet-search", "ui.search.label", searchEl));
+    bar.append(filter("sheet-search", "ui.search.label", searchEl, true));
     const fuels = [...new Set(api.data.tests.map((r) => r.fuel).filter((f): f is string => !!f))].sort();
     const outcomes = [...new Set(api.data.tests.map((r) => r.outcome))].sort();
     famSelEl = select("sheet-family",
@@ -238,39 +239,40 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         ...FAMILIES.filter((f) => api.data.experiments.some((e) => e.family === f))
           .map((f) => ({ value: f, text: t(`ui.family.${f}`) }))],
       store.get().family, (v) => store.set({ family: (v || null) as Family | null }));
-    bar.append(labeled("sheet-family", "ui.sheet.family", famSelEl));
+    bar.append(filter("sheet-family", "ui.sheet.family", famSelEl));
     fuelSelEl = select("sheet-fuel",
       [{ value: "", text: t("ui.sheet.filter.all") }, ...fuels.map((f) => ({ value: f, text: f }))],
       fuelFilter, (v) => { fuelFilter = v; render(); });
-    bar.append(labeled("sheet-fuel", "ui.sheet.col.fuel", fuelSelEl));
+    bar.append(filter("sheet-fuel", "ui.sheet.col.fuel", fuelSelEl));
     outcomeSelEl = select("sheet-outcome",
       [{ value: "", text: t("ui.sheet.filter.all") }, ...outcomes.map((o) => ({ value: o, text: t(`ui.outcome.${o}`) }))],
       outcomeFilter, (v) => { outcomeFilter = (v || null) as Outcome | null; render(); });
-    bar.append(labeled("sheet-outcome", "ui.nearest.outcome", outcomeSelEl));
+    bar.append(filter("sheet-outcome", "ui.nearest.outcome", outcomeSelEl));
     plottedSelEl = select("sheet-plotted",
       [{ value: "all", text: t("ui.sheet.filter.all") },
         { value: "plotted", text: t("ui.sheet.filter.plotted") },
         { value: "unplaced", text: t("ui.sheet.filter.unplaced") }],
       plottedFilter, (v) => { plottedFilter = (v || "all") as PlottedFilter; render(); });
-    bar.append(labeled("sheet-plotted", "ui.sheet.filter.placement", plottedSelEl));
+    bar.append(filter("sheet-plotted", "ui.sheet.filter.placement", plottedSelEl));
+    countEl = h("span", { class: "sheet-count", "data-own": true });
+    bar.append(countEl);
     return bar;
   }
 
+  /** Coverage as one compact row of numbers: plotted of total, then each reason's count. */
   function coverage(): HTMLElement {
     const { plotted, total } = api.coverage();
     const byReason = new Map<string, number>();
     for (const r of api.notPlaced()) byReason.set(r.reason, (byReason.get(r.reason) ?? 0) + 1);
-    return h("div", { class: "coverage" },
-      h("h3", {}, t("ui.sheet.coverage.title")),
-      h("p", { "data-own": true }, t("ui.stage.coverage", { plotted, total })),
-      h("ul", {}, ...[...byReason].map(([reason, n]) =>
-        h("li", {}, `${reason}: `, h("span", { "data-own": true }, String(n))))));
+    const kids: (Node | string)[] = [t("ui.stage.coverage", { plotted, total })];
+    for (const [reason, n] of byReason) kids.push(" · ", `${reason}: `, h("span", { "data-own": true }, String(n)));
+    return h("p", { class: "coverage-row", "data-own": true }, ...kids);
   }
 
   function downloads(): HTMLElement {
     return h("div", { class: "downloads" },
       h("h3", {}, t("ui.sheet.downloads.title")),
-      h("ul", {}, ...["tests.json", "experiments.json", "moments.json"].map((f) =>
+      h("ul", {}, ...["tests.json", "experiments.json", "moments.json", "library.json", "search.json", "coverage.json"].map((f) =>
         h("li", {}, h("a", { href: `data/${f}`, download: true }, f)))));
   }
 
@@ -404,6 +406,14 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     if (plottedSelEl) plottedSelEl.value = plottedFilter;
   }
 
+  /** The toolbar count mirrors the visible tab: filtered investigations, test rows or materials. */
+  function updateCount(): void {
+    if (!countEl) return;
+    if (tab === "tests") countEl.textContent = t("ui.sheet.count.tests", { n: sortedTestRows(placedIds()).length });
+    else if (tab === "margins") countEl.textContent = t("ui.sheet.count.materials", { n: api.data.moon.lunar_margins.materials.length });
+    else countEl.textContent = t("ui.sheet.count.investigations", { n: sortedFiltered().length });
+  }
+
   function render(): void {
     for (const [k, b] of tabBtns) b.setAttribute("aria-selected", String(k === tab));
     syncControls();
@@ -413,6 +423,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
       body.replaceChildren(tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins());
       if (tab === "investigations" && selectedInv) selectRow(selectedInv, false);
     }
+    updateCount();
   }
 
   function build(): void {

@@ -263,6 +263,18 @@ describe("ui", () => {
     expect(roots().sheet.hidden).toBe(true);
   });
 
+  it("analyst tables fit without sideways scroll: fixed layout, sticky header, wrapped titles", () => {
+    expect(css).toMatch(/#sheet table\s*\{[^}]*table-layout:\s*fixed/);
+    expect(css).toMatch(/#sheet thead th\s*\{[^}]*position:\s*sticky/);
+    expect(css).toMatch(/#sheet (th|td)[^{]*\{[^}]*overflow-wrap:\s*anywhere/);
+  });
+
+  it("analyst workspace at 1280 px and wider: table left, chart in a right column of about 40 %", () => {
+    const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
+    expect(base).toMatch(/min-width:\s*1280px\)[\s\S]*?body\[data-lens="analyst"\] #sheet\s*\{[^}]*width:\s*60%/);
+    expect(base).toMatch(/min-width:\s*1280px\)[\s\S]*?body\[data-lens="analyst"\] #stage\s*\{[^}]*padding-left:\s*60%/);
+  });
+
   it("header button groups wrap instead of clipping; the locale picker is one compact select", () => {
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "ui.css"), "utf8");
     expect(css).toMatch(/\.lens-switch\s*\{[^}]*flex-wrap:\s*wrap/);
@@ -497,7 +509,28 @@ describe("ui", () => {
     }
   });
 
-  it("the coverage panel counts every reason and the downloads link the data files", () => {
+  it("the analyst toolbar is one row: search grows, four selects inline, result count at the end", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    const bar = sheet.querySelector(".sheet-toolbar")!;
+    expect(bar.firstElementChild!.querySelector("input[type=\"search\"]")).not.toBeNull();
+    expect(bar.firstElementChild!.classList.contains("grow")).toBe(true);
+    expect(bar.querySelectorAll("select").length).toBe(4);
+    expect(bar.lastElementChild!.className).toBe("sheet-count");
+    // the count follows the current tab and the filters
+    const count = () => bar.querySelector(".sheet-count")!.textContent!;
+    expect(count()).toBe(`${experiments.length} investigations`);
+    const box = sheet.querySelector<HTMLInputElement>("#sheet-search")!;
+    box.value = "no-such-fuel-xyz";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(count()).toBe("0 investigations");
+    box.value = "";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(count()).toBe(`${experiments.length} investigations`);
+  });
+
+  it("coverage is one compact row and the downloads link the six data files", () => {
     const extra: TestRun = {
       id: "PSI-101#1", investigation: "PSI-101", fuel: null, fuel_class: "smoke", gravity: "micro-g",
       o2_pct: null, pressure_kpa: null, outcome: "unknown",
@@ -509,17 +542,15 @@ describe("ui", () => {
       store.set({ lens: "analyst" });
       const sheet = roots().sheet;
       const { plotted, total } = ctx.api.coverage();
-      expect(sheet.textContent).toContain(`Plotted ${plotted} of ${total} tests`);
+      const row = sheet.querySelector(".coverage-row")!;
+      expect(row.textContent).toContain(`Plotted ${plotted} of ${total} tests`);
       const reasons = new Map<string, number>();
       for (const r of ctx.api.notPlaced()) reasons.set(r.reason, (reasons.get(r.reason) ?? 0) + 1);
       expect(reasons.size).toBeGreaterThan(0);
-      for (const [reason, n] of reasons) {
-        const li = [...sheet.querySelectorAll(".coverage li")].find((e) => e.textContent!.startsWith(reason));
-        expect(li!.textContent).toContain(String(n));
-      }
+      for (const [reason, n] of reasons) expect(row.textContent).toContain(`${reason}: ${n}`);
       const hrefs = [...sheet.querySelectorAll(".downloads a")].map((a) => (a as HTMLAnchorElement).getAttribute("href"));
-      expect(hrefs).toEqual(["data/tests.json", "data/experiments.json", "data/moments.json"]);
-      expect(sheet.querySelectorAll(".downloads a[download]").length).toBe(3);
+      expect(hrefs).toEqual(["data/tests.json", "data/experiments.json", "data/moments.json", "data/library.json", "data/search.json", "data/coverage.json"]);
+      expect(sheet.querySelectorAll(".downloads a[download]").length).toBe(6);
       expect(unlinkedNumbers(sheet)).toEqual([]);
     } finally {
       tests.pop();

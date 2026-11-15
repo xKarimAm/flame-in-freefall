@@ -67,6 +67,11 @@ body[data-lens="analyst"] #story { display: none; }
     width: min(52rem, 46vw); max-height: none;
   }
 }
+/* at 1280 px and wider the workspace splits: table on the left, the 2D SVG chart on the right */
+@media (min-width: 1280px) {
+  body[data-lens="analyst"] #sheet { width: 60%; max-width: none; }
+  body[data-lens="analyst"] #stage { padding-left: 60%; }
+}
 #sheet a { color: var(--link); }
 
 /* Stories overlay: full screen */

@@ -85,12 +85,21 @@ a.num { font-variant-numeric: tabular-nums; }
 #sheet .tab + .tab { margin-left: -1px; }
 #sheet .tab[aria-selected="true"] { background: var(--ink); color: var(--sheet); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; border-color: var(--ink); }
 #sheet a { color: var(--link); text-decoration: underline; }
-#sheet table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+#sheet table { border-collapse: collapse; width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
+#sheet th, #sheet td { overflow-wrap: anywhere; }
+#sheet thead th { position: sticky; top: 0; background: var(--sheet); z-index: 1; }
 #sheet th button.sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
 #sheet th[aria-sort="ascending"] button.sort, #sheet th[aria-sort="descending"] button.sort { text-decoration: underline; text-underline-offset: 3px; }
-.sheet-filter { display: flex; gap: 8px; align-items: center; margin: 12px 0; }
-.sheet-filter select, .sheet-filter input[type="search"] { font: inherit; min-height: 40px; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius); }
-.sheet-controls { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.sheet-filter select, .sheet-filter input[type="search"] { font: inherit; min-height: 40px; width: 100%; box-sizing: border-box; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius); }
+/* one toolbar row: the search grows, the four selects sit inline, the result count ends the row.
+   Selects are capped with an ellipsis (the full data value shows in the opened list) so the row holds at 1360 px. */
+.sheet-toolbar { display: flex; align-items: flex-end; gap: 4px 8px; flex-wrap: wrap; }
+.sheet-toolbar .sheet-filter { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+.sheet-toolbar .sheet-filter.grow { flex: 1 1 7rem; }
+.sheet-toolbar select { max-width: 7.5rem; text-overflow: ellipsis; }
+.sheet-toolbar label { font-size: 13px; color: var(--muted); }
+.sheet-toolbar .sheet-count { margin-left: auto; align-self: center; white-space: nowrap; color: var(--muted); font-size: 14px; }
+.coverage-row { margin: 8px 0; font-size: 14px; }
 #overlay-search { font: inherit; min-height: 40px; margin-top: 12px; width: min(28rem, 100%); background: var(--space-black); color: var(--ink-dark); border: 1px solid var(--rule); border-radius: var(--radius); }
 .overlay-count { color: var(--muted-dark); font-size: 14px; }
 .story-card[hidden] { display: none; }
