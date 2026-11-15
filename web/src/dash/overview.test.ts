@@ -10,7 +10,7 @@ import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import type { Ctx, Experiment, TestRun } from "../contract";
-import { renderOverview } from "./overview";
+import { airTitle, renderOverview } from "./overview";
 
 const read = (rel: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8"));
 const tests = read("../../../data/build/tests.json") as TestRun[];
@@ -143,6 +143,23 @@ describe("overview ranking (task 50)", () => {
     const rule = root.querySelector(".dash-rule")!.textContent!;
     expect(rule).toContain("1.0 or less");
     expect(rule).toMatch(/distance d\b/);
+  });
+
+  it("renders an open-band air with the sheet's open wording, never a doubled range (R15)", () => {
+    // an air whose o2_pct_max is null shows the minimum with the existing
+    // open-band wording; the closed range reuses the sheet's translatable joiner
+    const ctx = ctxFor();
+    const heo = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    const textOf = (oxygen: string): string => {
+      const el = document.createElement("span");
+      el.append(...airTitle(ctx, { kind: "atmosphere", id: "heo-dm-1006" },
+        oxygen === "open" ? { ...heo, o2_pct_max: null } : heo));
+      return el.textContent!;
+    };
+    expect(textOf("open")).toContain("33.7 % or more");
+    expect(textOf("open")).not.toContain("33.7 to 33.7");
+    expect(textOf("open")).not.toContain(" to ");
+    expect(textOf("closed")).toContain("33.7 to 40 %");
   });
 
   it("selecting a ranked row notifies the stage", () => {

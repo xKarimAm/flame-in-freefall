@@ -529,8 +529,8 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     result.setAttribute("aria-live", "polite");
     const planeName = t(`ui.stage.plane.${selectedPlane}`);
     if (n > 0) {
-      // the count is scoped to the archive, linked to the file it was counted
-      // from, and followed by how many of them are on the chart; both computed
+      // both counts are scoped to the archive and to the selected plane: n is
+      // the archive rows in this gravity, m the ones among them on the chart
       for (const bit of t("ui.stage.plane.holds").split(/(\{\w+\})/g)) {
         const m = bit.match(/^\{(\w+)\}$/);
         if (!m) result.append(bit);
@@ -538,7 +538,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
         else if (m[1] === "plane") result.append(planeName);
         else result.append(bit);
       }
-      result.append(" ", t("ui.stage.plane.chart", { m: api.coverage().plotted }));
+      const placedIds = new Set(api.placed().map((p) => p.id));
+      const g = grav[selectedPlane];
+      const m = api.data.tests.filter((r) => placedIds.has(r.id) && (counts.get(r.id) ?? "micro-g") === g).length;
+      result.append(" ", t("ui.stage.plane.chart", { m }));
     } else {
       result.textContent = t("ui.stage.plane.empty", { plane: planeName });
     }

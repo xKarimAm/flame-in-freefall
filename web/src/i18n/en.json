@@ -216,7 +216,7 @@
   "ui.dash.numbers.oxygen": "Tests with oxygen recorded",
   "ui.dash.numbers.publications": "Publication listings",
   "ui.dash.ranked.title": "Ranked for this air",
-  "ui.dash.ranked.air-moon": "{name} ({pressure} kPa, {oxygen} % oxygen)",
+  "ui.dash.ranked.air-moon": "{name} ({pressure} kPa, {oxygen} oxygen)",
   "ui.dash.ranked.air-point": "{pressure} kPa, {oxygen} % oxygen",
   "ui.dash.ranked.rule": "Closest tested conditions, not a prediction. Distance counts 5 oxygen points the same as 25 kPa of pressure. Near means a test with distance d of 1.0 or less.",
   "ui.dash.ranked.near": "{n} near",

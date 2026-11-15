@@ -33,7 +33,7 @@ const families: Record<string, Family> = Object.fromEntries(
   [...goldenExperiments, fixture("PSI-69", "droplets"), fixture("PSI-159", "gas jets")].map((e) => [e.id, e.family]),
 );
 
-interface Extra { placed?: PlacedTest[]; notPlaced?: NotPlacedRow[] }
+interface Extra { placed?: PlacedTest[]; notPlaced?: NotPlacedRow[]; tests?: TestRun[] }
 function fakeApi(extra: Extra = {}): DataApi & { nearestSpy: ReturnType<typeof vi.fn> } {
   const placed: PlacedTest[] = [
     ...tests
@@ -61,7 +61,7 @@ function fakeApi(extra: Extra = {}): DataApi & { nearestSpy: ReturnType<typeof v
     familyMix: [], nearestBurned: null, nearestWentOut: null,
   }));
   return {
-    data: { experiments: goldenExperiments, tests, moon, incidents },
+    data: { experiments: goldenExperiments, tests: [...tests, ...(extra.tests ?? [])], moon, incidents },
     // the dashboard tabs resolve every investigation in the data: the fixture answers
     // from the golden experiments, else a bare placeholder with a valid link shape
     experiment: (id: string) =>
@@ -1483,6 +1483,34 @@ describe("act 1 public picture layout (task 21)", () => {
     step()[2]!.click();
     expect(host.querySelector(".plane-result")!.textContent).toBe("No test in the PSI archive ran in Earth gravity.");
     expect(dots()).toBe(0);
+  });
+
+  it("the on-chart count is scoped to the selected plane, not the archive (R15)", () => {
+    // one placed test in another plane: micro keeps its own on-chart count,
+    // the lunar step counts only the lunar test
+    const lunarPlaced: PlacedTest = {
+      id: "PSI-L#1", investigation: "PSI-159", family: "gas jets", fuel: null,
+      o2_pct: 30, pressure_kpa: 56.5, flow_cm_s: null, outcome: "burned", url: "https://example.test/",
+    };
+    const lunarRow = {
+      id: "PSI-L#1", investigation: "PSI-159", fuel: null, gravity: "lunar-g",
+      o2_pct: 30, pressure_kpa: 56.5, outcome: "burned",
+      source: { file: "csv_x", row: 1, url: "https://example.test/" },
+    } as unknown as TestRun;
+    const stage = { view: "tilt-lunar", show_families: ["gas jets"], reference: ["heo-dm-1006"] } as StageState;
+    const beat = { story: "the-gap", scene: "s", beat: "b", kind: "takeaway" } as AppState["beat"];
+    const { api, host } = setup(stage, null, { placed: [lunarPlaced], tests: [lunarRow] }, SIZE, "public", beat);
+    const microTests = api.data.tests.filter((r) => (r.gravity ?? "micro-g") === "micro-g").length;
+    const microPlaced = api.placed().filter((p) =>
+      api.data.tests.some((r) => r.id === p.id && (r.gravity ?? "micro-g") === "micro-g")).length;
+    const result = () => host.querySelector(".plane-result")!;
+    expect(result().textContent).toBe(
+      `${microTests} tests in the PSI archive ran in Microgravity. ${microPlaced} of them are on the chart.`,
+    );
+    [...host.querySelectorAll<HTMLButtonElement>(".plane-step button")][1]!.click();
+    expect(result().textContent).toBe(
+      "1 tests in the PSI archive ran in Moon gravity. 1 of them are on the chart.",
+    );
   });
 
   it("the plane stepper only shows on the chapter-4 pages (task 59)", () => {

@@ -53,6 +53,19 @@ describe("i18n dictionaries", () => {
     }
   });
 
+  it("corrected sentences fall back to English, never a hand translation (R15)", () => {
+    // R6 and R3 corrected these sentences in English; the old translations
+    // inferred (flow-terminated) or mis-scoped (dial-noair), so both keys are
+    // deleted from the locales and fall back to the English text
+    for (const locale of ["es", "hi"] as Locale[]) {
+      expect(dicts[locale]!["ui.outcome.flow-terminated"]).toBeUndefined();
+      expect(dicts[locale]!["ui.stage.dial-noair"]).toBeUndefined();
+      for (const value of Object.values(dicts[locale]!)) expect(value).not.toContain("Seguía ardiendo");
+    }
+    expect(makeT(() => "es")("ui.outcome.flow-terminated")).toBe("Flow was terminated (as recorded)");
+    expect(makeT(() => "hi")("ui.stage.dial-noair")).toBe("is outside every air marked on this dial.");
+  });
+
   it("chrome text falls back from the locale to en, then to the key", () => {
     for (const locale of Object.keys(dicts) as Locale[]) {
       const t = makeT(() => locale);

@@ -85,7 +85,7 @@ function numbersSection(ctx: Ctx): HTMLElement {
 /** The air the ranking is for (R4): the Moon box by its plain name and moon.json values,
  *  or the slider values. Moon numbers link to their moon.json source; slider values are
  *  the visitor's own input, marked data-own like the panel weighting. */
-function airTitle(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null): (Node | string)[] {
+export function airTitle(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null): (Node | string)[] {
   const { t } = ctx;
   const f = (v: number): string => String(Number(v.toFixed(1)));
   if (query.kind === "point") {
@@ -93,13 +93,18 @@ function airTitle(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null):
   }
   // atmosphere queries always carry their moon.json atmosphere (rankForAir throws otherwise)
   const a = atmosphere!;
+  // the oxygen range reuses the sheet's wording: the translatable range joiner
+  // when the band is closed, the open-band wording for a null maximum
+  const oxygen = a.o2_pct_max == null
+    ? t("ui.sheet.band-open", { lo: f(a.o2_pct_min) })
+    : t("ui.sheet.range", { lo: f(a.o2_pct_min), hi: f(a.o2_pct_max), unit: t("ui.panel.unit.pct") });
   const kids: (Node | string)[] = [];
   for (const bit of t("ui.dash.ranked.air-moon").split(/(\{\w+\})/g)) {
     const m = bit.match(/^\{(\w+)\}$/);
     if (!m) kids.push(bit);
     else if (m[1] === "name") kids.push(t(`ui.air.${a.id}`));
     else if (m[1] === "pressure") kids.push(cite(f(a.pressure_kpa), a.url));
-    else if (m[1] === "oxygen") kids.push(cite(`${f(a.o2_pct_min)} to ${f(a.o2_pct_max ?? a.o2_pct_min)}`, a.url));
+    else if (m[1] === "oxygen") kids.push(cite(oxygen, a.url));
     else kids.push(bit);
   }
   return kids;
