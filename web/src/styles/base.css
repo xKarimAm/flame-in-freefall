@@ -79,6 +79,14 @@ body[data-stage-hidden="true"] #stage { visibility: hidden; }
     align-items: flex-start;
     padding-top: calc(var(--chrome-h) + 16px);
   }
+  /* the slider page shares its column with the panel: its text stays compact and the
+     turn-the-page cue is left out, so nothing ends up under the panel */
+  html body:has(#panel:not([hidden])) #story .step.is-active .step-card .step-text,
+  html body:has(#panel:not([hidden])) #story .step.is-active .step-card .step-text .sent.sent {
+    font-size: var(--text-body); line-height: 1.35;
+  }
+  body:has(#panel:not([hidden])) #story .step.is-active .step-cue { display: none; }
+  body:has(#panel:not([hidden])) #panel { max-height: calc(100vh - var(--chrome-h) - 300px); }
 }
 
 /* tabular numbers everywhere a number can move (slider readouts already have it) */
