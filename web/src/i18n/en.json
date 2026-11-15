@@ -206,6 +206,7 @@
   "ui.library.stories": "Back to stories",
   "ui.library.voice": "Told in the voice of {voice}",
   "ui.library.moments": "The numbers behind this story",
+  "ui.library.unavailable": "This story could not be shown.",
   "ui.library.strip-count": "{n} tests with this recorded",
   "ui.library.map-label": "One dot per real test",
   "ui.library.strip-label": "One mark per real test",

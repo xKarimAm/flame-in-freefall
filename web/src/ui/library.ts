@@ -319,14 +319,17 @@ export function renderLibraryPage(story: LibraryStory, moments: LibraryMoment[],
   page.append(h("p", { class: "lib-hook" }, story.hook));
   page.append(h("p", { class: "lib-reveal" }, story.reveal));
   page.append(signatureView(story, moments, ctx));
-  page.append(h("h4", { class: "lib-moments-title" }, t("ui.library.moments")));
-  const list = h("ul", { class: "lib-moments" });
-  for (const id of story.moments) {
-    const m = momentById(moments, id);
-    const value = m.value_max == null ? `${fmt(m.value)} ${m.unit}` : `${fmt(m.value)} to ${fmt(m.value_max)} ${m.unit}`;
-    list.append(h("li", { class: "lib-moment" }, cite(`${m.label}: ${value}`, m.url)));
+  // stories with no moments get no numbers heading and no list
+  if (story.moments.length) {
+    page.append(h("h4", { class: "lib-moments-title" }, t("ui.library.moments")));
+    const list = h("ul", { class: "lib-moments" });
+    for (const id of story.moments) {
+      const m = momentById(moments, id);
+      const value = m.value_max == null ? `${fmt(m.value)} ${m.unit}` : `${fmt(m.value)} to ${fmt(m.value_max)} ${m.unit}`;
+      list.append(h("li", { class: "lib-moment" }, cite(`${m.label}: ${value}`, m.url)));
+    }
+    page.append(list);
   }
-  page.append(list);
   page.append(h("p", { class: "lib-bridge" }, story.bridge));
   const ai = h(
     "p",

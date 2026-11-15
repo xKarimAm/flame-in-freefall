@@ -146,6 +146,8 @@ export function mountOverlay(
     try {
       data = await lib;
     } catch {
+      // a rejected fetch must not stick: the next open tries again
+      lib = null;
       if (mark !== opened) return;
       body.replaceChildren(h("p", {}, t("ui.load-error")));
       return;
@@ -172,7 +174,14 @@ export function mountOverlay(
     // the search box and count line stay in the shell but hidden: a page is one story, nothing to filter
     root.querySelector<HTMLInputElement>("#overlay-search")!.hidden = true;
     root.querySelector(".overlay-count")!.textContent = "";
-    body.append(back, renderLibraryPage(story, moments, ctx));
+    // a bad moment id must not blank the dialog: say so in plain words, keeping the way back
+    let page: HTMLElement;
+    try {
+      page = renderLibraryPage(story, moments, ctx);
+    } catch {
+      page = h("p", {}, t("ui.library.unavailable"));
+    }
+    body.append(back, page);
     back.focus();
   }
 

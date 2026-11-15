@@ -226,6 +226,48 @@ describe("library", () => {
     void open;
   });
 
+  it("an unknown moment id shows a plain line instead of a blank dialog (task 38)", async () => {
+    document.body.innerHTML = `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="x"></section><div id="overlay" hidden></div>`;
+    const c = ctx();
+    const root = document.getElementById("overlay")!;
+    const bad = { ...story("bre"), id: "bad-moments", moments: ["nope.unknown-moment"] };
+    const { openLibrary } = mountOverlay(root, c, async () => ({ stories: [bad], moments }));
+    await openLibrary(document.createElement("button"));
+    root.querySelector<HTMLButtonElement>(".library-card")!.click();
+    expect(root.querySelector(".lib-page")).toBeNull(); // no half-rendered page
+    expect(root.querySelector(".overlay-body")!.textContent).toContain(c.t("ui.library.unavailable"));
+    expect(root.querySelector<HTMLButtonElement>(".library-back")).not.toBeNull(); // the way back stays
+  });
+
+  it("stories with no moments show no numbers heading (task 38)", () => {
+    const c = ctx();
+    const bare = renderLibraryPage(story("bre"), moments, c);
+    expect(story("bre").moments).toEqual([]);
+    expect(bare.querySelector(".lib-moments-title")).toBeNull();
+    expect(bare.querySelectorAll(".lib-moment").length).toBe(0);
+    const full = renderLibraryPage(story("flex"), moments, c);
+    expect(full.querySelector(".lib-moments-title")).not.toBeNull();
+    expect(full.querySelectorAll(".lib-moment").length).toBe(story("flex").moments.length);
+  });
+
+  it("a failed library load does not poison the next open (task 38)", async () => {
+    document.body.innerHTML = `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="x"></section><div id="overlay" hidden></div>`;
+    const c = ctx();
+    const root = document.getElementById("overlay")!;
+    let calls = 0;
+    const flaky = async (): Promise<{ stories: LibraryStory[]; moments: LibraryMoment[] }> => {
+      calls++;
+      if (calls === 1) throw new Error("network down");
+      return { stories, moments };
+    };
+    const { openLibrary } = mountOverlay(root, c, flaky);
+    await openLibrary(document.createElement("button"));
+    expect(root.querySelector(".overlay-body")!.textContent).toContain(c.t("ui.load-error"));
+    await openLibrary(document.createElement("button"));
+    expect(calls).toBe(2);
+    expect(root.querySelectorAll(".library-card").length).toBe(19);
+  });
+
   it("Tab stays inside the open dialog", async () => {
     document.body.innerHTML = `<div id="overlay" hidden></div>`;
     const c = ctx();
