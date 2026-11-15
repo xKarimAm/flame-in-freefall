@@ -320,6 +320,65 @@ describe("ui", () => {
     expect(roots().sheet.querySelector("tr.detail")).toBeNull();
   });
 
+  it("search and filters narrow the investigations table and the count follows", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    const rows = () => [...sheet.querySelectorAll("table.investigations tbody tr")];
+    const box = sheet.querySelector<HTMLInputElement>("#sheet-search")!;
+    box.value = "droplet";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(rows().length).toBe(1);
+    expect(sheet.querySelector("table.investigations caption")!.textContent).toContain("1 investigations");
+    box.value = "";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(rows().length).toBe(experiments.length);
+    const fuel = "Methanol";
+    const fuelSel = sheet.querySelector<HTMLSelectElement>("#sheet-fuel")!;
+    fuelSel.value = fuel;
+    fuelSel.dispatchEvent(new Event("change", { bubbles: true }));
+    const wanted = experiments.filter((e) => tests.some((t) => t.investigation === e.id && t.fuel === fuel));
+    expect(wanted.length).toBeGreaterThan(0);
+    expect(rows().length).toBe(wanted.length);
+    fuelSel.value = "";
+    fuelSel.dispatchEvent(new Event("change", { bubbles: true }));
+    const outSel = sheet.querySelector<HTMLSelectElement>("#sheet-outcome")!;
+    outSel.value = "burned";
+    outSel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(rows().length).toBe(experiments.filter((e) => tests.some((t) => t.investigation === e.id && t.outcome === "burned")).length);
+    outSel.value = "";
+    outSel.dispatchEvent(new Event("change", { bubbles: true }));
+    const plotSel = sheet.querySelector<HTMLSelectElement>("#sheet-plotted")!;
+    plotSel.value = "unplaced";
+    plotSel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(rows().length).toBe(1); // only PSI-98 has a row with no pressure recorded
+    plotSel.value = "all";
+    plotSel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(rows().length).toBe(experiments.length);
+    expect(unlinkedNumbers(sheet)).toEqual([]);
+  });
+
+  it("the tests tab sorts every column and its rows link to their PSI rows", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    sheet.querySelectorAll<HTMLButtonElement>("button.tab")[2]!.click();
+    const rows = () => [...sheet.querySelectorAll("table.tests-table tbody tr")];
+    expect(rows().length).toBe(tests.length);
+    expect(sheet.querySelector("table.tests-table caption")!.textContent).toContain(`${tests.length} test rows`);
+    const sortBtn = (label: string) => [...sheet.querySelectorAll<HTMLButtonElement>("table.tests-table th button.sort")].find((b) => b.textContent === label)!;
+    sortBtn("Oxygen").click();
+    const o2s = rows().map((r) => r.children[2].textContent);
+    const fmt = (v: number) => String(Number(v.toFixed(1)));
+    const nums = tests.map((t) => t.o2_pct as number);
+    expect(o2s[0]).toContain(fmt(Math.min(...nums)));
+    sortBtn("Oxygen").click();
+    expect(rows()[0]!.children[2].textContent).toContain(fmt(Math.max(...nums)));
+    const link = rows()[0]!.querySelectorAll("td")[6]!.querySelector("a")!;
+    expect(link.getAttribute("href")).toMatch(/^https:\/\//);
+    expect(unlinkedNumbers(sheet)).toEqual([]);
+  });
+
   it("the coverage panel counts every reason and the downloads link the data files", () => {
     const extra: TestRun = {
       id: "PSI-101#1", investigation: "PSI-101", fuel: null, fuel_class: "smoke", gravity: "micro-g",
@@ -482,6 +541,29 @@ describe("ui", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(roots().overlay.hidden).toBe(true);
     expect(document.activeElement).toBe(stories);
+  });
+
+  it("the overlay search filters stories by title, family and acronym, with a count", () => {
+    setup();
+    document.getElementById("story")!.innerHTML =
+      `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="Build your Moon-base air"></section><section id="story-what-nasa-tested" data-story="what-nasa-tested" data-act="2" data-title="What NASA has tested"></section>`;
+    const storiesBtn = buttons(roots().chrome).find((b) => b.textContent === "Stories")!;
+    storiesBtn.click();
+    const box = roots().overlay.querySelector<HTMLInputElement>("#overlay-search")!;
+    const visible = () => [...roots().overlay.querySelectorAll<HTMLElement>(".story-card")].filter((c) => !c.hidden);
+    expect(visible().length).toBe(2);
+    box.value = "flex";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(visible().length).toBe(1);
+    expect(visible()[0]!.textContent).toContain("What NASA has tested");
+    expect(roots().overlay.querySelector(".overlay-count")!.textContent).toBe("1 of 2 stories");
+    box.value = "moon-base";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(visible().length).toBe(1);
+    expect(visible()[0]!.textContent).toContain("Build your Moon-base air");
+    box.value = "";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(visible().length).toBe(2);
   });
 
   it("the engine ending card opens the Stories overlay through the open-overlay event", () => {

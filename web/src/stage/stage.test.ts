@@ -541,6 +541,22 @@ describe("public picture", () => {
   });
 });
 
+describe("family filter", () => {
+  it("the chart shows only the filtered family's tests", () => {
+    const { host, store, api } = setup({ view: "micro-g", show_families: allFamilies });
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+    store.set({ family: "droplets" });
+    const dots = [...host.querySelectorAll('[data-layer="tests"] circle')];
+    const wanted = api.placed().filter((p) => p.family === "droplets");
+    expect(wanted.length).toBeGreaterThan(0);
+    expect(dots.length).toBe(wanted.length);
+    const ids = new Set(wanted.map((p) => p.id));
+    expect(dots.every((d) => ids.has(d.getAttribute("data-id")!))).toBe(true);
+    store.set({ family: null });
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+  });
+});
+
 describe("linked selection", () => {
   const linkedSetup = () => setup({ view: "micro-g", show_families: allFamilies });
   const testDot = (host: HTMLElement, id: string) =>

@@ -67,7 +67,12 @@ a.num { font-variant-numeric: tabular-nums; }
 #sheet th button.sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
 #sheet th[aria-sort="ascending"] button.sort, #sheet th[aria-sort="descending"] button.sort { text-decoration: underline; text-underline-offset: 3px; }
 .sheet-filter { display: flex; gap: 8px; align-items: center; margin: 12px 0; }
-.sheet-filter select { font: inherit; min-height: 40px; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius); }
+.sheet-filter select, .sheet-filter input[type="search"] { font: inherit; min-height: 40px; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius); }
+.sheet-controls { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+#overlay-search { font: inherit; min-height: 40px; margin-top: 12px; width: min(28rem, 100%); background: var(--space-black); color: var(--ink-dark); border: 1px solid var(--rule); border-radius: var(--radius); }
+.overlay-count { color: var(--muted-dark); font-size: 14px; }
+.story-card[hidden] { display: none; }
+#sheet .row-select { font: inherit; font-family: var(--font-id); padding: 0; background: none; border: 0; border-bottom: 1px solid var(--link); color: var(--link); cursor: pointer; text-align: left; }
 .coverage, .downloads { margin: 12px 0; }
 .coverage ul, .downloads ul { margin: 8px 0; padding-left: 1.2em; }
 tr.detail td { padding: 12px 16px; background: var(--sheet-ground); }

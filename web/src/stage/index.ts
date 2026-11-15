@@ -124,8 +124,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const lunar = stage.view === "tilt-lunar";
     const placed = api.placed();
     refs = empty ? { bands: [], paper: [] } : planReferences(stage, api);
-    const wanted = empty ? [] : drawnTests(stage, placed);
-    const strip = empty ? [] : noPressureRows(stage, api.notPlaced());
+    // the family filter (panel or sheet) narrows the chart to that family's tests
+    const fam = state.family ?? null;
+    const wanted = empty ? [] : drawnTests(stage, placed).filter((w) => !fam || w.family === fam);
+    const strip = empty ? [] : noPressureRows(stage, api.notPlaced()).filter((r) => !fam || r.family === fam);
     noPressure = strip.length;
 
     // x domain: computed from the tests and references shown (see pressuresForDomain).
@@ -377,7 +379,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     drawAll();
   });
   store.subscribe((state, prev) => {
-    const full = state.stage !== prev.stage || state.locale !== prev.locale || state.lens !== prev.lens || (state.sliders === null) !== (prev.sliders === null);
+    const full = state.stage !== prev.stage || state.locale !== prev.locale || state.lens !== prev.lens || state.family !== prev.family || (state.sliders === null) !== (prev.sliders === null);
     if (state.stage !== prev.stage) extra = [];
     if (full) drawAll();
     else if (state.sliders !== prev.sliders || state.family !== prev.family) drawLive();

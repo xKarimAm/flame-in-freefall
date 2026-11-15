@@ -1,13 +1,15 @@
 // Analyst sheet: all investigations, and the Moon-gravity margins from moon.json.
 // Generated with Claude, SI-assisted.
-import { FAMILIES, type Ctx, type Experiment, type Family, type Publication, type StageState } from "../contract";
+import { FAMILIES, type Ctx, type Experiment, type Family, type Outcome, type Publication, type StageState, type TestRun } from "../contract";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import { cite, h, num, numOrMissing } from "./dom";
 
-type Tab = "investigations" | "margins";
+type Tab = "investigations" | "margins" | "tests";
 const tabFor = (s: StageState["analyst_sheet"]): Tab => (s === "lunar-margins" || s === "failing-materials" ? "margins" : "investigations");
 
 type SortKey = "acronym" | "title" | "family" | "tests" | "o2" | "pressure" | "outcomes" | "papers";
+type TestSortKey = "investigation" | "fuel" | "o2" | "pressure" | "flow" | "outcome" | "source" | "placed";
+type PlottedFilter = "all" | "plotted" | "unplaced";
 
 export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   const { api, store, t } = ctx;
@@ -17,8 +19,18 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   let sig: string | null = null;
   let sortKey: SortKey = "family";
   let sortDir: 1 | -1 = 1;
-  let famFilter: Family | null = null;
+  let testSortKey: TestSortKey = "investigation";
+  let testSortDir: 1 | -1 = 1;
+  let query = "";
+  let fuelFilter: string | null = null;
+  let outcomeFilter: Outcome | null = null;
+  let plottedFilter: PlottedFilter = "all";
   let selectedInv: string | null = null;
+  let searchEl: HTMLInputElement | null = null;
+  let famSelEl: HTMLSelectElement | null = null;
+  let fuelSelEl: HTMLSelectElement | null = null;
+  let outcomeSelEl: HTMLSelectElement | null = null;
+  let plottedSelEl: HTMLSelectElement | null = null;
 
   const table = (cls: string, caption: Node, head: string[], rows: Node[][]): HTMLElement =>
     h("table", { class: cls },
@@ -128,8 +140,56 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   }
 
   function sortedFiltered(): Experiment[] {
-    const rows = api.data.experiments.filter((e) => !famFilter || e.family === famFilter);
-    return [...rows].sort((a, b) => {
+    const rows = sortedExperiments().filter((e) => invPasses(e, placedIds()));
+    return rows;
+  }
+
+  function placedIds(): Set<string> {
+    return new Set(api.placed().map((p) => p.id));
+  }
+
+  function fuelsOf(e: Experiment): string[] {
+    const out = new Set<string>();
+    for (const r of api.data.tests) if (r.investigation === e.id && r.fuel) out.add(r.fuel);
+    return [...out];
+  }
+
+  function invMatches(e: Experiment, q: string): boolean {
+    if (!q) return true;
+    const hay = `${e.acronym} ${e.title} ${e.family} ${t(`ui.family.${e.family}`)} ${fuelsOf(e).join(" ")}`.toLowerCase();
+    return hay.includes(q);
+  }
+
+  function rowMatches(r: TestRun, q: string): boolean {
+    if (!q) return true;
+    const e = api.experiment(r.investigation);
+    const hay = `${r.investigation} ${e?.acronym ?? ""} ${e?.title ?? ""} ${e?.family ?? ""} ${r.fuel ?? ""}`.toLowerCase();
+    return hay.includes(q);
+  }
+
+  function invPasses(e: Experiment, placed: Set<string>): boolean {
+    const fam = store.get().family;
+    if (fam && e.family !== fam) return false;
+    const rows = api.data.tests.filter((x) => x.investigation === e.id);
+    if (fuelFilter && !rows.some((r) => r.fuel === fuelFilter)) return false;
+    if (outcomeFilter && !rows.some((r) => r.outcome === outcomeFilter)) return false;
+    if (plottedFilter === "plotted" && !rows.some((r) => placed.has(r.id))) return false;
+    if (plottedFilter === "unplaced" && !rows.some((r) => !placed.has(r.id))) return false;
+    return invMatches(e, query);
+  }
+
+  function rowPasses(r: TestRun, placed: Set<string>): boolean {
+    const fam = store.get().family;
+    if (fam && api.experiment(r.investigation)?.family !== fam) return false;
+    if (fuelFilter && r.fuel !== fuelFilter) return false;
+    if (outcomeFilter && r.outcome !== outcomeFilter) return false;
+    if (plottedFilter === "plotted" && !placed.has(r.id)) return false;
+    if (plottedFilter === "unplaced" && placed.has(r.id)) return false;
+    return rowMatches(r, query);
+  }
+
+  function sortedExperiments(): Experiment[] {
+    return [...api.data.experiments].sort((a, b) => {
       const va = sortVal(a, sortKey);
       const vb = sortVal(b, sortKey);
       const r = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb));
@@ -154,14 +214,46 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
       ]));
   }
 
-  function filterRow(): HTMLElement {
-    const sel = h("select", { id: "sheet-family" },
-      h("option", { value: "" }, t("ui.panel.family-all")),
-      ...FAMILIES.filter((f) => api.data.experiments.some((e) => e.family === f))
-        .map((f) => h("option", { value: f }, t(`ui.family.${f}`))));
-    sel.value = famFilter ?? "";
-    sel.addEventListener("change", () => { famFilter = (sel.value || null) as Family | null; render(); });
-    return h("div", { class: "sheet-filter" }, h("label", { for: "sheet-family" }, t("ui.sheet.family")), sel);
+  function select(id: string, options: { value: string; text: string }[], current: string | null, onChange: (v: string | null) => void): HTMLSelectElement {
+    const sel = h("select", { id }, ...options.map((o) => h("option", { value: o.value }, o.text)));
+    sel.value = current ?? "";
+    sel.addEventListener("change", () => onChange(sel.value || null));
+    return sel;
+  }
+
+  function labeled(id: string, labelKey: string, control: HTMLElement): HTMLElement {
+    return h("div", { class: "sheet-filter" }, h("label", { for: id }, t(labelKey)), control);
+  }
+
+  /** One search box and four filters for both tables; the family one is shared with the panel. */
+  function controls(): HTMLElement {
+    const bar = h("div", { class: "sheet-controls" });
+    searchEl = h("input", { type: "search", id: "sheet-search", value: query });
+    searchEl.addEventListener("input", () => { query = searchEl!.value.trim().toLowerCase(); render(); });
+    bar.append(labeled("sheet-search", "ui.search.label", searchEl));
+    const fuels = [...new Set(api.data.tests.map((r) => r.fuel).filter((f): f is string => !!f))].sort();
+    const outcomes = [...new Set(api.data.tests.map((r) => r.outcome))].sort();
+    famSelEl = select("sheet-family",
+      [{ value: "", text: t("ui.panel.family-all") },
+        ...FAMILIES.filter((f) => api.data.experiments.some((e) => e.family === f))
+          .map((f) => ({ value: f, text: t(`ui.family.${f}`) }))],
+      store.get().family, (v) => store.set({ family: (v || null) as Family | null }));
+    bar.append(labeled("sheet-family", "ui.sheet.family", famSelEl));
+    fuelSelEl = select("sheet-fuel",
+      [{ value: "", text: t("ui.sheet.filter.all") }, ...fuels.map((f) => ({ value: f, text: f }))],
+      fuelFilter, (v) => { fuelFilter = v; render(); });
+    bar.append(labeled("sheet-fuel", "ui.sheet.col.fuel", fuelSelEl));
+    outcomeSelEl = select("sheet-outcome",
+      [{ value: "", text: t("ui.sheet.filter.all") }, ...outcomes.map((o) => ({ value: o, text: t(`ui.outcome.${o}`) }))],
+      outcomeFilter, (v) => { outcomeFilter = (v || null) as Outcome | null; render(); });
+    bar.append(labeled("sheet-outcome", "ui.nearest.outcome", outcomeSelEl));
+    plottedSelEl = select("sheet-plotted",
+      [{ value: "all", text: t("ui.sheet.filter.all") },
+        { value: "plotted", text: t("ui.sheet.filter.plotted") },
+        { value: "unplaced", text: t("ui.sheet.filter.unplaced") }],
+      plottedFilter, (v) => { plottedFilter = (v || "all") as PlottedFilter; render(); });
+    bar.append(labeled("sheet-plotted", "ui.sheet.filter.placement", plottedSelEl));
+    return bar;
   }
 
   function coverage(): HTMLElement {
@@ -182,11 +274,87 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         h("li", {}, h("a", { href: `data/${f}`, download: true }, f)))));
   }
 
+  const testCols: { key: TestSortKey; label: string }[] = [
+    { key: "investigation", label: "ui.sheet.col.acronym" },
+    { key: "fuel", label: "ui.sheet.col.fuel" },
+    { key: "o2", label: "ui.nearest.oxygen" },
+    { key: "pressure", label: "ui.nearest.pressure" },
+    { key: "flow", label: "ui.nearest.flow" },
+    { key: "outcome", label: "ui.nearest.outcome" },
+    { key: "source", label: "ui.sheet.col.source" },
+    { key: "placed", label: "ui.sheet.col.placed" },
+  ];
+
+  function testHead(): HTMLElement {
+    return h("thead", {}, h("tr", {}, ...testCols.map((c) => {
+      const th = h("th", { scope: "col", "aria-sort": c.key === testSortKey ? (testSortDir === 1 ? "ascending" : "descending") : "none" });
+      const b = h("button", { type: "button", class: "sort" }, t(c.label));
+      b.addEventListener("click", () => {
+        if (testSortKey === c.key) testSortDir = testSortDir === 1 ? -1 : 1;
+        else { testSortKey = c.key; testSortDir = 1; }
+        render();
+      });
+      th.append(b);
+      return th;
+    })));
+  }
+
+  function sortedTestRows(placed: Set<string>): TestRun[] {
+    const val = (r: TestRun): string | number => {
+      switch (testSortKey) {
+        case "investigation": return api.experiment(r.investigation)?.acronym ?? r.investigation;
+        case "fuel": return r.fuel ?? "";
+        case "o2": return r.o2_pct ?? Infinity;
+        case "pressure": return r.pressure_kpa ?? Infinity;
+        case "flow": return r.flow_cm_s ?? Infinity;
+        case "outcome": return r.outcome;
+        case "source": return r.id;
+        case "placed": return placed.has(r.id) ? 0 : 1;
+      }
+    };
+    return api.data.tests.filter((r) => rowPasses(r, placed)).sort((a, b) => {
+      const va = val(a);
+      const vb = val(b);
+      const r = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb));
+      return (r || a.id.localeCompare(b.id)) * testSortDir;
+    });
+  }
+
+  function testsTab(): HTMLElement {
+    const placed = placedIds();
+    const rows = sortedTestRows(placed);
+    return h("div", { class: "tests-tab" },
+      h("table", { class: "tests-table" },
+        h("caption", {}, h("span", { "data-own": true }, t("ui.sheet.tests-caption", { n: rows.length }))),
+        testHead(),
+        h("tbody", {}, ...rows.map((r) => {
+          const e = api.experiment(r.investigation);
+          const sel = h("button", { type: "button", class: "row-select", "data-own": true }, e?.acronym ?? r.investigation);
+          sel.addEventListener("click", () => {
+            const next = selectedInv === r.investigation ? null : r.investigation;
+            if (next) {
+              tab = "investigations";
+              window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: next } }));
+              render();
+              body.querySelector("tr.detail")?.scrollIntoView({ block: "nearest" });
+            } else window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: null } }));
+          });
+          return h("tr", {},
+            h("td", {}, sel),
+            h("td", {}, r.fuel ? cite(r.fuel, r.source.url, "num fuel") : missing()),
+            h("td", {}, numOrMissing(t, r.o2_pct, 1, "%", r.source.url)),
+            h("td", {}, numOrMissing(t, r.pressure_kpa, 1, "kPa", r.source.url)),
+            h("td", {}, numOrMissing(t, r.flow_cm_s ?? null, 1, "cm/s", r.source.url)),
+            h("td", {}, h("span", {}, t(`ui.outcome.${r.outcome}`))),
+            h("td", {}, cite(r.id, r.source.url, "num")),
+            h("td", {}, h("span", {}, t(placed.has(r.id) ? "ui.sheet.yes" : "ui.sheet.no"))));
+        }))));
+  }
+
   function investigations(): HTMLElement {
     const rows = sortedFiltered();
     return h("div", { class: "investigations-tab" },
       coverage(),
-      filterRow(),
       h("table", { class: "investigations" },
         h("caption", {}, h("span", { "data-own": true }, t("ui.sheet.caption", { investigations: rows.length, tests: api.data.tests.length }))),
         invHead(),
@@ -226,24 +394,36 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     );
   }
 
+  function syncControls(): void {
+    if (searchEl && document.activeElement !== searchEl) searchEl.value = query;
+    if (famSelEl) famSelEl.value = store.get().family ?? "";
+    if (fuelSelEl) fuelSelEl.value = fuelFilter ?? "";
+    if (outcomeSelEl) outcomeSelEl.value = outcomeFilter ?? "";
+    if (plottedSelEl) plottedSelEl.value = plottedFilter;
+  }
+
   function render(): void {
     for (const [k, b] of tabBtns) b.setAttribute("aria-selected", String(k === tab));
-    const next = [tab, sortKey, sortDir, famFilter].join("|");
+    syncControls();
+    const next = [tab, sortKey, sortDir, testSortKey, testSortDir, store.get().family, fuelFilter, outcomeFilter, plottedFilter, query].join("|");
     if (sig !== next) {
       sig = next;
-      body.replaceChildren(tab === "investigations" ? investigations() : margins());
+      body.replaceChildren(tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins());
       if (tab === "investigations" && selectedInv) selectRow(selectedInv, false);
     }
   }
 
   function build(): void {
-    tabBtns = (["investigations", "margins"] as Tab[]).map((k) => {
+    tabBtns = (["investigations", "margins", "tests"] as Tab[]).map((k) => {
       const b = h("button", { type: "button", role: "tab", class: "btn tab" }, t(`ui.sheet.tab.${k}`));
       b.addEventListener("click", () => { tab = k; render(); });
       return [k, b];
     });
     body = h("div", { class: "sheet-body", role: "tabpanel" });
-    root.replaceChildren(h("div", { class: "tabs", role: "tablist", "aria-label": t("ui.sheet.tabs-label") }, ...tabBtns.map(([, b]) => b)), body);
+    root.replaceChildren(
+      h("div", { class: "tabs", role: "tablist", "aria-label": t("ui.sheet.tabs-label") }, ...tabBtns.map(([, b]) => b)),
+      controls(),
+      body);
     document.body.dataset.lens = store.get().lens;
     sig = null;
     render();
