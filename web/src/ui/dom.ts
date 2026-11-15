@@ -1,5 +1,11 @@
 // Small DOM helpers shared by the UI files. Generated with Claude, SI-assisted.
+import type { Atmosphere, Lens } from "../contract";
 type Attrs = Record<string, string | true | undefined>;
+
+/** An atmosphere's name in words: plain Public names from ui.air.<id>, the moon.json name elsewhere. */
+export function airName(lens: Lens, atm: Atmosphere, t: (key: string) => string): string {
+  return lens === "public" ? t(`ui.air.${atm.id}`) : atm.name;
+}
 type Kid = Node | string | null | undefined;
 
 export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs = {}, ...kids: Kid[]): HTMLElementTagNameMap[K] {

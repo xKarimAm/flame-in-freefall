@@ -9,7 +9,7 @@ import {
   type NearestRow,
 } from "../contract";
 import { queryFromState } from "../store";
-import { cite, h, num, numOrMissing } from "./dom";
+import { airName, cite, h, num, numOrMissing } from "./dom";
 
 const PRESETS: AtmosphereId[] = ["heo-dm-1006", "exp-10-2", "iss-air"];
 const clamp = (v: number, r: { min: number; max: number }): number => Math.min(r.max, Math.max(r.min, v));
@@ -18,6 +18,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
   const { api, store, t } = ctx;
   let pIn: HTMLInputElement, oIn: HTMLInputElement, pOut: HTMLElement, oOut: HTMLElement;
   let famSel: HTMLSelectElement, list: HTMLElement;
+  let presetBtns: { btn: HTMLButtonElement; id: AtmosphereId }[] = [];
   let lastKey = "";
   let detailsOpen = false;
   let expBox: HTMLElement;
@@ -133,13 +134,15 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     pIn = p.input; oIn = o.input; pOut = p.out; oOut = o.out;
 
     const presets = h("div", { class: "presets", role: "group", "aria-label": t("ui.panel.presets") });
+    presetBtns = [];
     for (const id of PRESETS) {
       let a;
       try { a = api.atmosphere(id); } catch { continue; }
       // data-own: the label is a curated atmosphere name; the values it sets show in the readouts
-      const b = h("button", { type: "button", class: "btn", "data-own": true }, a.name);
+      const b = h("button", { type: "button", class: "btn", "data-own": true }, airName(store.get().lens, a, t));
       b.addEventListener("click", () =>
         store.set({ sliders: { pressure_kpa: clamp(a.pressure_kpa, SLIDER_RANGE.pressure_kpa), o2_pct: clamp(a.o2_pct_min, SLIDER_RANGE.o2_pct) } }));
+      presetBtns.push({ btn: b, id });
       presets.append(b);
     }
 
@@ -178,6 +181,10 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     pOut.textContent = `${s.sliders.pressure_kpa} ${t("ui.panel.unit.kpa")}`;
     oOut.textContent = `${s.sliders.o2_pct} ${t("ui.panel.unit.pct")}`;
     famSel.value = s.family ?? "";
+    // the preset labels follow the lens: plain words in Public, moon.json names elsewhere
+    for (const p of presetBtns) {
+      try { p.btn.textContent = airName(s.lens, api.atmosphere(p.id), t); } catch { /* skipped above */ }
+    }
     const key = JSON.stringify([s.sliders, s.family, s.locale, s.lens]);
     if (key !== lastKey) { lastKey = key; renderList(); }
   }

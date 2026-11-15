@@ -11,6 +11,7 @@ import { createDataApi } from "../data/index";
 import { stories } from "../engine/stories";
 import { makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
+import { airName } from "./dom";
 import { mount } from "./index";
 
 const read = (rel: string): any => JSON.parse(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8"));
@@ -113,6 +114,36 @@ describe("ui", () => {
     expect(sheet.querySelector(".margin-table")).not.toBeNull();
     expect(unlinkedNumbers(sheet)).toEqual([]);
     expect(roots().panel.querySelectorAll("a.num").length).toBeGreaterThan(0);
+  });
+
+  describe("plain air names (task 22)", () => {
+    const plain: Record<string, string> = {
+      "iss-air": "Earth air (and the space station)",
+      "heo-dm-1006": "Planned Moon-base air",
+      "exp-10-2": "Planned Moon-base air, earlier stage",
+      "moon-base-brief": "Moon base or rover",
+      suit: "Inside a spacesuit",
+    };
+    it("airName speaks plain words in the Public lens and keeps the moon.json name elsewhere", () => {
+      const t = makeT(() => "en");
+      const en = i18nDicts.en!;
+      for (const [id, words] of Object.entries(plain)) {
+        expect(en[`ui.air.${id}`]).toBe(words);
+        const atm = moon.atmospheres.find((a: { id: string }) => a.id === id)!;
+        expect(airName("public", atm, t)).toBe(words);
+        expect(airName("astronaut", atm, t)).toBe(atm.name);
+        expect(airName("analyst", atm, t)).toBe(atm.name);
+      }
+    });
+    it("slider presets speak plain words in Public and engineering names after a lens switch", () => {
+      const { store } = setup(); // public
+      const labels = () => [...roots().panel.querySelectorAll(".presets .btn")].map((b) => b.textContent);
+      expect(labels()).toEqual(["Planned Moon-base air", "Planned Moon-base air, earlier stage", "Earth air (and the space station)"]);
+      store.set({ lens: "astronaut" });
+      expect(labels()).toEqual(
+        ["heo-dm-1006", "exp-10-2", "iss-air"].map((id) => moon.atmospheres.find((a: { id: string; name: string }) => a.id === id)!.name),
+      );
+    });
   });
 
   it("shows the two exact sentences", () => {

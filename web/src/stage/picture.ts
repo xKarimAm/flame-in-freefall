@@ -4,6 +4,7 @@
 // data/curated/moon.json atmospheres by id through ctx.api.atmosphere; the incident marker reads
 // the incident's own oxygen words, and is absent when they hold no oxygen number.
 import type { AtmosphereId, Ctx, Incident } from "../contract";
+import { airName } from "../ui/dom";
 import { wrap } from "./layout";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -69,11 +70,12 @@ export function dialSVG(ctx: Ctx, shown: Incident[]): SVGSVGElement {
   chart.append(
     svg("text", { class: "dial-axis", transform: `translate(14 ${(y(0) + y(100)) / 2}) rotate(-90)`, "text-anchor": "middle" }, t("ui.stage.y-axis")),
   );
-  // atmosphere marks, values read from moon.json by id
+  // atmosphere marks, values read from moon.json by id; names are plain words in Public
+  const lens = ctx.store.get().lens;
   for (const id of DIAL_IDS) {
     const a = api.atmosphere(id);
     const max = a.o2_pct_max;
-    const label = max === null || max === a.o2_pct_min ? `${a.name} · ${a.o2_pct_min} %` : `${a.name} · ${a.o2_pct_min}–${max} %`;
+    const label = max === null || max === a.o2_pct_min ? `${airName(lens, a, t)} · ${a.o2_pct_min} %` : `${airName(lens, a, t)} · ${a.o2_pct_min}–${max} %`;
     const lines = wrap(label, 30);
     if (max !== null && max > a.o2_pct_min) {
       chart.append(svg("rect", { class: "dial-band", x: AXIS_X - 6, y: y(max), width: 12, height: y(a.o2_pct_min) - y(max), "data-atmosphere": id }));

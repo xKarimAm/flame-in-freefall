@@ -958,6 +958,25 @@ describe("act 1 public picture layout (task 21)", () => {
   });
 });
 
+describe("plain air names (task 22)", () => {
+  const moonRef = { view: "micro-g", show_families: allFamilies, reference: ["heo-dm-1006"] } as StageState;
+  it("the dial marks speak plain words in Public; other lenses show no dial", () => {
+    const pub = setup({ view: "incident", incident_ids: ["apollo-1"] } as StageState, null, {}, SIZE);
+    const marks = [...pub.host.querySelectorAll(".dial-mark")].map((n) => n.textContent);
+    expect(marks.some((m) => m!.includes("Planned Moon-base air"))).toBe(true);
+    expect(marks.some((m) => m!.includes("HEO-DM-1006"))).toBe(false);
+    const astro = setup({ view: "incident", incident_ids: ["apollo-1"] } as StageState, null, {}, SIZE, "astronaut");
+    expect(astro.host.querySelectorAll(".dial-mark").length).toBe(0);
+  });
+  it("the legend names the Moon box plainly in Public and from moon.json for Analyst", () => {
+    const pub = setup(moonRef, null, {}, SIZE);
+    expect(pub.host.querySelector(".stage-legend")!.textContent).toContain("Planned Moon-base air");
+    expect(pub.host.querySelector(".stage-legend")!.textContent).not.toContain("HEO-DM-1006");
+    const ana = setup(moonRef, null, {}, SIZE, "analyst");
+    expect(ana.host.querySelector(".stage-legend")!.textContent).toContain("Exploration atmosphere HEO-DM-1006 (8.2 psia)");
+  });
+});
+
 describe("incidentO2", () => {
   it("reads the leading oxygen number of the incident's own words, else null", () => {
     expect(incidentO2("100% oxygen at pressure")).toBe(100);

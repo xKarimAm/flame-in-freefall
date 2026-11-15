@@ -379,7 +379,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       const left = px - scales.plot.x0 >= label.length * CHAR_PX + arm + 8;
       gYou.append(svg("text", { class: "you-label", x: left ? px - arm - 4 : px + arm + 4, y: py - arm, "text-anchor": left ? "end" : "start" }, label));
     }
-    const items = legendItems(t, { kinds, nearest: rows.length > 0, refs, you: state.sliders !== null, noPressure });
+    const items = legendItems(t, { kinds, nearest: rows.length > 0, refs, you: state.sliders !== null, noPressure }, state.lens);
     legend.replaceChildren(
       ...items.map((item) => {
         const li = html("li");
