@@ -15,7 +15,7 @@ import { chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { dotKind, noPressureRows, refShape } from "./plan";
 import type { RefPlan } from "./plan";
-import { DIAL_IDS, incidentO2 } from "./picture";
+import { DIAL_IDS, flameStandPad, incidentO2, markerBottomFraction } from "./picture";
 import { layoutRefs } from "./refs";
 
 const read = <T>(rel: string): T => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf8")) as T;
@@ -898,6 +898,63 @@ describe("every plotted count links to the data file", () => {
       const a = r.querySelector("a.parade-n")!;
       expect(a.getAttribute("href")).toBe("data/tests.json");
     }
+  });
+});
+
+describe("act 1 public picture layout (task 21)", () => {
+  const hook = { view: "incident", incident_ids: ["apollo-1"] } as StageState;
+  const reveal = { view: "incident", incident_ids: ["apollo-1", "mir-1997"] } as StageState;
+
+  it("maps a dial marker to the flame's standing height: Apollo's 100 % mark stands the flame at the top", () => {
+    // dial viewBox is 560 high with y(100) = 28: (560 - 28) / 560 = 0.95
+    expect(markerBottomFraction(100)).toBeCloseTo(0.95, 10);
+    expect(markerBottomFraction(0)).toBeCloseTo((560 - 524) / 560, 10);
+  });
+
+  it("reserves headroom for the flame's overhang: a tall flame at the 100 % mark needs 179 px", () => {
+    // tall flame 190, dial 224 high, mark at 0.95: 190 - 0.05 * 224 = 178.8, rounded up
+    expect(flameStandPad(100, true)).toBe(179);
+    expect(flameStandPad(0, true)).toBe(0);
+    expect(flameStandPad(undefined, false)).toBe(0);
+  });
+
+  it("the hook page shows Apollo 1 alone with the flame standing at the dial's 100 % mark", () => {
+    const { host } = setup(hook, null, {}, SIZE);
+    const cards = [...host.querySelectorAll(".stage-incidents article.incident-card")];
+    expect(cards.map((c) => c.querySelector("h3")!.textContent)).toEqual(["Apollo 1"]);
+    const flame = host.querySelector(".flame-at-mark") as HTMLElement;
+    expect(flame).not.toBeNull();
+    expect(flame.style.bottom).toBe("95%");
+    expect((host.querySelector(".picture-side") as HTMLElement).style.getPropertyValue("--flame-overhang")).toBe("179px");
+  });
+
+  it("the reveal page shows both incidents as two compact cards, flame still at Apollo's mark", () => {
+    const { host } = setup(reveal, null, {}, SIZE);
+    expect(host.querySelector('.stage-incidents')!.getAttribute("data-count")).toBe("2");
+    const cards = [...host.querySelectorAll(".stage-incidents article.incident-card")];
+    expect(cards.map((c) => c.querySelector("h3")!.textContent)).toEqual(["Apollo 1", "Mir oxygen generator fire"]);
+    expect((host.querySelector(".flame-at-mark") as HTMLElement).style.bottom).toBe("95%");
+  });
+
+  it("an incident with no oxygen number leaves the flame on the ground", () => {
+    const { host } = setup({ view: "incident", incident_ids: ["mir-1997"] } as StageState, null, {}, SIZE);
+    expect((host.querySelector(".flame-at-mark") as HTMLElement).style.bottom).toBe("0%");
+  });
+
+  it("other lenses keep the plain cards with no picture side", () => {
+    const { host } = setup(hook, null, {}, SIZE, "astronaut");
+    expect(host.querySelector(".picture-side")).toBeNull();
+    expect(host.querySelector(".flame-at-mark")).toBeNull();
+    expect(host.querySelector("article.incident-card h3")!.textContent).toBe("Apollo 1");
+  });
+
+  it("stylesheet lays the picture out inside the stage box: narrow dial, side column with room for the flame, compact cards", () => {
+    expect(css).toMatch(/\.public-picture \.o2-dial\s*\{[^}]*width:\s*120px/);
+    expect(css).toMatch(/\.picture-side\s*\{[^}]*width:\s*251px/);
+    expect(css).toMatch(/\.flame-at-mark\s*\{[^}]*position:\s*absolute/);
+    expect(css).toMatch(/\.public-picture \.incident-card\s*\{[^}]*font-size:\s*16px/);
+    expect(css).toMatch(/\.stage-incidents\.public-picture\[data-count="2"\]\s*\{[^}]*251px minmax\(0,\s*1fr\) minmax\(0,\s*1fr\)/);
+    expect(css).toMatch(/\.picture-side\s*\{[^}]*padding-top:\s*var\(--flame-overhang/);
   });
 });
 

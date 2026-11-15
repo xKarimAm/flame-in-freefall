@@ -34,6 +34,25 @@ const TOP = 28;
 const BOTTOM = 524;
 const AXIS_X = 56;
 
+/** Where a marker sits as a fraction up from the dial's bottom edge (the flame stands there). */
+export function markerBottomFraction(v: number): number {
+  return (H - y(v)) / H;
+}
+
+/** Flame heights in flameSVG below: tall when a marker is shown, small and calm otherwise. */
+export const FLAME_H = { tall: 190, small: 110 } as const;
+/** Wide-screen dial width in stage.css: the dial art scales uniformly, so this is its height. */
+export const DIAL_WIDE_W = 120;
+export const dialWideH = (DIAL_WIDE_W * H) / W;
+
+/** Headroom above the dial so a flame standing with its base at the mark never leaves the box:
+ *  the flame's overhang past the dial top (0 when the mark sits low enough). Pure. */
+export function flameStandPad(mark: number | undefined, tall: boolean): number {
+  const flameH = tall ? FLAME_H.tall : FLAME_H.small;
+  const f = mark === undefined ? 0 : markerBottomFraction(mark);
+  return Math.max(0, Math.ceil(flameH - (1 - f) * dialWideH));
+}
+
 const y = (v: number): number => BOTTOM - (v / 100) * (BOTTOM - TOP);
 
 /** Tall vertical gauge, 0 to 100 % oxygen, with the atmosphere marks and one marker per numeric incident. */
@@ -89,7 +108,7 @@ const FLAME_LAYERS: { fill: string; d: string }[] = [
 
 /** The flame guide: tall in high-oxygen air (an incident marker is shown), small and calm otherwise. */
 export function flameSVG(tall: boolean): SVGSVGElement {
-  const h = tall ? 190 : 110;
+  const h = tall ? FLAME_H.tall : FLAME_H.small;
   const f = svg("svg", {
     class: `flame-guide ${tall ? "tall" : "small"}`,
     viewBox: "0 0 100 160",

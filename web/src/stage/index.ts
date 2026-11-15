@@ -11,7 +11,7 @@ import type { Size } from "./layout";
 import type { Scales } from "./layout";
 import { dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
-import { DIAL_IDS, dialSVG, flameSVG, incidentO2 } from "./picture";
+import { DIAL_IDS, dialSVG, flameStandPad, flameSVG, incidentO2, markerBottomFraction } from "./picture";
 import { renderExplainers } from "./explain";
 import { renderParade } from "./parade";
 import { TILT_MS, lunarLabelFor, mountTilt, tiltAllowed, type TiltView } from "./tilt";
@@ -440,7 +440,18 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     }
     incidents.classList.add("public-picture");
     const side = html("div", "picture-side");
-    side.append(dialSVG(ctx, pages), flameSVG(pages.some((i) => incidentO2(i.oxygen) !== null)));
+    const dial = dialSVG(ctx, pages);
+    // the flame stands with its base at the dial's current oxygen mark (the ground when there is none)
+    const mark = pages.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== null);
+    const flameWrap = html("span", "flame-at-mark");
+    flameWrap.style.bottom = `${((mark === undefined ? 0 : markerBottomFraction(mark)) * 100).toFixed(1).replace(/\.0$/, "")}%`;
+    flameWrap.append(flameSVG(mark !== undefined));
+    // the flame stands against the dial (its % height is the dial's); the side keeps
+    // headroom above the dial for the flame's overhang (wide screens only, via CSS)
+    const dialWrap = html("span", "dial-wrap");
+    dialWrap.append(dial, flameWrap);
+    side.style.setProperty("--flame-overhang", `${flameStandPad(mark, mark !== undefined)}px`);
+    side.append(dialWrap);
     const seen = new Set<string>();
     const src = html("p", "dial-source");
     src.append(`${t("ui.stage.dial-source")}: `);

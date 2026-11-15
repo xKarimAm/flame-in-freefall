@@ -92,9 +92,29 @@
 /* public picture (act 1): the oxygen dial and flame guide beside large plain incident cards */
 .stage-incidents.public-picture { align-items: start; }
 .picture-side { display: flex; gap: 24px; align-items: flex-end; justify-content: center; }
+.dial-wrap { display: contents; }
+.flame-at-mark { display: block; }
 @media (min-width: 1100px) {
-  .stage-incidents.public-picture[data-count="1"] { grid-template-columns: auto 1fr; }
-  .stage-incidents.public-picture[data-count="2"] { grid-template-columns: auto 1fr 1fr; }
+  .stage-incidents.public-picture[data-count="1"] { grid-template-columns: 251px minmax(0, 1fr); }
+  .stage-incidents.public-picture[data-count="2"] { grid-template-columns: 251px minmax(0, 1fr) minmax(0, 1fr); }
+}
+/* explicit placement on wide screens: the side and the cards share row 1, the source line spans row 2 */
+@media (min-width: 1100px) {
+  .stage-incidents.public-picture > .picture-side { grid-column: 1; grid-row: 1; }
+  .stage-incidents.public-picture > .dial-source { grid-column: 1 / -1; grid-row: 2; }
+  .stage-incidents.public-picture > .incident-card { grid-row: 1; min-width: 0; }
+}
+.incident-card { overflow-wrap: anywhere; } /* long source URLs must not widen the card's column */
+/* wide screens: the dial goes narrow on the left with room for the flame beside it, and the
+   cards turn compact so hook (one card) and reveal (two cards) fit the stage box height */
+@media (min-width: 1100px) {
+  .picture-side { display: block; position: relative; width: 251px; flex: none; padding-top: var(--flame-overhang, 0px); }
+  .public-picture .o2-dial { width: 120px; max-width: 120px; height: auto; }
+  .dial-wrap { display: block; position: relative; }
+  .flame-at-mark { position: absolute; left: 132px; }
+  .public-picture .incident-card { font-size: 16px; padding: 20px 22px; }
+  .public-picture .incident-card h3 { font-size: 24px; }
+  .public-picture .incident-card .incident-lead { font-size: 18px; }
 }
 .public-picture .incident-card { font-size: 20px; }
 .dial-source { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--muted-dark); }
