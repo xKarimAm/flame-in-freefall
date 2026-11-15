@@ -87,10 +87,13 @@ export function mountOverlay(
       const needles = q.trim().toLowerCase();
       let n = 0;
       let total = 0;
+      // with experiment stories on the page the count line counts those; chapter cards are still filtered
+      const libOnly = body.querySelector(".library-card") != null;
       for (const card of [...body.querySelectorAll<HTMLElement>("[data-hay]")]) {
-        total++;
         const hit = !needles || (card.dataset.hay ?? "").includes(needles);
         card.hidden = !hit;
+        if (libOnly && !card.classList.contains("library-card")) continue;
+        total++;
         if (hit) n++;
       }
       count.textContent =
@@ -115,7 +118,7 @@ export function mountOverlay(
 
   function renderStories(): void {
     const sections = [...document.querySelectorAll<HTMLElement>("section[data-story]")];
-    const { body, show } = shell();
+    const { body, show, mark } = shell();
     const cards = sections.map((sec) => {
       const card = h(
         "button",
@@ -136,6 +139,22 @@ export function mountOverlay(
     body.append(h("div", { class: "story-cards" }, ...cards));
     body.append(cards.length ? libBtn : h("p", {}, t("ui.overlay.empty")));
     show("");
+    // The experiment stories load right under the chapters, so nobody has to find a second button.
+    // If they cannot load, the button stays as the way in.
+    if (!cards.length) return;
+    if (!lib) lib = load();
+    void lib.then(
+      (data) => {
+        if (mark !== opened) return;
+        const openPage = (id: string): void => {
+          const story = data.stories.find((s) => s.id === id);
+          if (story) renderPage(story, data.moments);
+        };
+        libBtn.replaceWith(h("h3", { class: "library-title" }, t("ui.library.title")), renderLibraryList(data.stories, ctx, openPage));
+        show(root.querySelector<HTMLInputElement>("#overlay-search")?.value ?? "");
+      },
+      () => { lib = null; },
+    );
   }
 
   async function renderLibrary(): Promise<void> {
