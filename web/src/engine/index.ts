@@ -144,16 +144,15 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     });
   }
 
-  /** The stage hides while the cover or a chapter page fills the screen. */
+  /** The stage hides while a chapter page fills the screen; the cover keeps its live
+   *  stage behind the text, so only chapters hide it. */
   function updateStageHidden(): void {
     const vh = window.innerHeight;
     const inView = (n: Element): boolean => {
       const r = n.getBoundingClientRect();
       return r.top < vh / 2 && r.bottom > vh / 2;
     };
-    const cover = el.querySelector(".cover");
-    const chapter = [...el.querySelectorAll(".chapter")].some(inView);
-    document.body.dataset.stageHidden = cover && inView(cover) || chapter ? "true" : "false";
+    document.body.dataset.stageHidden = [...el.querySelectorAll(".chapter")].some(inView) ? "true" : "false";
   }
 
   function render(): void {

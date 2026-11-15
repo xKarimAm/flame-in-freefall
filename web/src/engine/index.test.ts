@@ -361,7 +361,11 @@ describe("engine mount", () => {
     expect(css).toMatch(/\.step\.is-active \.step-card\s*\{\s*color:\s*var\(--ink-dark\)/);
   });
 
-  it("hides the stage while the cover or a chapter page is on screen (task 41c)", () => {
+  it("the cover is text on the left over the live stage, chapters hide it (task 45)", () => {
+    expect(css).not.toMatch(/\.cover\s*\{[^}]*background/);
+  });
+
+  it("hides the stage while a chapter page is on screen, never on the cover (task 41c, 45)", () => {
     const { el } = setup();
     Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
     const cover = el.querySelector(".cover")!;
@@ -372,7 +376,7 @@ describe("engine mount", () => {
       cover.getBoundingClientRect = () => rect(0, 800);
       chapter.getBoundingClientRect = () => rect(2000, 400);
       window.dispatchEvent(new Event("scroll"));
-      expect(document.body.dataset.stageHidden).toBe("true");
+      expect(document.body.dataset.stageHidden).toBe("false"); // cover shows the live dial
       cover.getBoundingClientRect = () => rect(-900, 800);
       chapter.getBoundingClientRect = () => rect(2000, 400);
       window.dispatchEvent(new Event("scroll"));

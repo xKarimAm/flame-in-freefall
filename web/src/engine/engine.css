@@ -1,13 +1,12 @@
 /* Picture-book scroll story: cover, chapter pages, beat pages. Generated with Claude, SI-assisted. */
 
-/* cover: first page, opaque over the stage */
+/* cover: first page, text on the left over the live stage (never an opaque page) */
 .cover {
   min-height: calc(100vh - var(--chrome-h));
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 4vw;
-  background: var(--space-deep);
   color: var(--ink-dark);
   pointer-events: auto;
 }

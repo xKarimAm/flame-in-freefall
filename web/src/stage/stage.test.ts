@@ -17,7 +17,7 @@ import type { Rect } from "./layout";
 import { chartPasses, dotKind, noPressureRows, refShape } from "./plan";
 import type { ChartFilters } from "../contract";
 import type { RefPlan } from "./plan";
-import { DIAL_IDS, flameStandPad, incidentO2, markerBottomFraction } from "./picture";
+import { DIAL_IDS, flameHeight, incidentO2, markerBottomFraction } from "./picture";
 import { layoutRefs } from "./refs";
 
 const read = <T>(rel: string): T => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf8")) as T;
@@ -1177,21 +1177,31 @@ describe("act 1 public picture layout (task 21)", () => {
     expect(markerBottomFraction(0)).toBeCloseTo((560 - 524) / 560, 10);
   });
 
-  it("reserves headroom for the flame's overhang: a tall flame at the 100 % mark needs 179 px", () => {
-    // tall flame 190, dial 224 high, mark at 0.95: 190 - 0.05 * 224 = 178.8, rounded up
-    expect(flameStandPad(100, true)).toBe(179);
-    expect(flameStandPad(0, true)).toBe(0);
-    expect(flameStandPad(undefined, false)).toBe(0);
+  it("the flame stands on its mark and grows with it, at least 160 tall (task 45)", () => {
+    expect(flameHeight(null)).toBe(110); // small and calm with no marker
+    expect(flameHeight(0)).toBe(160);
+    expect(flameHeight(50)).toBe(210);
+    expect(flameHeight(100)).toBe(260);
   });
 
-  it("the hook page shows Apollo 1 alone with the flame standing at the dial's 100 % mark", () => {
+  it("the hook page shows Apollo 1 alone with the flame standing on the dial's 100 % mark (task 45)", () => {
     const { host } = setup(hook, null, {}, SIZE);
     const cards = [...host.querySelectorAll(".stage-incidents article.incident-card")];
     expect(cards.map((c) => c.querySelector("h3")!.textContent)).toEqual(["Apollo 1"]);
-    const flame = host.querySelector(".flame-at-mark") as HTMLElement;
-    expect(flame).not.toBeNull();
-    expect(flame.style.bottom).toBe("95%");
-    expect((host.querySelector(".picture-side") as HTMLElement).style.getPropertyValue("--flame-overhang")).toBe("179px");
+    // the flame lives inside the dial now, its base exactly on the incident marker
+    expect(host.querySelector(".flame-at-mark")).toBeNull();
+    const flame = host.querySelector(".o2-dial .flame-guide.tall") as SVGSVGElement;
+    const marker = host.querySelector('.o2-dial [data-incident="apollo-1"]')!;
+    expect(Number(flame.getAttribute("y")) + Number(flame.getAttribute("height"))).toBeCloseTo(Number(marker.getAttribute("y1")), 5);
+    // the viewport bottom is the DRAWN flame bottom (viewBox cropped at the outer
+    // arc's lowest point, 108 + ry 40 = 148), so the flame visibly touches the mark
+    const vb = flame.getAttribute("viewBox")!.split(" ").map(Number);
+    expect(vb[2]).toBe(100);
+    expect(vb[3]).toBe(148);
+    expect(Number(flame.getAttribute("width"))).toBeCloseTo((Number(flame.getAttribute("height")) * vb[2]) / vb[3], 5);
+    const band = host.querySelector('.o2-dial [data-atmosphere="heo-dm-1006"]')!;
+    expect(band.tagName).toBe("rect");
+    expect(band.getAttribute("width")).toBe("12"); // the scale is 12 wide
   });
 
   it("the reveal page shows both incidents as two compact cards, flame still at Apollo's mark", () => {
@@ -1199,12 +1209,16 @@ describe("act 1 public picture layout (task 21)", () => {
     expect(host.querySelector('.stage-incidents')!.getAttribute("data-count")).toBe("2");
     const cards = [...host.querySelectorAll(".stage-incidents article.incident-card")];
     expect(cards.map((c) => c.querySelector("h3")!.textContent)).toEqual(["Apollo 1", "Mir oxygen generator fire"]);
-    expect((host.querySelector(".flame-at-mark") as HTMLElement).style.bottom).toBe("95%");
+    const flame = host.querySelector(".o2-dial .flame-guide.tall") as SVGSVGElement;
+    const marker = host.querySelector('.o2-dial [data-incident="apollo-1"]')!;
+    expect(Number(flame.getAttribute("y")) + Number(flame.getAttribute("height"))).toBeCloseTo(Number(marker.getAttribute("y1")), 5);
   });
 
   it("an incident with no oxygen number leaves the flame on the ground", () => {
     const { host } = setup({ view: "incident", incident_ids: ["mir-1997"] } as StageState, null, {}, SIZE);
-    expect((host.querySelector(".flame-at-mark") as HTMLElement).style.bottom).toBe("0%");
+    const flame = host.querySelector(".o2-dial .flame-guide.small") as SVGSVGElement;
+    expect(flame).not.toBeNull();
+    expect(Number(flame.getAttribute("y")) + Number(flame.getAttribute("height"))).toBeCloseTo(524, 5); // the dial's 0 line
   });
 
   it("on narrow screens the incident cards move into the story card, the dial stays (task 41b)", () => {
@@ -1239,13 +1253,11 @@ describe("act 1 public picture layout (task 21)", () => {
     expect(host.querySelector("article.incident-card h3")!.textContent).toBe("Apollo 1");
   });
 
-  it("stylesheet lays the picture out inside the stage box: narrow dial, side column with room for the flame, compact cards", () => {
-    expect(css).toMatch(/\.public-picture \.o2-dial\s*\{[^}]*width:\s*120px/);
-    expect(css).toMatch(/\.picture-side\s*\{[^}]*width:\s*251px/);
-    expect(css).toMatch(/\.flame-at-mark\s*\{[^}]*position:\s*absolute/);
-    expect(css).toMatch(/\.public-picture \.incident-card\s*\{[^}]*font-size:\s*var\(--text-body\)/);
-    expect(css).toMatch(/\.stage-incidents\.public-picture\[data-count="2"\]\s*\{[^}]*251px minmax\(0,\s*1fr\) minmax\(0,\s*1fr\)/);
-    expect(css).toMatch(/\.picture-side\s*\{[^}]*padding-top:\s*var\(--flame-overhang/);
+  it("stylesheet fills the stage box with the dial: tall scale, labels right, flame on the mark (task 45)", () => {
+    expect(css).toMatch(/\.o2-dial text\s*\{[^}]*font-size:\s*var\(--text-body\)/);
+    expect(css).not.toMatch(/\.flame-at-mark/);
+    expect(css).toMatch(/\.public-picture \.o2-dial\s*\{[^}]*height:\s*100%/);
+    expect(css).toMatch(/\.o2-dial \.dial-frame\s*\{[^}]*stroke-width:\s*12/);
   });
 });
 
