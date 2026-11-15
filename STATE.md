@@ -18,6 +18,13 @@
 | 5 | `docs/SUBMISSION.md` + README (R20), experiment shelf and pages (R21), Analyst dashboard (R22) | **Muse Spark lane running** since 18:10 on `release/web` (`E:\fif-wt\release`, queue `docs/RELEASE-QUEUE.md` "Last wave"). It cannot commit: after each run check, look, commit for it, PR to `main` |
 
 Leftover branches with nothing useful on them: `lane/ui/library-pages` (`E:\fif-wt\B`), `lane/ui/dashboard` (`E:\fif-wt\D`), `lane/docs/submission` (`E:\fif-wt\skel`): their coders died at the limit; check `git status` there before reusing.
+## Salvage from the stopped Sonnet coders (found 18:15; do this next, in this order)
+1. **Submission text:** `lane/docs/submission` (`E:\fif-wt\skel`) has `docs/SUBMISSION.md` and the README, committed and pushed, **PR #21 open**. Its fact-check never ran. Before merging: recount every number in it from `data/build/*.json` and fix mismatches. The Muse lane is also writing R20 (the same file) on `release/web`: keep whichever is correct, do not merge both blindly.
+2. **Analyst dashboard:** `E:\fif-wt\D` (`lane/ui/dashboard`) holds uncommitted work: `sheet.ts`, new `dashboard.css`, tests, `en.json`. It builds; 2 of its own new tests fail (`ui.test.ts:159` tile links "expected 3 to be less than 3"; `ui.test.ts:196` sort arrow text is empty, expected an up arrow). Fix those two, run check.ps1, look in the browser (Analyst lens, Dashboard tab), commit, PR.
+3. **Experiment shelf and pages:** `E:\fif-wt\B` (`lane/ui/library-pages`) has 1 commit (shelf grouped by family, `library.css`) plus uncommitted `overlay.ts`. It builds; 1 existing test fails (`library.test.ts` "public lens: signature first, then hook, one moment as a large number, then bridge (task 53)"). Fix or restore that order, check, browser look, commit, PR.
+4. The Muse lane queue has R21 and R22 for the same two features. If 2 and 3 above land first, tick R21 and R22 as done in `E:\fif-wt\release\docs\RELEASE-QUEUE.md` (or create `E:\fif-wt\release\STOP`) so Muse does not redo them.
+
+**Karim's standing instructions for all UI work (18:06):** use the taste skill (`design-taste-frontend`) and its inspector on every UI change, the Matt Pocock skills where they fit, and the rules in `docs/UX-BRIEF.md`. These were not applied to PRs #17 to #20; run the inspector on `main` before calling the UI done.
 ## How to finish each item (the same steps for every branch)
 1. `git -C <worktree> fetch origin` then `git -C <worktree> rebase origin/main` (or merge). `en.json` conflicts: keep both blocks of keys.
 2. `powershell -ExecutionPolicy Bypass -File <worktree>\scripts\check.ps1` must print `check.ps1: green`.
