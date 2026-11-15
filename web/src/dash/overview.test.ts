@@ -54,7 +54,7 @@ describe("overview numbers (task 56a)", () => {
       [String(experiments.length), "data/experiments.json"],
       [String(coverage.total), "data/tests.json"],
       [String(coverage.plotted), "data/coverage.json"],
-      [String(withO2), "data/coverage.json"],
+      [String(withO2), "data/tests.json"], // R4: counted from the tests file
       [String(pubs), "data/experiments.json"],
     ];
     for (const [i, [value, file]] of expected.entries()) {
@@ -63,6 +63,8 @@ describe("overview numbers (task 56a)", () => {
       expect(a.getAttribute("href")).toBe(file);
       expect(figures[i]!.querySelector("figcaption")!.textContent).not.toBe("");
     }
+    // R4: the listings are summed, never deduped, and labelled as listings
+    expect(figures[4]!.querySelector("figcaption")!.textContent).toBe("Publication listings");
   });
 });
 
@@ -115,6 +117,32 @@ describe("overview ranking (task 50)", () => {
       const exp = experiments.find((e) => e.id === inv)!;
       expect(li.querySelector("a.dash-acronym")!.getAttribute("href")).toBe(exp.psi_url);
     }
+  });
+
+  it("the ranked title names the air and the rule explains near and d (R4)", () => {
+    // default: the Moon-box air by its plain name and moon.json values, each number source-linked
+    const heo = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    const f = (v: number): string => String(Number(v.toFixed(1)));
+    const root = renderOverview(ctxFor());
+    const title = root.querySelector(".dash-ranked h3")!;
+    expect(title.textContent).toContain("Ranked for this air");
+    expect(title.textContent).toContain("Planned Moon-base air");
+    expect(title.textContent).toContain(f(heo.pressure_kpa));
+    expect(title.textContent).toContain(f(heo.o2_pct_min));
+    expect(title.textContent).toContain(f(heo.o2_pct_max!));
+    const links = [...title.querySelectorAll("a")];
+    expect(links.length).toBeGreaterThan(0);
+    for (const a of links) expect(a.getAttribute("href")).toBe(heo.url);
+    // sliders: the title carries the slider values instead
+    const sliders = renderOverview(ctxFor({ pressure_kpa: 101.4, o2_pct: 21 }));
+    const sliderTitle = sliders.querySelector(".dash-ranked h3")!;
+    expect(sliderTitle.textContent).toContain("Ranked for this air");
+    expect(sliderTitle.textContent).toContain("101.4");
+    expect(sliderTitle.textContent).toContain("21");
+    expect(sliderTitle.textContent).not.toContain("Moon-base");
+    const rule = root.querySelector(".dash-rule")!.textContent!;
+    expect(rule).toContain("1.0 or less");
+    expect(rule).toMatch(/distance d\b/);
   });
 
   it("selecting a ranked row notifies the stage", () => {

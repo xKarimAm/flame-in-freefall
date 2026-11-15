@@ -408,6 +408,45 @@ describe("engine mount", () => {
     }
   });
 
+  it("marks the cover while it is on screen so the stage shows only the dial and flame (R2b)", () => {
+    const { el } = setup();
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
+    const cover = el.querySelector(".cover")!;
+    const rect = (top: number, h: number): DOMRect =>
+      ({ top, bottom: top + h, left: 0, right: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+    try {
+      cover.getBoundingClientRect = () => rect(0, 800);
+      window.dispatchEvent(new Event("scroll"));
+      expect(document.body.dataset.cover).toBe("true");
+      cover.getBoundingClientRect = () => rect(-900, 800);
+      window.dispatchEvent(new Event("scroll"));
+      expect(document.body.dataset.cover).toBe("false");
+    } finally {
+      delete document.body.dataset.cover;
+    }
+  });
+
+  it("page dots are 10 px circles, never stretched by the global button height (R2d)", () => {
+    // ui.css gives every button a 40 px minimum height: the dots opt back out
+    expect(css).toMatch(/\.page-dot\s*\{[^}]*width:\s*10px/);
+    expect(css).toMatch(/\.page-dot\s*\{[^}]*height:\s*10px/);
+    expect(css).toMatch(/\.page-dot\s*\{[^}]*border-radius:\s*50%/);
+    expect(css).toMatch(/\.page-dot\s*\{[^}]*min-height:\s*0/);
+  });
+
+  it("small screens keep a 16 px page margin and compact chapter titles (R7)", () => {
+    expect(css).toMatch(/\.cover\s*\{[^}]*padding:\s*max\(4vw,\s*16px\)/);
+    expect(css).toMatch(/\.chapter\s*\{[^}]*padding:\s*max\(4vw,\s*16px\)/);
+    expect(css).toMatch(/\.end-card\s*\{[^}]*margin-left:\s*max\(4vw,\s*16px\)/);
+    expect(css).toMatch(/@media\s*\(max-width:\s*767px\)[\s\S]*?\.story-title\s*\{[^}]*font-size:\s*32px/);
+  });
+
+  it("chapter pages span the full viewport width, not just the story column (R2c)", () => {
+    expect(css).toMatch(/\.chapter\s*\{[^}]*width:\s*100vw/);
+    // the full-bleed width counts the scrollbar: clip the sliver so no sideways scroll appears
+    expect(css).toMatch(/html\s*\{[^}]*overflow-x:\s*clip/);
+  });
+
   it("chapter titles are large sentence case with no uppercase tracking (task 42)", () => {
     expect(css).toMatch(/\.story-title\s*\{[^}]*font-size:\s*var\(--text-chapter\)/);
     expect(css).toMatch(/\.chapter-question\s*\{[^}]*font-size:\s*var\(--text-card\)/);

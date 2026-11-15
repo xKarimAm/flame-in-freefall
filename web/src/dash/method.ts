@@ -141,21 +141,11 @@ function coverageSection(ctx: Ctx, c: CovDoc): HTMLElement {
         h("td", { class: "num" }, fileLink(String(n), COV_FILE)))))));
 }
 
-/** How many digit runs the numbers audit looks at: every number in the story.* strings. */
-function storyNumberCount(ctx: Ctx): number {
-  let n = 0;
-  for (const [k, v] of Object.entries(ctx.dicts.en ?? {})) {
-    if (k.startsWith("story.") && typeof v === "string") n += (v.match(/\d+/g) ?? []).length;
-  }
-  return n;
-}
-
 function checksSection(ctx: Ctx, d: MethodData): HTMLElement {
   const { t, api } = ctx;
   const rows: [string, string, (Node | string)[]][] = [];
-  const storyNumbers = storyNumberCount(ctx);
-  rows.push([t("ui.dash.method.check.numbers"), t("ui.dash.method.check.numbers-what"),
-    [h("span", { "data-own": true }, t("ui.dash.method.check.numbers-count", { n: storyNumbers }))]]);
+  // R5: no digit-run figure ("1,129" would count twice); the audit row stays without one
+  rows.push([t("ui.dash.method.check.numbers"), t("ui.dash.method.check.numbers-what"), []]);
   const withSummary = api.data.experiments.filter((e) => e.summary);
   const quotes = withSummary.reduce((n, e) => n + (e.summary?.quotes.length ?? 0), 0);
   const libCount = d.library?.length ?? 0;
@@ -174,7 +164,7 @@ function checksSection(ctx: Ctx, d: MethodData): HTMLElement {
   return h("section", { class: "dash-checks", "aria-labelledby": "dash-checks-title" },
     h("h3", { id: "dash-checks-title" }, t("ui.dash.method.checks")),
     h("ul", { class: "dash-check-list" }, ...rows.map(([name, what, count]) =>
-      h("li", {}, h("p", { class: "dash-check-name" }, name), h("p", {}, what), h("p", {}, ...count)))));
+      h("li", {}, h("p", { class: "dash-check-name" }, name), h("p", {}, what), ...(count.length ? [h("p", {}, ...count)] : [])))));
 }
 
 function aiSection(ctx: Ctx, d: MethodData): HTMLElement | null {

@@ -119,6 +119,7 @@ describe("ui", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
+    sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     for (const root of [roots().panel, sheet]) expect(unlinkedNumbers(root)).toEqual([]);
     buttons(sheet).find((b) => b.getAttribute("role") === "tab" && b.textContent === "Moon-gravity margins")!.click(); // margins tab
     expect(sheet.querySelector(".margin-table")).not.toBeNull();
@@ -191,6 +192,7 @@ describe("ui", () => {
       const { store } = setup();
       store.set({ lens: "analyst" });
       const sheet = roots().sheet;
+      sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
       const colIndex = (table: Element, label: string): number =>
         [...table.querySelectorAll("thead th")].findIndex((th) => th.textContent === label);
       const checkCol = (table: Element, label: string): void => {
@@ -310,6 +312,10 @@ describe("ui", () => {
     expect(store.get().sliders!.o2_pct).toBe(p69.o2_pct);
     expect(first()).toContain(p69.fuel!);
     expect(roots().panel.querySelector("#slider-o2")).toBe(o2); // not re-created while dragging
+  });
+
+  it("outcome words record, never infer: flow-terminated says only what was recorded (R6)", () => {
+    expect(i18nDicts.en!["ui.outcome.flow-terminated"]).toBe("Flow was terminated (as recorded)");
   });
 
   it("shows a null flow as 'not recorded', never 0", () => {
@@ -464,9 +470,21 @@ describe("ui", () => {
     const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
     // story column left 40 %, stage right 60 %: they never share space
     expect(base).toMatch(/grid-template-columns:\s*40% 60%/);
-    // under 1100 px the stage pins under the header at 45 % height, solid, above the story
-    expect(base).toMatch(/#stage\s*\{[^}]*height:\s*45vh[^}]*z-index:\s*12[^}]*background:\s*var\(--space-deep\)/);
+    // under 1100 px the stage pins under the header at 45 % height, solid and grounded
+    expect(base).toMatch(/#stage\s*\{[^}]*height:\s*45vh[^}]*background:\s*var\(--space-deep\)/);
     expect(base).toMatch(/body\[data-stage-hidden="true"\] #stage\s*\{\s*visibility:\s*hidden/);
+  });
+
+  it("small screens read the story over the pinned stage, never under it (R7)", () => {
+    const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
+    // the story paints above the stage (z 10 over the stage's single digit),
+    // so scrolling text is never hidden behind the pinned chart
+    expect(base).toMatch(/#story\s*\{[^}]*z-index:\s*10/);
+    const narrow = base.match(/@media\s*\(max-width:\s*1099px\)\s*\{[^}]*#stage\s*\{([^}]*)\}/);
+    expect(narrow, "narrow stage rule").not.toBeNull();
+    const z = narrow![1].match(/z-index:\s*(\d+)/);
+    expect(z, "narrow stage z-index").not.toBeNull();
+    expect(Number(z![1])).toBeLessThan(10);
   });
 
   it("the answer is large type", () => {
@@ -523,16 +541,32 @@ describe("ui", () => {
     expect(roots().sheet.hidden).toBe(true);
   });
 
-  it("analyst tables fit without sideways scroll: fixed layout, sticky header, wrapped titles", () => {
+  it("analyst tables never break words mid-word; the title column keeps 16 rem (R2g)", () => {
     expect(css).toMatch(/#sheet table\s*\{[^}]*table-layout:\s*fixed/);
     expect(css).toMatch(/#sheet thead th\s*\{[^}]*position:\s*sticky/);
-    expect(css).toMatch(/#sheet (th|td)[^{]*\{[^}]*overflow-wrap:\s*anywhere/);
+    expect(css).toMatch(/#sheet (th|td)[^{]*\{[^}]*overflow-wrap:\s*normal/);
+    expect(css).toMatch(/#sheet (th|td)[^{]*\{[^}]*word-break:\s*normal/);
+    expect(css).not.toMatch(/#sheet (th|td)[^{]*\{[^}]*overflow-wrap:\s*anywhere/);
+    expect(css).toMatch(/#sheet td\.title\s*\{[^}]*min-width:\s*16rem/);
   });
 
-  it("analyst workspace at 1280 px and wider: table left, chart in a right column of about 40 %", () => {
+  it("tables scroll sideways inside the panel only below 900 px (R2g)", () => {
+    expect(css).toMatch(/#sheet \.sheet-body\s*\{[^}]*overflow-x:\s*clip/);
+    expect(css).toMatch(/max-width:\s*899px\)[\s\S]*?#sheet \.sheet-body\s*\{[^}]*overflow-x:\s*auto/);
+  });
+
+  it("the investigations title cells carry the wide-column class (R2g)", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    roots().sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
+    const cells = [...roots().sheet.querySelectorAll("table.investigations tbody td.title")];
+    expect(cells.length).toBe(experiments.length);
+  });
+
+  it("analyst workspace: no side columns, the sheet is full width and the stage hides (R2f)", () => {
     const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
-    expect(base).toMatch(/min-width:\s*1280px\)[\s\S]*?body\[data-lens="analyst"\] #sheet\s*\{[^}]*width:\s*60%/);
-    expect(base).toMatch(/min-width:\s*1280px\)[\s\S]*?body\[data-lens="analyst"\] #stage\s*\{[^}]*padding-left:\s*60%/);
+    expect(base).not.toMatch(/min-width:\s*1280px\)[\s\S]*?body\[data-lens="analyst"\] #sheet\s*\{[^}]*width:\s*60%/);
+    expect(base).not.toMatch(/body\[data-lens="analyst"\] #stage\s*\{[^}]*padding-left:/);
   });
 
   it("header button groups wrap instead of clipping; the locale picker is one compact select", () => {
@@ -635,6 +669,7 @@ describe("ui", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
+    sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const sortBtn = [...sheet.querySelectorAll<HTMLButtonElement>("table.investigations th button.sort")].find(
       (b) => b.textContent === "Title",
     )!;
@@ -669,8 +704,9 @@ describe("ui", () => {
 
   it("every font size is a type token, nothing else (task 43)", () => {
     const files = ["../styles/base.css", "../styles/tokens.css", "../engine/engine.css", "../stage/stage.css", "./ui.css"];
-    // 40 px is the task-43 phone exception for the cover title only
-    const allowed = /^var\(--text-(meta|body|card|chapter|cover)\)$|^(inherit|initial|unset|0|smaller|larger|40px)$|em$|%$/;
+    // 40 px is the task-43 phone exception for the cover title only,
+    // 32 px the R7 phone exception for chapter titles
+    const allowed = /^var\(--text-(meta|body|card|chapter|cover)\)$|^(inherit|initial|unset|0|smaller|larger|40px|32px)$|em$|%$/;
     const bad: string[] = [];
     for (const f of files) {
       const cssText = readFileSync(join(dirname(fileURLToPath(import.meta.url)), f), "utf8");
@@ -706,6 +742,7 @@ describe("ui", () => {
   it("the investigations table has one row per experiment, sorted by family then acronym", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
+    roots().sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const rows = [...roots().sheet.querySelectorAll("table.investigations tbody tr")];
     expect(rows.length).toBe(experiments.length);
     expect(rows.map((r) => r.children[2].textContent)).toEqual(["droplets", "gas jets", "large-scale solids"]);
@@ -713,20 +750,26 @@ describe("ui", () => {
     expect(rows[2].textContent).toContain("not recorded"); // PSI-98 has no pressure range
   });
 
-  it("Analyst replaces the story column with a full-height sheet", () => {
+  it("Analyst hides the story stage and gives the sheet the full width (R2f)", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     expect(document.body.dataset.lens).toBe("analyst");
     expect(roots().sheet.hidden).toBe(false);
     const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
     expect(base).toMatch(/body\[data-lens="analyst"\] #story\s*\{\s*display:\s*none/);
-    expect(base).toMatch(/body\[data-lens="analyst"\] #sheet\s*\{[^}]*width:\s*min\(52rem, 46vw\)/);
+    // the story stage hides: the dashboard has its own chart
+    expect(base).toMatch(/body\[data-lens="analyst"\] #stage\s*\{\s*display:\s*none/);
+    // the sheet takes the full window width instead of the 46 vw / 60 % column
+    expect(base).toMatch(/body\[data-lens="analyst"\] #sheet\s*\{[^}]*left:\s*0; right:\s*0/);
+    expect(base).not.toMatch(/body\[data-lens="analyst"\] #sheet\s*\{[^}]*width:\s*min\(52rem, 46vw\)/);
+    expect(base).not.toMatch(/body\[data-lens="analyst"\] #sheet\s*\{[^}]*width:\s*60%/);
   });
 
   it("rows with no range sort last in both directions (task 40a)", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
+    sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const rows = () => [...sheet.querySelectorAll("table.investigations tbody tr")];
     const sortBtn = (label: string) => [...sheet.querySelectorAll<HTMLButtonElement>("table.investigations th button.sort")].find((b) => b.textContent === label)!;
     // PSI-98 has an oxygen range, the fixtures have none: descending must not float the gaps first
@@ -743,6 +786,7 @@ describe("ui", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
+    sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const acros = () => [...sheet.querySelectorAll("table.investigations tbody tr")].map((r) => r.children[0].textContent);
     const sortBtn = (label: string) => [...sheet.querySelectorAll<HTMLButtonElement>("th button.sort")].find((b) => b.textContent === label)!;
     const th = (label: string) => sortBtn(label).closest("th")!;
@@ -765,6 +809,7 @@ describe("ui", () => {
   it("a row opens its test rows with recorded values and source links", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
+    roots().sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const target = experiments.find((e) => e.id === "PSI-98")!;
     const btn = [...roots().sheet.querySelectorAll<HTMLButtonElement>("button.row-open")].find((b) => b.textContent === target.acronym)!;
     btn.click();
@@ -803,6 +848,7 @@ describe("ui", () => {
   it("selecting a row dispatches for the chart; an incoming selection opens the row", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
+    roots().sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const seen: (string | null)[] = [];
     window.addEventListener(SELECT_INVESTIGATION, (e) =>
       seen.push((e as CustomEvent<{ investigation: string | null }>).detail.investigation));
@@ -823,6 +869,7 @@ describe("ui", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
+    sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const rows = () => [...sheet.querySelectorAll("table.investigations tbody tr")];
     const box = sheet.querySelector<HTMLInputElement>("#sheet-search")!;
     box.value = "droplet";
@@ -861,6 +908,7 @@ describe("ui", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
+    sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     expect(store.get().filters).toEqual({ search: "", fuel: null, outcome: null, plotted: "all" });
     const rows = () => sheet.querySelectorAll("table.investigations tbody tr").length;
     const box = sheet.querySelector<HTMLInputElement>("#sheet-search")!;
@@ -955,6 +1003,7 @@ describe("ui", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
+    sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const bar = sheet.querySelector(".sheet-toolbar")!;
     expect(bar.firstElementChild!.querySelector("input[type=\"search\"]")).not.toBeNull();
     expect(bar.firstElementChild!.classList.contains("grow")).toBe(true);
@@ -983,6 +1032,7 @@ describe("ui", () => {
       const { store, ctx } = setup();
       store.set({ lens: "analyst" });
       const sheet = roots().sheet;
+      sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
       const { plotted, total } = ctx.api.coverage();
       const row = sheet.querySelector(".coverage-row")!;
       expect(row.textContent).toContain(`Plotted ${plotted} of ${total} tests`);
@@ -999,11 +1049,21 @@ describe("ui", () => {
     }
   });
 
+  it("opening the dashboard lands on the Dashboard tab, not All investigations (R2f)", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const tabs = [...roots().sheet.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    expect(tabs[0]!.textContent).toBe("Dashboard");
+    expect(tabs[0]!.getAttribute("aria-selected")).toBe("true");
+    expect(roots().sheet.querySelector(".dash-overview")).not.toBeNull();
+    expect(roots().sheet.querySelector("table.investigations")).toBeNull();
+  });
+
   it("the default sheet tab follows the beat; the person can switch freely", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const selected = () => roots().sheet.querySelector('[aria-selected="true"]')!.textContent;
-    expect(selected()).toBe("All investigations");
+    expect(selected()).toBe("Dashboard");
     store.set({ beat: { story: "s", scene: "a", beat: "b", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "lunar-margins" } });
     expect(selected()).toBe("Moon-gravity margins");
     buttons(roots().sheet).find((b) => b.getAttribute("data-tab") === "investigations")!.click();
@@ -1018,11 +1078,20 @@ describe("ui", () => {
     const sheet = roots().sheet;
     const tabs = () => [...sheet.querySelectorAll<HTMLButtonElement>("button.tab")];
     const selected = () => tabs().findIndex((b) => b.getAttribute("aria-selected") === "true");
-    // investigations is selected by default; the four dashboard tabs sit first
-    expect(tabs()[4]!.textContent).toBe("All investigations");
-    tabs()[4]!.focus();
-    expect(selected()).toBe(4);
-    tabs()[4]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    // the Dashboard tab is selected by default; the four dashboard tabs sit first
+    expect(tabs()[0]!.textContent).toBe("Dashboard");
+    tabs()[0]!.focus();
+    expect(selected()).toBe(0);
+    tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(selected()).toBe(1);
+    expect(document.activeElement).toBe(tabs()[1]);
+    tabs()[1]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(selected()).toBe(0);
+    expect(document.activeElement).toBe(tabs()[0]);
+    tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(selected()).toBe(6); // wraps around to the last of the seven tabs
+    expect(document.activeElement).toBe(tabs()[6]);
+    tabs()[6]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
     expect(selected()).toBe(5);
     expect(document.activeElement).toBe(tabs()[5]);
     tabs()[5]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
@@ -1099,6 +1168,7 @@ describe("ui", () => {
     const open = () => {
       const { store } = setup();
       store.set({ lens: "analyst" });
+      roots().sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
       const btn = [...roots().sheet.querySelectorAll<HTMLButtonElement>("button.row-open")].find((b) => b.textContent === saffire().acronym)!;
       btn.click();
       return { btn, detail: roots().sheet.querySelector("tr.detail")! };

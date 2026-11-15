@@ -43,9 +43,10 @@ a { color: inherit; }
 }
 #story .step { pointer-events: auto; }
 /* under 1100 px the stage pins under the header at 45 % of the viewport with a solid
-   ground and sits above the story: cards scroll below it and disappear behind it */
+   ground and sits below the story: cards scroll over it on their opaque ground, so
+   large text is never hidden behind the pinned chart while scrolling (R7) */
 @media (max-width: 1099px) {
-  #stage { height: 45vh; z-index: 12; background: var(--space-deep); }
+  #stage { height: 45vh; z-index: 1; background: var(--space-deep); }
 }
 /* while the cover or a chapter page is on screen the stage hides instead of peeking out */
 body[data-stage-hidden="true"] #stage { visibility: hidden; }
@@ -69,20 +70,16 @@ body { font-variant-numeric: tabular-nums; }
   background: var(--sheet); color: var(--ink);
 }
 
-/* analyst workspace: the sheet goes full height instead of the story column */
+/* analyst workspace: the sheet replaces the story column; the dashboard has its own
+   chart, so the story stage hides and the sheet takes the full window width (R2f) */
 body[data-lens="analyst"] #story { display: none; }
 body[data-lens="analyst"] main { display: block; }
+body[data-lens="analyst"] #stage { display: none; }
 @media (min-width: 1100px) {
-  body[data-lens="analyst"] #stage { padding-left: 0; }
   body[data-lens="analyst"] #sheet {
-    top: var(--chrome-h); bottom: 0; left: 0; right: auto;
-    width: min(52rem, 46vw); max-height: none;
+    top: var(--chrome-h); bottom: 0; left: 0; right: 0;
+    width: auto; max-width: none; max-height: none;
   }
-}
-/* at 1280 px and wider the workspace splits: table on the left, the 2D SVG chart on the right */
-@media (min-width: 1280px) {
-  body[data-lens="analyst"] #sheet { width: 60%; max-width: none; }
-  body[data-lens="analyst"] #stage { padding-left: 60%; }
 }
 #sheet a { color: var(--link); }
 

@@ -29,8 +29,6 @@
   "ui.stage.plane.micro": "Microgravedad",
   "ui.stage.plane.lunar": "Gravedad de la Luna",
   "ui.stage.plane.earth": "Gravedad de la Tierra",
-  "ui.stage.plane.holds": "{plane} tiene {n} pruebas.",
-  "ui.stage.plane.empty": "Ninguna prueba se hizo en {plane}.",
   "ui.stage.microg-plane": "Microgravedad: pruebas de NASA con el aire registrado",
   "ui.stage.tilt.micro": "Pruebas de NASA con el aire registrado",
   "ui.stage.lunar-plane": "Gravedad de la Luna (1/6 g)",

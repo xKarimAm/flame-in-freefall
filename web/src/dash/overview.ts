@@ -75,8 +75,31 @@ function numbersSection(ctx: Ctx): HTMLElement {
     h("div", { class: "dash-figure-wrap", role: "listitem" }, figure(t("ui.dash.numbers.investigations"), api.data.experiments.length, EXPERIMENTS_FILE)),
     h("div", { class: "dash-figure-wrap", role: "listitem" }, figure(t("ui.dash.numbers.tests"), total, TESTS_FILE)),
     h("div", { class: "dash-figure-wrap", role: "listitem" }, figure(t("ui.dash.numbers.plotted"), plotted, COVERAGE_FILE)),
-    h("div", { class: "dash-figure-wrap", role: "listitem" }, figure(t("ui.dash.numbers.oxygen"), withO2, COVERAGE_FILE)),
+    h("div", { class: "dash-figure-wrap", role: "listitem" }, figure(t("ui.dash.numbers.oxygen"), withO2, TESTS_FILE)),
     h("div", { class: "dash-figure-wrap", role: "listitem" }, figure(t("ui.dash.numbers.publications"), pubs, EXPERIMENTS_FILE)));
+}
+
+/** The air the ranking is for (R4): the Moon box by its plain name and moon.json values,
+ *  or the slider values. Moon numbers link to their moon.json source; slider values are
+ *  the visitor's own input, marked data-own like the panel weighting. */
+function airTitle(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null): (Node | string)[] {
+  const { t } = ctx;
+  const f = (v: number): string => String(Number(v.toFixed(1)));
+  if (query.kind === "point") {
+    return [h("span", { "data-own": true }, t("ui.dash.ranked.air-point", { pressure: f(query.pressure_kpa), oxygen: f(query.o2_pct) }))];
+  }
+  // atmosphere queries always carry their moon.json atmosphere (rankForAir throws otherwise)
+  const a = atmosphere!;
+  const kids: (Node | string)[] = [];
+  for (const bit of t("ui.dash.ranked.air-moon").split(/(\{\w+\})/g)) {
+    const m = bit.match(/^\{(\w+)\}$/);
+    if (!m) kids.push(bit);
+    else if (m[1] === "name") kids.push(t(`ui.air.${a.id}`));
+    else if (m[1] === "pressure") kids.push(cite(f(a.pressure_kpa), a.url));
+    else if (m[1] === "oxygen") kids.push(cite(`${f(a.o2_pct_min)} to ${f(a.o2_pct_max ?? a.o2_pct_min)}`, a.url));
+    else kids.push(bit);
+  }
+  return kids;
 }
 
 /** (c) "Ranked for this air": every ranked investigation with its numbers, then the rest. */
@@ -107,7 +130,7 @@ function rankingSection(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | 
     return h("li", { class: "dash-unranked-row" }, link, `: ${t("ui.dash.ranked.unrankable")}`);
   });
   return h("section", { class: "dash-ranked", "aria-labelledby": "dash-ranked-title" },
-    h("h3", { id: "dash-ranked-title" }, t("ui.dash.ranked.title")),
+    h("h3", { id: "dash-ranked-title" }, `${t("ui.dash.ranked.title")}: `, ...airTitle(ctx, query, atmosphere)),
     // the rule's fixed scales are contract constants, marked data-own like the panel weighting
     h("p", { class: "dash-rule", "data-own": true }, t("ui.dash.ranked.rule")),
     h("ol", {}, ...rows),

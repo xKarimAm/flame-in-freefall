@@ -99,18 +99,36 @@
 .picture-side { display: flex; min-height: 0; padding-top: var(--flame-overhang, 0px); }
 @media (min-width: 1100px) {
   .stage-incidents.public-picture[data-count="1"] { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
-  .stage-incidents.public-picture[data-count="2"] { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  /* two incidents stack vertically beside the dial: one card column with a 280 px
+     floor (R2a); the single-column rows grow with the cards and the stage scrolls */
+  .stage-incidents.public-picture[data-count="2"] { grid-template-columns: auto minmax(280px, 1fr); grid-template-rows: auto auto auto; }
 }
 /* explicit placement on wide screens: the dial and the cards share row 1, the source line spans row 2 */
 @media (min-width: 1100px) {
   .stage-incidents.public-picture > .picture-side { grid-column: 1; grid-row: 1; }
   .stage-incidents.public-picture > .dial-source { grid-column: 1 / -1; grid-row: 2; }
   .stage-incidents.public-picture > .incident-card { grid-row: 1; min-width: 0; }
+  /* two incidents: the dial spans both card rows, the cards stack in column 2 with
+     their 280 px floor, the source line moves to row 3 (R2a) */
+  .stage-incidents.public-picture[data-count="2"] > .picture-side { grid-row: 1 / span 2; }
+  .stage-incidents.public-picture[data-count="2"] > .dial-source { grid-row: 3; }
+  .stage-incidents.public-picture[data-count="2"] > .incident-card { grid-column: 2; grid-row: auto; min-width: 280px; }
 }
 .incident-card { overflow-wrap: anywhere; } /* long source URLs must not widen the card's column */
+/* the cover shows only the dial and the flame: incident cards hide while it fills the screen (R2b) */
+body[data-cover="true"] .stage-incidents .incident-card { display: none; }
 /* the dial instrument: as tall as the stage box allows (capped near its drawn size so the
    12-unit scale reads 12 px and the labels 17 px), flame on the mark inside the art */
 .public-picture .o2-dial { height: 100%; max-height: 34rem; width: auto; max-width: none; }
+/* narrow screens: the dial keeps the stage width (the flame zone scales with it, so
+   nothing is cut off) with its readout below it; the stage scrolls inside itself.
+   This block stays after the height-driven rule so it wins at equal specificity (R7) */
+@media (max-width: 1099px) {
+  .stage-incidents.public-picture > .picture-side { flex-direction: column; }
+  /* width in, height out: the 500-unit viewBox (flame zone plus dial) scales whole,
+     so the flame zone can never push the dial past the stage edge */
+  .public-picture .o2-dial { width: 100%; max-width: 100%; height: auto; max-height: none; aspect-ratio: 500 / 560; }
+}
 .public-picture .incident-card { font-size: var(--text-body); }
 .public-picture .incident-card h3 { font-size: var(--text-card); }
 .public-picture .incident-card .incident-lead { font-size: var(--text-card); }

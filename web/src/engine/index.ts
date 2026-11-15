@@ -149,6 +149,15 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     });
   }
 
+  /** The cover shows only the dial and the flame: incident cards hide while it fills the screen. */
+  function updateCoverFlag(): void {
+    const cover = el.querySelector(".cover");
+    if (!cover) return;
+    const vh = window.innerHeight;
+    const r = cover.getBoundingClientRect();
+    document.body.dataset.cover = r.top < vh / 2 && r.bottom > vh / 2 ? "true" : "false";
+  }
+
   /** The stage hides while a chapter page fills the screen; the cover keeps its live
    *  stage behind the text, so only chapters hide it. */
   function updateStageHidden(): void {
@@ -236,10 +245,13 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     if (s.lens !== prev.lens || s.locale !== prev.locale) render();
   });
   const onScroll = (): void => {
-    if (el.isConnected) updateStageHidden();
+    if (!el.isConnected) return;
+    updateStageHidden();
+    updateCoverFlag();
   };
   window.addEventListener("scroll", onScroll, { passive: true });
   updateStageHidden();
+  updateCoverFlag();
 
   if (steps.length === 0) return;
   makeScroller()

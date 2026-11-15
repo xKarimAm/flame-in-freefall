@@ -62,7 +62,11 @@ function fakeApi(extra: Extra = {}): DataApi & { nearestSpy: ReturnType<typeof v
   }));
   return {
     data: { experiments: goldenExperiments, tests, moon, incidents },
-    experiment: () => null, familyOf: (inv) => families[inv] ?? null,
+    // the dashboard tabs resolve every investigation in the data: the fixture answers
+    // from the golden experiments, else a bare placeholder with a valid link shape
+    experiment: (id: string) =>
+      goldenExperiments.find((e) => e.id === id) ?? ({ id, acronym: id, title: id, psi_url: "https://example.test/" } as Experiment),
+    familyOf: (inv) => families[inv] ?? null,
     placed: () => placed, notPlaced: (family) => notPlaced.filter((r) => !family || r.family === family),
     coverage: () => ({ plotted: placed.length, total: tests.length }),
     nearest: nearestSpy as unknown as DataApi["nearest"],
@@ -462,6 +466,31 @@ describe("incident view", () => {
     expect(css).toMatch(/\.stage-incidents\s*\{[^}]*grid-template-columns:\s*1fr;/); // stacked by default
     expect(css).toMatch(/@media \(min-width: 1100px\)\s*\{\s*\.stage-incidents\[data-count="2"\]\s*\{[^}]*1fr 1fr/);
   });
+  it("two public-picture cards stack vertically beside the dial, each at least 280 px wide (R2a)", () => {
+    // the wide count=2 picture rules: one dial column, one card column with a 280 px floor
+    expect(css).toMatch(/\.stage-incidents\.public-picture\[data-count="2"\]\s*\{[^}]*grid-template-columns:[^}]*minmax\(280px,\s*1fr\)/);
+    // every card's own box keeps that floor: read the declared minimum from the element rule
+    const rule = css.match(/\.stage-incidents\.public-picture\[data-count="2"\]\s*>\s*\.incident-card\s*\{([^}]*)\}/);
+    expect(rule, "count=2 card rule").not.toBeNull();
+    const min = rule![1].match(/min-width:\s*(\d+)px/);
+    expect(min, "card min-width in px").not.toBeNull();
+    expect(Number(min![1])).toBeGreaterThanOrEqual(280);
+    // the stage scrolls inside itself when the stacked cards do not fit
+    expect(css).toMatch(/\.stage-incidents\s*\{[^}]*overflow:\s*auto/);
+    // in the DOM both cards render in order inside the two-count container
+    const host = setup({ view: "incident", incident_ids: incidents.incidents.slice(0, 2).map((i) => i.id) }).host;
+    const box = host.querySelector<HTMLElement>(".stage-incidents")!;
+    expect(box.dataset["count"]).toBe("2");
+    expect(box.classList.contains("public-picture")).toBe(true);
+    expect([...box.querySelectorAll(":scope > .incident-card")].length).toBe(2);
+  });
+  it("incident cards hide while the cover fills the screen: the cover shows only dial and flame (R2b)", () => {
+    expect(css).toMatch(/body\[data-cover="true"\]\s*\.stage-incidents\s*\.incident-card\s*\{[^}]*display:\s*none/);
+  });
+  it("the narrow dial keeps the stage width with its readout below it, nothing cut off (R7)", () => {
+    expect(css).toMatch(/@media\s*\(max-width:\s*1099px\)[\s\S]*?\.public-picture \.o2-dial\s*\{[^}]*width:\s*100%[^}]*height:\s*auto/);
+    expect(css).toMatch(/@media\s*\(max-width:\s*1099px\)[\s\S]*?\.stage-incidents\.public-picture > \.picture-side\s*\{[^}]*flex-direction:\s*column/);
+  });
   it("is drawn even before the stage has a measured size", () => {
     const api = fakeApi();
     const store = createStore({ ...initialState, stage: { view: "incident", incident_ids: [incidents.incidents[0]!.id] } });
@@ -547,6 +576,19 @@ describe("public picture", () => {
     expect(host.querySelector(".dial-marker")).toBeNull();
     expect(host.querySelector(".flame-guide.small")).not.toBeNull();
     expect(host.querySelector(".flame-guide.tall")).toBeNull();
+  });
+
+  it("the flame stands in its own zone left of the scale, never over a label or a mark (R2e)", () => {
+    // Apollo's tall flame is the worst case: its box must end left of every anchored dial element
+    const { host } = pictureSetup([apollo.id, mir.id]);
+    const dial = host.querySelector(".o2-dial")!;
+    const flame = dial.querySelector(".flame-guide") as unknown as SVGSVGElement;
+    const right = Number(flame.getAttribute("x")) + Number(flame.getAttribute("width"));
+    const anchors = [...dial.querySelectorAll(
+      ".dial-frame, .dial-tick, .dial-num, .dial-mark, .dial-marker, .dial-point, .dial-band",
+    )].map((n) => Number(n.getAttribute("x") ?? n.getAttribute("x1") ?? n.getAttribute("cx")));
+    expect(anchors.length).toBeGreaterThan(0);
+    expect(right).toBeLessThan(Math.min(...anchors));
   });
 
   it("other lenses keep the incident cards without the picture", () => {
@@ -1227,8 +1269,9 @@ describe("act 1 public picture layout (task 21)", () => {
     expect(dialY(0)).toBe(524);
     expect(dialV(28)).toBeCloseTo(100, 10);
     expect(o2Airs(21, atms)).toEqual(["iss-air"]);
-    expect(o2Airs(100, atms)).toEqual(["moon-base-brief", "suit"]); // the open 30 %+ band holds 100 too
-    expect(o2Airs(34, atms)).toEqual(["moon-base-brief", "heo-dm-1006"]);
+    expect(o2Airs(100, atms)).toEqual(["suit"]); // R3: the open 30 %+ band never matches
+    expect(o2Airs(34, atms)).toEqual(["heo-dm-1006"]);
+    expect(o2Airs(30, atms)).toEqual(["exp-10-2"]); // the closed 10.2 psia band, not the open brief
     expect(o2Airs(25, atms)).toEqual([]);
     const box = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     box.setAttribute("viewBox", "0 0 300 560");
@@ -1245,12 +1288,16 @@ describe("act 1 public picture layout (task 21)", () => {
     const result = host.querySelector(".picture-side .dial-result")!;
     expect(result.textContent).toContain("100 %");
     expect(result.textContent).toContain("Inside a spacesuit");
+    expect(result.textContent).not.toContain("Moon base or rover"); // R3: the open band no longer matches 100
     expect(result.querySelector('a[href^="https://"]')).not.toBeNull();
     handle.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
     expect(handle.getAttribute("aria-valuenow")).toBe("99");
     expect(result.textContent).toContain("99 %");
     for (let i = 0; i < 200; i++) handle.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
     expect(handle.getAttribute("aria-valuenow")).toBe("0");
+    // R3: below every marked air the handle says so in the reworded sentence
+    expect(result.textContent).toContain("0 %");
+    expect(result.textContent).toContain("is outside every air marked on this dial.");
   });
 
   it("a handle with no mark to start from begins at station air (task 59)", () => {
@@ -1294,15 +1341,25 @@ describe("act 1 public picture layout (task 21)", () => {
     const plotted = api.placed().filter((p) => ["droplets", "gas jets"].includes(p.family)).length;
     expect(plotted).toBeGreaterThan(0);
     expect(btns[0]!.getAttribute("aria-pressed")).toBe("true");
-    expect(host.querySelector(".plane-result")!.textContent).toBe(`Microgravity holds ${micro} tests.`);
+    // R1: scoped to the archive, the count linked to the file it was counted
+    // from, and the on-chart count beside it; both computed, none typed
+    const onChart = api.coverage().plotted;
+    const result = () => host.querySelector(".plane-result")!;
+    expect(result().textContent).toBe(
+      `${micro} tests in the PSI archive ran in Microgravity. ${onChart} of them are on the chart.`,
+    );
+    const link = result().querySelector("a") as HTMLAnchorElement;
+    expect(link.textContent).toBe(String(micro));
+    expect(link.getAttribute("href")).toBe("data/tests.json");
+    expect(link.hasAttribute("download")).toBe(true);
     expect(dots()).toBe(plotted);
     const step = () => [...host.querySelectorAll<HTMLButtonElement>(".plane-step button")];
     step()[1]!.click();
     expect(step()[1]!.getAttribute("aria-pressed")).toBe("true");
-    expect(host.querySelector(".plane-result")!.textContent).toBe("No test ran in Moon gravity.");
+    expect(host.querySelector(".plane-result")!.textContent).toBe("No test in the PSI archive ran in Moon gravity.");
     expect(dots()).toBe(0);
     step()[2]!.click();
-    expect(host.querySelector(".plane-result")!.textContent).toBe("No test ran in Earth gravity.");
+    expect(host.querySelector(".plane-result")!.textContent).toBe("No test in the PSI archive ran in Earth gravity.");
     expect(dots()).toBe(0);
   });
 

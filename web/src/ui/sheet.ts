@@ -9,7 +9,9 @@ import { SELECT_INVESTIGATION } from "../stage/index";
 import { cite, h, num, numOrMissing, safeHref } from "./dom";
 
 type Tab = "overview" | "compare" | "method" | "map" | "investigations" | "margins" | "tests";
-const tabFor = (s: StageState["analyst_sheet"]): Tab => (s === "lunar-margins" || s === "failing-materials" ? "margins" : "investigations");
+// "Explore the dashboard" lands on the Dashboard tab: only an explicit table or
+// margins beat selects anything else (R2f)
+const tabFor = (s: StageState["analyst_sheet"]): Tab => (s === "lunar-margins" || s === "failing-materials" ? "margins" : s === "table" ? "investigations" : "overview");
 
 type SortKey = "acronym" | "title" | "family" | "tests" | "o2" | "pressure" | "outcomes" | "papers";
 type TestSortKey = "investigation" | "fuel" | "o2" | "pressure" | "flow" | "outcome" | "source" | "placed";
@@ -394,7 +396,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         invHead(),
         h("tbody", {}, ...rows.map((e) => h("tr", {},
           h("td", {}, openButton(e)),
-          h("td", {}, cite(e.title, e.psi_url, "plain")),
+          h("td", { class: "title" }, cite(e.title, e.psi_url, "plain")),
           h("td", {}, h("span", {}, t(`ui.family.${e.family}`))),
           h("td", { class: "num" }, num(e.test_count, 0, "", e.psi_url)),
           h("td", { class: "num" }, range(e.o2_pct_range, t("ui.panel.unit.pct"), e.psi_url)),

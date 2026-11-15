@@ -135,12 +135,13 @@ describe("method coverage, checks, AI, dictionary, downloads", () => {
     const { element, loaded } = renderMethod(ctx);
     document.body.append(element);
     await loaded;
-    // numbers audit input: every digit run in the story.* strings of the loaded en dictionary
-    let storyNumbers = 0;
-    for (const [k, v] of Object.entries(dicts.en!)) {
-      if (k.startsWith("story.") && typeof v === "string") storyNumbers += (v.match(/\d+/g) ?? []).length;
-    }
-    expect(element.textContent).toContain(`${storyNumbers}`);
+    // R5: the digit-run figure is gone ("1,129" counted twice); the audit row stays without it
+    expect(element.textContent).not.toMatch(/\d+ numbers in the story strings/);
+    expect(element.textContent).toContain("Numbers audit");
+    // R5: the AI-text claim is scoped to library text; experiment summaries hold real digits
+    expect(element.textContent).toContain("no typed numbers");
+    expect(element.textContent).toContain("word for word from the PSI text");
+    expect(element.textContent).not.toContain("holds no digits");
     // AI text audit: summaries, quotes and library stories with their models
     const withSummary = experiments.filter((e) => e.summary);
     const quotes = withSummary.reduce((n: number, e) => n + (e.summary?.quotes.length ?? 0), 0);

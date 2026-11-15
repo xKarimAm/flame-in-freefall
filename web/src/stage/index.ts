@@ -507,9 +507,21 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const n = inPlane(grav[selectedPlane]);
     const result = html("p", "plane-result");
     result.setAttribute("aria-live", "polite");
-    result.textContent = n > 0
-      ? t("ui.stage.plane.holds", { plane: t(`ui.stage.plane.${selectedPlane}`), n })
-      : t("ui.stage.plane.empty", { plane: t(`ui.stage.plane.${selectedPlane}`) });
+    const planeName = t(`ui.stage.plane.${selectedPlane}`);
+    if (n > 0) {
+      // the count is scoped to the archive, linked to the file it was counted
+      // from, and followed by how many of them are on the chart; both computed
+      for (const bit of t("ui.stage.plane.holds").split(/(\{\w+\})/g)) {
+        const m = bit.match(/^\{(\w+)\}$/);
+        if (!m) result.append(bit);
+        else if (m[1] === "n") result.append(dataLink(String(n)));
+        else if (m[1] === "plane") result.append(planeName);
+        else result.append(bit);
+      }
+      result.append(" ", t("ui.stage.plane.chart", { m: api.coverage().plotted }));
+    } else {
+      result.textContent = t("ui.stage.plane.empty", { plane: planeName });
+    }
     planeStep.append(result);
   }
 

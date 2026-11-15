@@ -34,6 +34,11 @@ const H = 560;
 const TOP = 28;
 const BOTTOM = 524;
 const AXIS_X = 56;
+/** The flame stands in its own zone left of the scale, never over a label or a mark
+ *  (R2e): the viewBox extends left of the dial so the flame keeps its mark alignment.
+ *  The tall Apollo flame is 176 wide, so its centre sits at -100 with room to spare. */
+export const FLAME_CX = -100;
+const VIEW_X = -200;
 
 /** Where a marker sits as a fraction up from the dial's bottom edge (the flame stands there). */
 export function markerBottomFraction(v: number): number {
@@ -69,10 +74,11 @@ export function dialV(units: number): number {
   return ((BOTTOM - units) / (BOTTOM - TOP)) * 100;
 }
 
-/** Ids of the atmospheres whose recorded oxygen range holds v (an open band holds
- *  everything above its min). Pure. */
+/** Ids of the atmospheres whose recorded closed oxygen range holds v. An open band
+ *  (o2_pct_max null) is drawn on the dial but never matches a handle value (R3):
+ *  the 30 %-or-more brief would otherwise name itself at every value above 30. Pure. */
 export function o2Airs(v: number, atms: { id: string; o2_pct_min: number; o2_pct_max: number | null }[]): string[] {
-  return atms.filter((a) => v >= a.o2_pct_min && (a.o2_pct_max === null || v <= a.o2_pct_max)).map((a) => a.id);
+  return atms.filter((a) => a.o2_pct_max !== null && v >= a.o2_pct_min && v <= a.o2_pct_max).map((a) => a.id);
 }
 
 const y = dialY;
@@ -80,7 +86,7 @@ const y = dialY;
 /** Tall vertical gauge, 0 to 100 % oxygen, with the atmosphere marks and one marker per numeric incident. */
 export function dialSVG(ctx: Ctx, shown: Incident[]): SVGSVGElement {
   const { api, t } = ctx;
-  const chart = svg("svg", { class: "o2-dial", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": t("ui.stage.dial-title"), overflow: "visible" });
+  const chart = svg("svg", { class: "o2-dial", viewBox: `${VIEW_X} 0 ${W - VIEW_X} ${H}`, role: "img", "aria-label": t("ui.stage.dial-title"), overflow: "visible" });
   chart.append(svg("title", {}, t("ui.stage.dial-title")));
   // frame and scale ticks every 10
   chart.append(svg("line", { class: "dial-frame", x1: AXIS_X, x2: AXIS_X, y1: y(0), y2: y(100) }));
@@ -154,7 +160,7 @@ export function flameSVG(mark: number | null): SVGSVGElement {
   const f = svg("svg", {
     class: `flame-guide ${mark === null ? "small" : "tall"}`,
     viewBox: `0 0 100 ${FLAME_H}`,
-    x: AXIS_X - w / 2,
+    x: FLAME_CX - w / 2,
     y: y(v) - h,
     width: w,
     height: h,

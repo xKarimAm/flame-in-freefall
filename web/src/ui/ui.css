@@ -83,7 +83,8 @@ button, select, input:not([type="search"]) { text-align: center; }
 #sheet .tab[aria-selected="true"] { background: var(--ink); color: var(--sheet); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; border-color: var(--ink); }
 #sheet a { color: var(--link); text-decoration: underline; }
 #sheet table { border-collapse: collapse; width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
-#sheet th, #sheet td { overflow-wrap: anywhere; }
+#sheet th, #sheet td { overflow-wrap: normal; word-break: normal; } /* never break mid-word (R2g) */
+#sheet td.title { min-width: 16rem; } /* the title column keeps room for full investigation titles */
 #sheet thead th { position: sticky; top: 0; background: var(--sheet); z-index: 1; }
 #sheet th button.sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
 #sheet th[aria-sort="ascending"] button.sort, #sheet th[aria-sort="descending"] button.sort { text-decoration: underline; text-underline-offset: 3px; }
@@ -111,7 +112,8 @@ table.test-rows { margin-top: 12px; font-size: var(--text-body); }
 #sheet td.num, #sheet th.num { text-align: right; }
 #sheet th.num button.sort { display: block; width: 100%; text-align: right; }
 #sheet th { font-weight: 700; }
-#sheet .sheet-body { overflow-x: auto; }
+#sheet .sheet-body { overflow-x: clip; } /* no sideways scroll: the columns fit at these widths */
+@media (max-width: 899px) { #sheet .sheet-body { overflow-x: auto; } } /* narrow panels scroll the table inside itself (R2g) */
 #sheet .missing { color: var(--muted); }
 #sheet .id { font-family: var(--font-id); }
 

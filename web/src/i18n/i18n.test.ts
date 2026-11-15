@@ -44,10 +44,10 @@ describe("i18n dictionaries", () => {
     }
   });
 
-  it("no string claims no Moon-gravity test ever ran (task 31 audit)", () => {
+  it("no string claims no Moon-gravity test ever ran (task 31 audit, R1)", () => {
     // lunar_margins reports materials measured in lunar gravity: scope every such
     // sentence to the PSI archive
-    const banned = ["No fire test has run", "Nobody has lit"];
+    const banned = ["No fire test has run", "Nobody has lit", "No test ran in"];
     for (const [key, value] of Object.entries(dicts.en!)) {
       for (const old of banned) expect(value, key).not.toContain(old);
     }

@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 4vw;
+  padding: max(4vw, 16px); /* text blocks never sit closer than 16 px to the edge (R7) */
   color: var(--ink-dark);
   pointer-events: auto;
 }
@@ -43,16 +43,24 @@
 .cover-explore { margin-top: 24px; align-self: flex-start; }
 .cover-cue { margin: 40px 0 0; color: var(--muted-dark); font-size: var(--text-meta); font-weight: 500; }
 
-/* chapter page: a full viewport tall electric-blue field between acts */
+/* chapter page: a full viewport tall electric-blue field between acts.
+   The story column is 40 % on desktop but the field spans the full viewport width
+   (the chapter sits at the viewport's left edge, so width alone bleeds it full) (R2c) */
 .chapter {
   min-height: 100vh;
+  width: 100vw;
+  max-width: 100vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 4vw;
+  padding: max(4vw, 16px); /* text blocks never sit closer than 16 px to the edge (R7) */
   background: var(--electric-blue);
   color: var(--ink-dark);
   pointer-events: auto;
+}
+@media (max-width: 767px) {
+  /* chapter titles stay on two lines at phone widths instead of three (R7) */
+  .story-title { font-size: 32px; }
 }
 .story-title {
   max-width: 24ch;
@@ -108,7 +116,7 @@
 .ending { min-height: 90vh; display: flex; align-items: center; }
 .end-card {
   width: min(30rem, 92vw);
-  margin-left: 4vw;
+  margin-left: max(4vw, 16px); /* text blocks never sit closer than 16 px to the edge (R7) */
   padding: 28px;
   background: var(--space-black);
   color: var(--ink-dark);
@@ -129,7 +137,7 @@
 
 /* page turning: gentle proximity snap, one page at a time.
    Under 1100 px pages snap below the pinned 45 vh stage, never under it. */
-html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) + 8px); }
+html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) + 8px); overflow-x: clip; } /* clip, not hidden: the full-bleed chapter's scrollbar sliver goes without breaking the sticky stage */
 @media (max-width: 1099px) {
   html { scroll-padding-top: calc(var(--chrome-h) + 45vh + 8px); }
 }
@@ -142,9 +150,9 @@ html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) +
   pointer-events: auto;
 }
 .page-dot {
-  width: 10px; height: 10px; padding: 0; font-size: 0;
+  width: 10px; height: 10px; min-height: 0; flex: none; padding: 0; font-size: 0;
   border: 1px solid var(--muted-dark); border-radius: 50%; background: transparent; cursor: pointer;
-}
+} /* min-height 0 opts out of the global 40 px button minimum: dots stay 10 px circles (R2d) */
 .page-dot[aria-current="true"] { background: var(--ink-dark); border-color: var(--ink-dark); }
 @media (max-width: 1099px) {
   /* the card already says "Page n of 18": dots stay only on wide screens */
