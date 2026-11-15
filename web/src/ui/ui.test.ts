@@ -71,6 +71,7 @@ const roots = () => ({
   sheet: document.getElementById("sheet")!,
   overlay: document.getElementById("overlay")!,
 });
+const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "ui.css"), "utf8");
 const p159 = tests.find((t) => t.id === "PSI-159#1")!;
 const p69 = tests.find((t) => t.id === "PSI-69#2")!;
 
@@ -202,6 +203,24 @@ describe("ui", () => {
     expect(panel.querySelector("ol.nearest")).not.toBeNull();
     btnText("Hide the details").click();
     expect(details().hasAttribute("hidden")).toBe(true);
+  });
+
+  it("the Public panel leads with the answer in large type, then sliders, presets, Show the details", () => {
+    setup(); // public, sliders live
+    const panel = roots().panel;
+    const order = [...panel.children].map((el) => el.className);
+    // answer first, then the sliders block, the presets, the family filter, the details toggle last
+    expect(order[0]).toBe("answer-wrap");
+    expect(order.indexOf("sliders")).toBeGreaterThan(0);
+    expect(order.indexOf("presets")).toBeGreaterThan(order.indexOf("sliders"));
+    const btn = [...panel.querySelectorAll("button")].find((b) => b.textContent === "Show the details")!;
+    expect(btn).toBeTruthy();
+    expect(order.indexOf("nearest-wrap")).toBeGreaterThan(order.indexOf("presets"));
+    expect(panel.querySelector(".answer-wrap .answer")).not.toBeNull();
+  });
+
+  it("the answer is large type", () => {
+    expect(css).toMatch(/\.answer\s*\{[^}]*font-size:\s*20px/);
   });
 
   it("Astronaut and Analyst keep the full list with no answer sentence", () => {

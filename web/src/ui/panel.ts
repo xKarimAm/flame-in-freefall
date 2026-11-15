@@ -17,7 +17,7 @@ const clamp = (v: number, r: { min: number; max: number }): number => Math.min(r
 export function mountPanel(root: HTMLElement, ctx: Ctx): void {
   const { api, store, t } = ctx;
   let pIn: HTMLInputElement, oIn: HTMLInputElement, pOut: HTMLElement, oOut: HTMLElement;
-  let famSel: HTMLSelectElement, list: HTMLElement;
+  let famSel: HTMLSelectElement, list: HTMLElement, answerBox: HTMLElement;
   let presetBtns: { btn: HTMLButtonElement; id: AtmosphereId }[] = [];
   let lastKey = "";
   let detailsOpen = false;
@@ -106,10 +106,14 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     );
     // Public lens: one sentence first, the full list behind a button. Other lenses keep the list.
     if (s.lens !== "public") {
+      answerBox.replaceChildren();
+      answerBox.hidden = true;
       list.replaceChildren(...full);
       return;
     }
-    const kids: Node[] = [first ? answer(first) : h("p", { class: "answer" }, t("ui.nearest.empty"))];
+    answerBox.hidden = false;
+    answerBox.replaceChildren(first ? answer(first) : h("p", { class: "answer" }, t("ui.nearest.empty")));
+    const kids: Node[] = [];
     const btn = h("button", { type: "button", class: "btn", "aria-expanded": detailsOpen ? "true" : "false" },
       t(detailsOpen ? "ui.panel.hide-details" : "ui.panel.show-details"));
     btn.addEventListener("click", () => { detailsOpen = !detailsOpen; renderList(); });
@@ -158,12 +162,14 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
       h("p", { class: "exp-why" }, t("ui.panel.exp.slider.why")));
     expBox.hidden = true;
     list = h("div", { class: "nearest-wrap" });
+    answerBox = h("div", { class: "answer-wrap" });
     root.replaceChildren(
-      expBox,
+      answerBox,
       h("div", { class: "sliders" }, p.row, o.row),
       h("p", { class: "presets-label" }, t("ui.panel.presets")),
       presets,
       h("div", { class: "family" }, h("label", { for: "family-filter" }, t("ui.panel.family")), famSel),
+      expBox,
       list,
     );
     lastKey = "";
