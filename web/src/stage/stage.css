@@ -219,3 +219,8 @@ body[data-cover="true"] .stage-incidents .incident-card { display: none; }
 .exp h4 { margin: 0 0 4px; font-size: var(--text-meta); font-weight: 700; }
 .exp p { margin: 0; font-size: var(--text-meta); line-height: 1.45; color: var(--muted-dark); }
 .exp .exp-why { margin-top: 4px; color: var(--ink-dark); }
+
+/* K9: the empty-plane sentence floats over the picture and fades/rises in; reduced motion: no movement */
+.plane-note { position: absolute; left: 50%; bottom: 8%; z-index: 2; margin: 0; max-width: min(34rem, 90%); padding: 8px 14px; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; text-align: center; font-size: var(--text-body); color: var(--ink-dark); background: var(--space-deep); transition: opacity 0.45s ease, transform 0.45s ease; }
+.plane-note.show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .plane-note { transition: none; transform: translate(-50%, 0); } }

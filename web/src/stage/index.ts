@@ -95,6 +95,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   const tiltBox = html("div", "stage-tilt");
   tiltBox.hidden = true;
   plotBox.append(tiltBox);
+  // K9: the sentence for an empty plane sits over the picture (fades in), not only under the buttons
+  const planeNote = html("p", "plane-note");
+  planeNote.setAttribute("aria-hidden", "true"); // the live .plane-result below says it for screen readers
+  plotBox.append(planeNote);
   let tilt: TiltView | null | undefined; // undefined = not tried yet
   let tiltOn = false;
   let size: Size | null = opts.size ?? null;
@@ -266,6 +270,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     if (useTilt && size) {
       try {
         tilt!.resize(size.w, size.h);
+        tilt!.setFocus(isCh4 && selectedPlane !== "micro" ? selectedPlane : "all"); // eased camera flight to the chosen plane
         tilt!.update(wanted, new Set(nearestRows(state).map((r) => r.id)), scales, {
           refs,
           sliders: state.sliders,
@@ -512,6 +517,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     planeStep.replaceChildren();
     const isCh4 = (store.get().beat?.story ?? "") === "the-gap";
     if (!chartView || !isCh4) {
+      planeNote.classList.remove("show");
       planeStep.hidden = true;
       return;
     }
@@ -554,6 +560,8 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     } else {
       result.textContent = t("ui.stage.plane.empty", { plane: planeName });
     }
+    planeNote.textContent = n === 0 ? (result.textContent ?? "") : "";
+    planeNote.classList.toggle("show", n === 0 && selectedPlane !== "micro");
     planeStep.append(result);
   }
 
