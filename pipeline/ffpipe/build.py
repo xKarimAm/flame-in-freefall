@@ -9,6 +9,7 @@ from pathlib import Path
 from .coverage import update_doc
 from .coverage_json import build_coverage
 from .experiments import build_experiments, build_psi_text
+from .search import build_search
 from .library import build_library, load_drafts
 from .moments import build_moments
 from .parsers import PARSERS
@@ -75,8 +76,9 @@ def main():
     library = build_library(load_drafts(), tests, moments, {t["id"]: t for t in texts})
     write_json(BUILD_DIR / "library.json", library)
     write_json(BUILD_DIR / "coverage.json", build_coverage(tests))
+    write_json(BUILD_DIR / "search.json", build_search(experiments, tests))
     update_doc(COVERAGE_MD, SNAPSHOT, tests)
-    print(f"wrote tests.json ({len(tests)} rows), experiments.json ({len(experiments)}), moments.json ({len(moments)}), psi-text.json ({len(texts)}), library.json ({len(library)} stories), coverage.json, COVERAGE.md table")
+    print(f"wrote tests.json ({len(tests)} rows), experiments.json ({len(experiments)}), moments.json ({len(moments)}), psi-text.json ({len(texts)}), library.json ({len(library)} stories), coverage.json, search.json, COVERAGE.md table")
 
 
 if __name__ == "__main__":
