@@ -8,11 +8,14 @@
 .stage-tilt { position: absolute; inset: 0; }
 .stage-tilt[hidden] { display: none; }
 .stage-tilt canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-.tilt-labels { position: absolute; inset: 0; pointer-events: none; }
-.tilt-label { position: absolute; margin: 0; font-size: 12px; color: var(--muted-dark); }
-.tilt-label:nth-child(1) { top: 8px; left: 12px; }
-.tilt-label:nth-child(2) { bottom: 8px; left: 12px; }
-.tilt-label:nth-child(3) { top: 8px; right: 12px; }
+.tilt-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.tilt-label { position: absolute; margin: 0; font-size: 12px; color: var(--muted-dark); background: var(--space-deep); padding: 2px 6px; white-space: nowrap; }
+.tilt-label[hidden] { display: none; }
+/* the three plane labels are large: each picture names its own plane */
+.tilt-label.plane-micro, .tilt-label.plane-lunar, .tilt-label.plane-earth { font-size: 20px; font-weight: 700; color: var(--ink-dark); transform: translate(-2%, -110%); }
+.tilt-label.axis-x { transform: translate(-50%, 40%); }
+.tilt-label.axis-y { transform: translate(-102%, -50%); }
+.tilt-label.you { color: var(--ink-dark); transform: translate(-50%, -160%); }
 .stage-svg text { fill: var(--muted-dark); font-size: 12px; }
 .stage-svg .axis-title { font-size: 13px; }
 .stage-svg .plane-label { fill: var(--ink-dark); font-size: 13px; font-weight: 500; }

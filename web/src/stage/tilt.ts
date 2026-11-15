@@ -1,20 +1,35 @@
 // Generated with Muse Spark, SI-assisted.
 // The three.js tilt for the lunar-gravity pages (stage view "tilt-lunar", acts 3 and 4): the chart
-// tips into 3D to show three gravity planes — microgravity with the real tests, the empty
-// Moon-gravity plane with its label, Earth gravity as a reference line. Points are the real placed
-// tests; nothing decorative. Flat MeshBasicMaterial colours only; no lights, no shadows.
+// tips into 3D to show three gravity planes — microgravity on top with the real tests, the empty
+// Moon-gravity plane in the middle with its yellow Moon box, Earth gravity as a thin reference
+// strip at the bottom. Points are the real placed tests; nothing decorative. Flat
+// MeshBasicMaterial colours only; no lights, no shadows.
 // The SVG chart stays the fallback (WebGL missing or reduced motion) and the accessible version;
 // the tilt points are never clickable — selection stays on the SVG chart, panel and sheet.
 import * as THREE from "three";
-import type { Ctx, PlacedTest } from "../contract";
+import { OUTCOME_GROUP } from "../contract";
+import type { Atmosphere, Ctx, Lens, Outcome, PlacedTest, StageState, StageView } from "../contract";
+import type { RefPlan } from "./plan";
 import type { Scales } from "./layout";
 
 /** Camera ease on entering and leaving: 600 ms. */
 export const TILT_MS = 600;
-const WORLD_W = 8;
-const WORLD_H = 6;
-const LUNAR_Z = -1.6;
-const EARTH_Z = 1.6;
+/** World size of the two full planes. */
+export const TILT_W = 8;
+export const TILT_H = 4.2;
+/** The three planes step down and back: microgravity on top, the Moon plane in the middle,
+ *  Earth thin at the bottom. */
+export const TILT_Y = { micro: 4.7, lunar: 0, earth: -4.2 } as const;
+export const TILT_Z = { micro: 0, lunar: -1.4, earth: -2.8 } as const;
+/** Earth is a thin reference strip, not a full plane. */
+export const EARTH_H = 0.6;
+/** The Moon box is a fixed-width marker centred on the band pressure (the band has no width in the data). */
+export const MOON_BOX_W = 0.55;
+/** Dots are at least 5 px on screen; nearest larger. PointsMaterial size with sizeAttenuation false is pixels. */
+export const DOT_PX = 5;
+export const NEAR_PX = 10;
+const FOV = 38;
+const TAN_HALF = Math.tan((FOV / 2) * (Math.PI / 180));
 
 export function easeOutCubic(k: number): number {
   const c = Math.min(1, Math.max(0, k));
@@ -31,10 +46,101 @@ export interface Pose {
   look: [number, number, number];
 }
 
-/** Camera pose: flat and chart-like at k = 0, tipped to show the three planes at k = 1. Pure. */
-export function tiltPose(k: number): Pose {
+/** Camera pose: flat and chart-like at k = 0 (straight at the microgravity plane),
+ *  tipped to frame all three planes at k = 1. Pure. Aspect widens the flat distance
+ *  so the plane fills narrow frames too. */
+export function tiltPose(k: number, aspect = 1.3): Pose {
+  const flatDist = Math.max(2.6 / TAN_HALF, 4.3 / (TAN_HALF * aspect));
+  const flat: Pose = { pos: [0, TILT_Y.micro, flatDist], look: [0, TILT_Y.micro, TILT_Z.micro] };
+  const tipped: Pose = { pos: [0, -5.8, 18.5], look: [0, 1.2, TILT_Z.lunar] };
   const e = easeOutCubic(k);
-  return { pos: [0, -5.2 * e, 8 - 3.6 * e], look: [0, 0.4 * e, -0.3 * e] };
+  const lerp = (a: number, b: number): number => a + (b - a) * e;
+  return {
+    pos: [lerp(flat.pos[0], tipped.pos[0]), lerp(flat.pos[1], tipped.pos[1]), lerp(flat.pos[2], tipped.pos[2])],
+    look: [lerp(flat.look[0], tipped.look[0]), lerp(flat.look[1], tipped.look[1]), lerp(flat.look[2], tipped.look[2])],
+  };
+}
+
+/** A camera for the pose; no renderer needed, so tests can project with it. */
+export function tiltCamera(pose: Pose, aspect: number): THREE.PerspectiveCamera {
+  const camera = new THREE.PerspectiveCamera(FOV, aspect, 0.1, 100);
+  camera.position.set(...pose.pos);
+  camera.lookAt(...pose.look);
+  return camera;
+}
+
+export interface TiltPlaneDef {
+  corners: [number, number, number][];
+  center: [number, number, number];
+}
+
+/** World footprint of the three planes, the single source for scene and tests. */
+export function tiltPlaneGeometry(): Record<"micro" | "lunar" | "earth", TiltPlaneDef> {
+  const def = (y: number, z: number, h: number): TiltPlaneDef => ({
+    corners: [
+      [-TILT_W / 2, y - h / 2, z],
+      [TILT_W / 2, y - h / 2, z],
+      [TILT_W / 2, y + h / 2, z],
+      [-TILT_W / 2, y + h / 2, z],
+    ],
+    center: [0, y, z],
+  });
+  return { micro: def(TILT_Y.micro, TILT_Z.micro, TILT_H), lunar: def(TILT_Y.lunar, TILT_Z.lunar, TILT_H), earth: def(TILT_Y.earth, TILT_Z.earth, EARTH_H) };
+}
+
+/** The Analyst lens always gets the 2D SVG chart, never the tilt. */
+export function tiltAllowed(lens: Lens, view: StageView): boolean {
+  return view === "tilt-lunar" && lens !== "analyst";
+}
+
+/** The Moon plane's label is the beat annotation's own words, falling back to the plane label. */
+export function lunarLabelFor(
+  annotations: NonNullable<StageState["annotation"]>,
+  t: (key: string) => string,
+  fallback: string,
+): string {
+  const first = annotations.find((a) => a.at === "lunar-plane");
+  return first ? t(first.text_key) : fallback;
+}
+
+export type TiltDotFill = "muted" | "near" | "burned";
+
+/** Dot colour exactly as the SVG chart: kept burning is orange, nearest is blue, the rest quiet grey. */
+export function dotFill(outcome: Outcome, nearest: boolean): TiltDotFill {
+  if (nearest) return "near";
+  return OUTCOME_GROUP[outcome] === "burned" ? "burned" : "muted";
+}
+
+/** Every dot is at least 5 px on screen; nearest dots draw larger. */
+export function dotSizePx(nearest: boolean): number {
+  return nearest ? NEAR_PX : DOT_PX;
+}
+
+/** Chart pixels to plane-local world units (both full planes share the mapping). */
+export function chartToWorld(s: Scales): (px: number, py: number) => [number, number] {
+  const w = s.plot.x1 - s.plot.x0;
+  const h = s.plot.y1 - s.plot.y0;
+  return (px, py) => [((px - s.plot.x0) / w - 0.5) * TILT_W, (0.5 - (py - s.plot.y0) / h) * TILT_H];
+}
+
+export interface MoonBox {
+  cx: number;
+  top: number;
+  bottom: number;
+  w: number;
+}
+
+/** The Moon box rect from the moon.json band (never typed here): centred on the band
+ *  pressure, spanning the whole oxygen range. */
+export function moonBoxWorld(atm: Atmosphere, s: Scales): MoonBox {
+  const toWorld = chartToWorld(s);
+  const o2max = atm.o2_pct_max ?? atm.o2_pct_min;
+  return {
+    cx: toWorld(s.x(atm.pressure_kpa), 0)[0],
+    top: toWorld(0, s.y(o2max))[1],
+    bottom: toWorld(0, s.y(atm.o2_pct_min))[1],
+    w: MOON_BOX_W,
+  };
 }
 
 function cssVar(name: string, fallback: string): string {
@@ -46,14 +152,279 @@ function cssVar(name: string, fallback: string): string {
   }
 }
 
+export interface TiltColors {
+  ground: string;
+  edge: string;
+  muted: string;
+  near: string;
+  burned: string;
+  moon: string;
+  ink: string;
+}
+
+export interface TiltLabels {
+  micro: string;
+  lunar: string;
+  earth: string;
+  x: string;
+  y: string;
+  you: string;
+}
+
+export interface TiltDotsInput {
+  /** data values (pressure kPa, oxygen %) to plane-local world units */
+  toWorld: (pressure_kpa: number, o2_pct: number) => [number, number];
+  box: MoonBox | null;
+  /** plane-local world position of the your-air mark, or null when the sliders are not live */
+  you: [number, number] | null;
+}
+
+export interface TiltScene {
+  /** the HTML labels fixed to the planes (positioned by setFrame/setPose) */
+  element: HTMLElement;
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  setDots(placed: PlacedTest[], nearest: Set<string>, input: TiltDotsInput, texts: TiltLabels): void;
+  setFrame(w: number, h: number): void;
+  setPose(k: number): void;
+  dispose(): void;
+}
+
+function html<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function planeMesh(w: number, h: number, color: string, opacity: number): THREE.Mesh {
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, h),
+    new THREE.MeshBasicMaterial({ color, transparent: opacity < 1, opacity, side: THREE.DoubleSide }),
+  );
+  return mesh;
+}
+
+function edgeLoop(w: number, h: number, color: string, dashed: boolean): THREE.LineLoop | THREE.Line {
+  const pts = [
+    new THREE.Vector3(-w / 2, -h / 2, 0),
+    new THREE.Vector3(w / 2, -h / 2, 0),
+    new THREE.Vector3(w / 2, h / 2, 0),
+    new THREE.Vector3(-w / 2, h / 2, 0),
+  ];
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  if (!dashed) return new THREE.LineLoop(geo, new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9 }));
+  const loop = new THREE.LineLoop(
+    geo,
+    new THREE.LineDashedMaterial({ color, dashSize: 0.25, gapSize: 0.16, transparent: true, opacity: 0.9 }),
+  );
+  loop.computeLineDistances();
+  return loop;
+}
+
+/** The scene graph without a renderer: planes, edges and HTML labels persist;
+ *  setDots rebuilds the dots, the Moon box and the your-air mark. No WebGL needed. */
+export function buildTiltScene(colors: TiltColors, initial: TiltLabels): TiltScene {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(FOV, 1.3, 0.1, 100);
+
+  const micro = new THREE.Group();
+  micro.name = "group-micro";
+  micro.position.set(0, TILT_Y.micro, TILT_Z.micro);
+  const microPlane = planeMesh(TILT_W, TILT_H, colors.ground, 1);
+  microPlane.name = "plane-micro";
+  const microEdge = edgeLoop(TILT_W, TILT_H, colors.edge, false);
+  microEdge.name = "edge-micro";
+  micro.add(microPlane, microEdge);
+
+  const lunar = new THREE.Group();
+  lunar.name = "group-lunar";
+  lunar.position.set(0, TILT_Y.lunar, TILT_Z.lunar);
+  const lunarPlane = planeMesh(TILT_W, TILT_H, colors.edge, 0.08);
+  lunarPlane.name = "plane-lunar";
+  const lunarEdge = edgeLoop(TILT_W, TILT_H, colors.edge, true);
+  lunarEdge.name = "edge-lunar";
+  lunar.add(lunarPlane, lunarEdge);
+
+  const earth = new THREE.Group();
+  earth.name = "group-earth";
+  earth.position.set(0, TILT_Y.earth, TILT_Z.earth);
+  const earthPlane = planeMesh(TILT_W, EARTH_H, colors.edge, 0.45);
+  earthPlane.name = "plane-earth";
+  const earthEdge = edgeLoop(TILT_W, EARTH_H, colors.edge, false);
+  earthEdge.name = "edge-earth";
+  earth.add(earthPlane, earthEdge);
+  scene.add(micro, lunar, earth);
+
+  // plane labels are HTML: readable, localised, and outside the canvas pixels
+  const labels = html("div", "tilt-labels");
+  const labelEls: Record<"plane-micro" | "plane-lunar" | "plane-earth" | "axis-x" | "axis-y" | "you", HTMLElement> = {
+    "plane-micro": html("p", "tilt-label plane-micro", initial.micro),
+    "plane-lunar": html("p", "tilt-label plane-lunar", initial.lunar),
+    "plane-earth": html("p", "tilt-label plane-earth", initial.earth),
+    "axis-x": html("p", "tilt-label axis-x", initial.x),
+    "axis-y": html("p", "tilt-label axis-y", initial.y),
+    you: html("p", "tilt-label you", initial.you),
+  };
+  labels.append(...Object.values(labelEls));
+
+  let frame = { w: 0, h: 0 };
+  let aspect = 1.3;
+  let youAnchor: [number, number, number] | null = null;
+
+  const anchors = (): [HTMLElement, [number, number, number] | null][] => [
+    [labelEls["plane-micro"], [-TILT_W / 2, TILT_H / 2, 0.05]],
+    [labelEls["plane-lunar"], [-TILT_W / 2, TILT_H / 2, 0.05]],
+    [labelEls["plane-earth"], [-TILT_W / 2, EARTH_H / 2, 0.05]],
+    [labelEls["axis-x"], [0, -TILT_H / 2, 0.05]],
+    [labelEls["axis-y"], [-TILT_W / 2, -TILT_H / 2, 0.05]],
+    [labelEls.you, youAnchor],
+  ];
+  labelEls.you.hidden = true;
+  // anchors are plane-local; the groups carry the plane offsets
+  const groupOf = (el: HTMLElement): THREE.Group =>
+    el === labelEls["plane-lunar"] ? lunar : el === labelEls["plane-earth"] ? earth : micro;
+
+  const reposition = (): void => {
+    scene.updateMatrixWorld();
+    camera.updateMatrixWorld();
+    const v = new THREE.Vector3();
+    for (const [el, local] of anchors()) {
+      if (!local) { el.hidden = true; continue; }
+      const g = groupOf(el);
+      v.set(local[0], local[1], local[2]).applyMatrix4(g.matrixWorld);
+      v.project(camera);
+      el.hidden = false;
+      el.style.left = `${((v.x * 0.5 + 0.5) * frame.w).toFixed(1)}px`;
+      el.style.top = `${((-v.y * 0.5 + 0.5) * frame.h).toFixed(1)}px`;
+    }
+  };
+
+  const clearNamed = (group: THREE.Group, names: string[]): void => {
+    for (const name of names) {
+      const o = group.getObjectByName(name);
+      if (o) {
+        group.remove(o);
+        o.traverse((c) => {
+          const mesh = c as THREE.Mesh;
+          if (mesh.geometry) mesh.geometry.dispose();
+          const mat = (mesh as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+          if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+          else if (mat) mat.dispose();
+        });
+      }
+    }
+  };
+
+  const dotsOf = (fill: TiltDotFill): { mat: THREE.PointsMaterial; pts: number[] } => {
+    const color = fill === "near" ? colors.near : fill === "burned" ? colors.burned : colors.muted;
+    return {
+      mat: new THREE.PointsMaterial({ color, size: dotSizePx(fill === "near"), sizeAttenuation: false, transparent: true, opacity: fill === "muted" ? 0.6 : 1 }),
+      pts: [],
+    };
+  };
+
+  return {
+    element: labels,
+    scene,
+    camera,
+    setDots(placed, nearest, input, texts) {
+      labelEls["plane-micro"].textContent = texts.micro;
+      labelEls["plane-lunar"].textContent = texts.lunar;
+      labelEls["plane-earth"].textContent = texts.earth;
+      labelEls["axis-x"].textContent = texts.x;
+      labelEls["axis-y"].textContent = texts.y;
+      labelEls.you.textContent = texts.you;
+      clearNamed(micro, ["dots-muted", "dots-burned", "dots-near", "you-mark"]);
+      clearNamed(lunar, ["moon-box", "edge-moonbox"]);
+      const layers: Record<TiltDotFill, { mat: THREE.PointsMaterial; pts: number[] }> = {
+        muted: dotsOf("muted"),
+        near: dotsOf("near"),
+        burned: dotsOf("burned"),
+      };
+      for (const p of placed) {
+        const [x, y] = input.toWorld(p.pressure_kpa, p.o2_pct);
+        layers[dotFill(p.outcome, nearest.has(p.id))].pts.push(x, y, 0.03);
+      }
+      for (const [name, layer] of Object.entries(layers) as [TiltDotFill, { mat: THREE.PointsMaterial; pts: number[] }][]) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.Float32BufferAttribute(layer.pts, 3));
+        const points = new THREE.Points(geo, layer.mat);
+        points.name = `dots-${name}`;
+        micro.add(points);
+      }
+      if (input.box) {
+        const h = Math.max(0.15, input.box.top - input.box.bottom);
+        const boxMesh = planeMesh(input.box.w, h, colors.moon, 0.35);
+        boxMesh.name = "moon-box";
+        boxMesh.position.set(input.box.cx, (input.box.top + input.box.bottom) / 2, 0.03);
+        const boxEdge = edgeLoop(input.box.w, h, colors.moon, false);
+        boxEdge.name = "edge-moonbox";
+        boxEdge.position.set(input.box.cx, (input.box.top + input.box.bottom) / 2, 0.03);
+        lunar.add(boxMesh, boxEdge);
+      }
+      youAnchor = null;
+      if (input.you) {
+        const [x, y] = input.you;
+        const arm = 0.45;
+        const mark = new THREE.LineSegments(
+          new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(x - arm, y, 0.03),
+            new THREE.Vector3(x + arm, y, 0.03),
+            new THREE.Vector3(x, y - arm, 0.03),
+            new THREE.Vector3(x, y + arm, 0.03),
+          ]),
+          new THREE.LineBasicMaterial({ color: colors.ink }),
+        );
+        mark.name = "you-mark";
+        micro.add(mark);
+        youAnchor = [x, y, 0.05];
+      }
+      reposition();
+    },
+    setFrame(w, h) {
+      if (w <= 0 || h <= 0) return;
+      frame = { w, h };
+      aspect = w / h;
+      camera.aspect = aspect;
+      camera.updateProjectionMatrix();
+      reposition();
+    },
+    setPose(k) {
+      const pose = tiltPose(k, aspect);
+      camera.position.set(...pose.pos);
+      camera.lookAt(...pose.look);
+      reposition();
+    },
+    dispose() {
+      scene.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (mesh.geometry) mesh.geometry.dispose();
+        const mat = (mesh as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+        if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+        else if (mat) mat.dispose();
+      });
+      labels.remove();
+    },
+  };
+}
+
 export interface TiltView {
   element: HTMLElement;
-  /** redraw points for the current beat; ids in `nearest` draw larger */
-  update(placed: PlacedTest[], nearest: Set<string>, s: Scales): void;
+  /** redraw points for the current beat; ids in `nearest` draw larger and blue */
+  update(placed: PlacedTest[], nearest: Set<string>, s: Scales, extras: TiltExtras): void;
   /** ease the camera to the tilted view (true) or back to flat (false) */
   setTilted(tilted: boolean): void;
   resize(w: number, h: number): void;
   dispose(): void;
+}
+
+export interface TiltExtras {
+  refs: RefPlan;
+  sliders: { pressure_kpa: number; o2_pct: number } | null;
+  microLabel: string;
+  lunarLabel: string;
+  earthLabel: string;
 }
 
 /**
@@ -87,98 +458,55 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
     onError();
   };
   const t = ctx.t;
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-  const dataBlue = cssVar("--data-on-dark", "#2491ff");
-  const muted = cssVar("--muted-dark", "#dfe1e2");
-
-  // microgravity plane: a quiet grid holding the real tests
-  const grid = new THREE.GridHelper(WORLD_W, 12, muted, muted);
-  grid.rotation.x = Math.PI / 2; // local depth becomes world height
-  grid.scale.set(1, 1, WORLD_H / WORLD_W);
-  (grid.material as THREE.Material).transparent = true;
-  (grid.material as THREE.Material).opacity = 0.35;
-  scene.add(grid);
-
-  // the empty Moon-gravity plane and the Earth-gravity reference line
-  const lunar = new THREE.Mesh(
-    new THREE.PlaneGeometry(WORLD_W, WORLD_H),
-    new THREE.MeshBasicMaterial({ color: muted, transparent: true, opacity: 0.07, side: THREE.DoubleSide }),
+  const view = buildTiltScene(
+    {
+      ground: cssVar("--space-black", "#1b1b1b"),
+      edge: cssVar("--muted-dark", "#dfe1e2"),
+      muted: cssVar("--muted-dark", "#dfe1e2"),
+      near: cssVar("--data-on-dark", "#2491ff"),
+      burned: cssVar("--flame", "#ff5804"),
+      moon: cssVar("--moon", "#e7f434"),
+      ink: cssVar("--ink-dark", "#ffffff"),
+    },
+    {
+      micro: t("ui.stage.tilt.micro"),
+      lunar: t("ui.stage.lunar-plane"),
+      earth: t("ui.stage.earth-line"),
+      x: t("ui.stage.x-axis"),
+      y: t("ui.stage.y-axis"),
+      you: t("ui.stage.your-air"),
+    },
   );
-  lunar.position.z = LUNAR_Z;
-  scene.add(lunar);
-  const border = new THREE.LineLoop(
-    new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-WORLD_W / 2, -WORLD_H / 2, LUNAR_Z),
-      new THREE.Vector3(WORLD_W / 2, -WORLD_H / 2, LUNAR_Z),
-      new THREE.Vector3(WORLD_W / 2, WORLD_H / 2, LUNAR_Z),
-      new THREE.Vector3(-WORLD_W / 2, WORLD_H / 2, LUNAR_Z),
-    ]),
-    new THREE.LineDashedMaterial({ color: muted, dashSize: 0.18, gapSize: 0.12, transparent: true, opacity: 0.8 }),
-  );
-  border.computeLineDistances();
-  scene.add(border);
-  const earth = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-WORLD_W / 2, 0, EARTH_Z), new THREE.Vector3(WORLD_W / 2, 0, EARTH_Z)]),
-    new THREE.LineBasicMaterial({ color: muted, transparent: true, opacity: 0.8 }),
-  );
-  scene.add(earth);
-
-  // plane labels are HTML: readable, localised, and outside the canvas pixels
-  const labels = document.createElement("div");
-  labels.className = "tilt-labels";
-  const microLabel = document.createElement("p");
-  microLabel.className = "tilt-label";
-  microLabel.textContent = t("ui.stage.microg-plane");
-  const lunarLabel = document.createElement("p");
-  lunarLabel.className = "tilt-label";
-  lunarLabel.textContent = t("ui.stage.lunar-plane");
-  const earthLabel = document.createElement("p");
-  earthLabel.className = "tilt-label";
-  earthLabel.textContent = t("ui.stage.earth-line");
-  labels.append(microLabel, lunarLabel, earthLabel);
-  container.append(renderer.domElement, labels);
-
-  const baseMat = new THREE.PointsMaterial({ color: muted, size: 3, sizeAttenuation: false, transparent: true, opacity: 0.55 });
-  const nearMat = new THREE.PointsMaterial({ color: dataBlue, size: 6, sizeAttenuation: false, transparent: true, opacity: 1 });
-  let base: THREE.Points | null = null;
-  let near: THREE.Points | null = null;
+  container.append(renderer.domElement, view.element);
 
   let raf = 0;
   let animToken = 0;
   let k = 0;
+  let size = { w: 0, h: 0 };
   const applyPose = (): void => {
-    const p = tiltPose(k);
-    camera.position.set(...p.pos);
-    camera.lookAt(...p.look);
-    renderer.render(scene, camera);
-  };
-
-  const toWorld = (px: number, py: number, s: Scales): [number, number] => {
-    const w = s.plot.x1 - s.plot.x0;
-    const h = s.plot.y1 - s.plot.y0;
-    return [((px - s.plot.x0) / w - 0.5) * WORLD_W, (0.5 - (py - s.plot.y0) / h) * WORLD_H];
+    view.setPose(k);
+    renderer.render(view.scene, view.camera);
   };
 
   return {
     element: container,
-    update(placed, nearest, s) {
+    update(placed, nearest, s, extras) {
       try {
-        const basePos: number[] = [];
-        const nearPos: number[] = [];
-        for (const p of placed) {
-          const [x, y] = toWorld(s.x(p.pressure_kpa), s.y(p.o2_pct), s);
-          (nearest.has(p.id) ? nearPos : basePos).push(x, y, 0.02);
-        }
-        if (base) { scene.remove(base); base.geometry.dispose(); }
-        if (near) { scene.remove(near); near.geometry.dispose(); }
-        const baseGeo = new THREE.BufferGeometry();
-        baseGeo.setAttribute("position", new THREE.Float32BufferAttribute(basePos, 3));
-        base = new THREE.Points(baseGeo, baseMat);
-        const nearGeo = new THREE.BufferGeometry();
-        nearGeo.setAttribute("position", new THREE.Float32BufferAttribute(nearPos, 3));
-        near = new THREE.Points(nearGeo, nearMat);
-        scene.add(base, near);
+        const toWorld = chartToWorld(s);
+        const moonBand = extras.refs.bands.find((b) => b.shape === "moon-box");
+        view.setDots(placed, nearest, {
+          toWorld: (p, o) => toWorld(s.x(p), s.y(o)),
+          box: moonBand ? moonBoxWorld(moonBand.atm, s) : null,
+          you: extras.sliders ? toWorld(s.x(extras.sliders.pressure_kpa), s.y(extras.sliders.o2_pct)) : null,
+        }, {
+          micro: extras.microLabel,
+          lunar: extras.lunarLabel,
+          earth: extras.earthLabel,
+          x: t("ui.stage.x-axis"),
+          y: t("ui.stage.y-axis"),
+          you: t("ui.stage.your-air"),
+        });
+        view.setFrame(size.w, size.h);
         applyPose();
       } catch (e) { fail(e); }
     },
@@ -200,26 +528,19 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
     },
     resize(w, h) {
       if (w <= 0 || h <= 0) return;
+      size = { w, h };
       try {
         renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
+        view.setFrame(w, h);
         applyPose();
       } catch (e) { fail(e); }
     },
     dispose() {
       cancelAnimationFrame(raf);
       animToken++;
-      scene.traverse((o) => {
-        const mesh = o as THREE.Mesh;
-        if (mesh.geometry) mesh.geometry.dispose();
-        const mat = (mesh as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
-        if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
-        else if (mat) mat.dispose();
-      });
+      view.dispose();
       renderer.dispose();
       renderer.domElement.remove();
-      labels.remove();
     },
   };
 }

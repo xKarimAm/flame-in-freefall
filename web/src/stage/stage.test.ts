@@ -8,7 +8,9 @@ import type { AppState, AtmosphereId, DataApi, Experiment, Family, IncidentsData
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { SELECT_INVESTIGATION, mount } from "./index";
-import { TILT_MS, easeOutCubic, mountTilt, tiltPose, tiltProgress } from "./tilt";
+import * as THREE from "three";
+import { TILT_MS, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltPlaneGeometry, tiltPose, tiltProgress } from "./tilt";
+import type { TiltColors, TiltLabels } from "./tilt";
 import { chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { dotKind, noPressureRows, refShape } from "./plan";
@@ -676,13 +678,14 @@ describe("three.js tilt", () => {
     expect(easeOutCubic(0)).toBe(0);
     expect(easeOutCubic(1)).toBe(1);
     expect(easeOutCubic(0.5)).toBeCloseTo(0.875);
+    // flat: straight at the microgravity plane, chart-like; tilted: tipped to show all three planes
+    const geo = tiltPlaneGeometry();
     const flat = tiltPose(0);
     const tilted = tiltPose(1);
     expect(flat.pos[0]).toBe(0);
-    expect(flat.pos[1]).toBeCloseTo(0);
-    expect(flat.pos[2]).toBe(8);
-    expect(tilted.pos[1]).toBeLessThan(0);
-    expect(tilted.pos[2]).toBeLessThan(8);
+    expect(flat.look).toEqual([0, geo.micro.center[1], geo.micro.center[2]]);
+    expect(tilted.pos[1]).toBeLessThan(flat.pos[1]);
+    expect(tilted.pos[2]).toBeGreaterThan(flat.pos[2]);
     expect(tilted.look).not.toEqual(flat.look);
   });
 
@@ -701,6 +704,172 @@ describe("three.js tilt", () => {
     expect(host.querySelector(".stage-tilt")!.hasAttribute("hidden")).toBe(true);
     expect((host.querySelector(".stage-svg") as SVGSVGElement).style.display).not.toBe("none");
     expect(en["ui.stage.earth-line"]).toBe("Earth gravity (1 g)");
+  });
+});
+
+describe("three.js tilt rebuild (task 20)", () => {
+  it("the Analyst lens never gets the tilt: only public and astronaut on lunar pages", () => {
+    expect(tiltAllowed("analyst", "tilt-lunar")).toBe(false);
+    expect(tiltAllowed("public", "tilt-lunar")).toBe(true);
+    expect(tiltAllowed("astronaut", "tilt-lunar")).toBe(true);
+    expect(tiltAllowed("public", "micro-g")).toBe(false);
+    expect(tiltAllowed("public", "empty")).toBe(false);
+    expect(tiltAllowed("analyst", "micro-g")).toBe(false);
+  });
+
+  it("the Moon label comes from the beat annotation, with the plane label as fallback", () => {
+    const t = (k: string) => `[${k}]`;
+    expect(lunarLabelFor([{ id: "a", text_key: "story.x.annotation", at: "lunar-plane" }], t, "fallback")).toBe("[story.x.annotation]");
+    expect(lunarLabelFor([], t, "fallback")).toBe("fallback");
+    expect(lunarLabelFor([{ id: "b", text_key: "story.x.other", at: "moon-box" }], t, "fallback")).toBe("fallback");
+  });
+
+  it("colours dots exactly as the SVG chart: grey, blue for nearest, orange for kept burning", () => {
+    expect(dotFill("burned", false)).toBe("burned");
+    expect(dotFill("completion", false)).toBe("burned");
+    expect(dotFill("flow-terminated", false)).toBe("burned");
+    expect(dotFill("extinction", false)).toBe("muted");
+    expect(dotFill("self-extinguished", false)).toBe("muted");
+    expect(dotFill("disruption", false)).toBe("muted");
+    expect(dotFill("no-ignition", false)).toBe("muted");
+    expect(dotFill("unknown", false)).toBe("muted");
+    expect(dotFill("burned", true)).toBe("near");
+    expect(dotFill("extinction", true)).toBe("near");
+  });
+
+  it("draws every dot at least 5 px on screen, nearest larger", () => {
+    expect(dotSizePx(false)).toBeGreaterThanOrEqual(5);
+    expect(dotSizePx(true)).toBeGreaterThan(dotSizePx(false));
+  });
+
+  it("puts the Moon box at the moon.json pressure and across the whole oxygen band", () => {
+    const s = chartScales({ w: 500, h: 464 }, { min: 0, max: 100, ticks: [0, 100] }, { bandH: 0, headH: 20, strip: false });
+    const atm = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    expect([atm.pressure_kpa, atm.o2_pct_min, atm.o2_pct_max]).toEqual([56.5, 33.7, 40]);
+    const toWorld = chartToWorld(s);
+    const box = moonBoxWorld(atm, s);
+    expect(box.w).toBeGreaterThan(0);
+    expect(box.top).toBeGreaterThan(box.bottom);
+    expect(box.cx).toBeCloseTo(toWorld(s.x(56.5), 0)[0], 10);
+    expect(box.top).toBeCloseTo(toWorld(0, s.y(40))[1], 10);
+    expect(box.bottom).toBeCloseTo(toWorld(0, s.y(33.7))[1], 10);
+  });
+
+  it("frames all three planes inside the stage box with the Moon plane in the middle", () => {
+    for (const size of [{ w: 900, h: 600 }, { w: 688, h: 700 }, { w: 600, h: 800 }]) {
+      const camera = tiltCamera(tiltPose(1, size.w / size.h), size.w / size.h);
+      camera.updateMatrixWorld();
+      const ndc = (p: readonly [number, number, number]): THREE.Vector3 => new THREE.Vector3(...p).project(camera);
+      const geo = tiltPlaneGeometry();
+      for (const plane of Object.values(geo)) {
+        for (const c of [...plane.corners, plane.center]) {
+          const v = ndc(c);
+          expect(v.x).toBeGreaterThanOrEqual(-1);
+          expect(v.x).toBeLessThanOrEqual(1);
+          expect(v.y).toBeGreaterThanOrEqual(-1);
+          expect(v.y).toBeLessThanOrEqual(1);
+        }
+      }
+      // the Moon plane sits in the middle of the frame, the micro plane above it
+      expect(Math.abs(ndc(geo.lunar.center).y)).toBeLessThan(0.4);
+      expect(ndc(geo.micro.center).y).toBeGreaterThan(ndc(geo.lunar.center).y);
+      expect(ndc(geo.earth.center).y).toBeLessThan(ndc(geo.lunar.center).y);
+      // labels sit just outside their plane corners: keep room so they are not clipped
+      for (const plane of [geo.micro, geo.lunar, geo.earth]) {
+        expect(ndc(plane.corners[3]).y).toBeLessThan(0.85); // top-left corner, label above
+        expect(ndc(plane.corners[0]).y).toBeGreaterThan(-0.85); // bottom-left corner, labels below
+      }
+    }
+  });
+
+  const tiltColors: TiltColors = { ground: "#111111", edge: "#222222", muted: "#333333", near: "#444444", burned: "#555555", moon: "#666666", ink: "#777777" };
+  const tiltTexts: TiltLabels = { micro: "Every NASA test so far", lunar: "No fire test has run in Moon gravity.", earth: "Earth gravity (1 g)", x: "Air pressure (kPa)", y: "Oxygen in the air (%)", you: "Your air" };
+  const tiltScales = () => chartScales({ w: 500, h: 464 }, { min: 0, max: 100, ticks: [0, 100] }, { bandH: 0, headH: 20, strip: false });
+
+  it("builds three filled planes with clear edges, dots only on the micro plane, the Moon box alone on the lunar plane", () => {
+    const view = buildTiltScene(tiltColors, tiltTexts);
+    try {
+      const mesh = (name: string): THREE.Mesh => {
+        const o = view.scene.getObjectByName(name);
+        expect(o).toBeTruthy();
+        return o as THREE.Mesh;
+      };
+      expect(mesh("plane-micro").geometry.type).toBe("PlaneGeometry");
+      expect(mesh("plane-lunar").geometry.type).toBe("PlaneGeometry");
+      expect(mesh("plane-earth").geometry.type).toBe("PlaneGeometry");
+      expect(view.scene.getObjectByName("edge-micro")).toBeTruthy();
+      expect(view.scene.getObjectByName("edge-lunar")).toBeTruthy();
+      expect(view.scene.getObjectByName("edge-earth")).toBeTruthy();
+      // Earth is a thin reference strip, not a full plane
+      const earthH = (mesh("plane-earth").geometry as THREE.PlaneGeometry).parameters.height;
+      const microH = (mesh("plane-micro").geometry as THREE.PlaneGeometry).parameters.height;
+      expect(earthH).toBeLessThan(microH);
+      const s = tiltScales();
+      const cw = chartToWorld(s);
+      const dataToWorld = (p: number, o: number): [number, number] => cw(s.x(p), s.y(o));
+      const atm = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+      view.setDots(
+        [
+          { id: "a", outcome: "burned", pressure_kpa: 60, o2_pct: 30 } as PlacedTest,
+          { id: "b", outcome: "extinction", pressure_kpa: 50, o2_pct: 25 } as PlacedTest,
+        ],
+        new Set(["b"]),
+        { toWorld: dataToWorld, box: moonBoxWorld(atm, s), you: null },
+        tiltTexts,
+      );
+      const kids = (name: string): string[] => (view.scene.getObjectByName(name)?.children ?? []).map((c) => c.name);
+      // the real tests live on the micro plane: one orange kept-burning dot, one blue nearest dot
+      expect(kids("group-micro")).toEqual(expect.arrayContaining(["plane-micro", "edge-micro", "dots-muted", "dots-burned", "dots-near"]));
+      const count = (name: string): number => (view.scene.getObjectByName(name) as THREE.Points).geometry.getAttribute("position").count;
+      expect(count("dots-burned")).toBe(1);
+      expect(count("dots-near")).toBe(1);
+      expect(count("dots-muted")).toBe(0);
+      expect(((view.scene.getObjectByName("dots-burned") as THREE.Points).material as THREE.PointsMaterial).color.getStyle()).toBe(new THREE.Color(tiltColors.burned).getStyle());
+      expect(((view.scene.getObjectByName("dots-near") as THREE.Points).material as THREE.PointsMaterial).color.getStyle()).toBe(new THREE.Color(tiltColors.near).getStyle());
+      // the Moon box is the ONLY thing on the lunar plane: no dots, no marks
+      expect(kids("group-lunar")).toEqual(expect.arrayContaining(["plane-lunar", "edge-lunar", "moon-box"]));
+      expect(view.scene.getObjectByName("group-lunar")!.children.filter((c) => c.type === "Points")).toEqual([]);
+      expect(((view.scene.getObjectByName("moon-box") as THREE.Mesh).material as THREE.MeshBasicMaterial).color.getStyle()).toBe(new THREE.Color(tiltColors.moon).getStyle());
+      // every plane carries a large HTML label fixed to it, plus the axis titles
+      const label = (cls: string): HTMLElement => {
+        const el = view.element.querySelector(`.tilt-label.${cls}`) as HTMLElement | null;
+        expect(el).not.toBeNull();
+        return el!;
+      };
+      expect(label("plane-micro").textContent).toBe(tiltTexts.micro);
+      expect(label("plane-lunar").textContent).toBe(tiltTexts.lunar);
+      expect(label("plane-earth").textContent).toBe(tiltTexts.earth);
+      expect(label("axis-x").textContent).toBe(tiltTexts.x);
+      expect(label("axis-y").textContent).toBe(tiltTexts.y);
+      view.setFrame(800, 600);
+      view.setPose(1);
+      for (const cls of ["plane-micro", "plane-lunar", "plane-earth", "axis-x", "axis-y"]) {
+        const el = label(cls);
+        expect(el.style.left).toMatch(/px$/);
+        expect(el.style.top).toMatch(/px$/);
+        expect(Number.isFinite(parseFloat(el.style.left))).toBe(true);
+      }
+      // without sliders there is no "your air" mark
+      expect(view.scene.getObjectByName("you-mark")).toBeUndefined();
+      expect(label("you").hidden).toBe(true);
+    } finally {
+      view.dispose();
+    }
+  });
+
+  it("draws the your-air mark on the micro plane when the sliders are live", () => {
+    const view = buildTiltScene(tiltColors, tiltTexts);
+    try {
+      const s = tiltScales();
+      const cw = chartToWorld(s);
+      view.setDots([], new Set(), { toWorld: (p, o) => cw(s.x(p), s.y(o)), box: null, you: cw(s.x(56.5), s.y(34)) }, tiltTexts);
+      expect(view.scene.getObjectByName("you-mark")).not.toBeUndefined();
+      const you = view.element.querySelector(".tilt-label.you") as HTMLElement;
+      expect(you.hidden).toBe(false);
+      expect(you.textContent).toBe(tiltTexts.you);
+    } finally {
+      view.dispose();
+    }
   });
 });
 

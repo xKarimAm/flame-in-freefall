@@ -14,7 +14,7 @@ import type { DotKind, RefPlan } from "./plan";
 import { DIAL_IDS, dialSVG, flameSVG, incidentO2 } from "./picture";
 import { renderExplainers } from "./explain";
 import { renderParade } from "./parade";
-import { TILT_MS, mountTilt, type TiltView } from "./tilt";
+import { TILT_MS, lunarLabelFor, mountTilt, tiltAllowed, type TiltView } from "./tilt";
 import { DIAMOND, layoutRefs } from "./refs";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -184,7 +184,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       tiltBox.hidden = true;
       chart.style.display = "";
     };
-    if (lunar && tilt === undefined) {
+    if (tiltAllowed(state.lens, stage.view) && tilt === undefined) {
       try {
         tilt = mountTilt(tiltBox, ctx, disableTilt);
       } catch {
@@ -192,7 +192,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       }
       if (!tilt) tilt = null;
     }
-    const useTilt = lunar && tilt != null;
+    const useTilt = tiltAllowed(state.lens, stage.view) && tilt != null;
     if (useTilt !== tiltOn) {
       tiltOn = useTilt;
       if (useTilt) {
@@ -207,7 +207,13 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     if (useTilt && size) {
       try {
         tilt!.resize(size.w, size.h);
-        tilt!.update(wanted, new Set(nearestRows(state).map((r) => r.id)), scales);
+        tilt!.update(wanted, new Set(nearestRows(state).map((r) => r.id)), scales, {
+          refs,
+          sliders: state.sliders,
+          microLabel: t("ui.stage.tilt.micro"),
+          lunarLabel: lunarLabelFor(stage.annotation ?? [], (k) => t(k), t("ui.stage.lunar-plane")),
+          earthLabel: t("ui.stage.earth-line"),
+        });
       } catch {
         disableTilt();
       }
