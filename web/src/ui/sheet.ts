@@ -7,6 +7,7 @@ import { renderMethod } from "../dash/method";
 import { renderOverview } from "../dash/overview";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import { cite, h, num, numOrMissing, safeHref } from "./dom";
+import "./dashboard.css";
 
 type Tab = "overview" | "compare" | "method" | "map" | "investigations" | "margins" | "tests";
 // "Explore the dashboard" lands on the Dashboard tab: only an explicit table or
@@ -80,6 +81,9 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
       h("p", {}, cite(t("ui.sheet.detail.psi-link"), e.psi_url, "plain")));
   }
 
+  /** The name column shows two lines at most; the full title stays in the tooltip. */
+  const titled = (a: HTMLAnchorElement, title: string): HTMLAnchorElement => (a.setAttribute("title", title), a);
+
   /** Opens the investigation's row (closing any other), without scrolling. */
   function openRow(id: string): boolean {
     const btn = [...body.querySelectorAll<HTMLButtonElement>("button.row-open")].find((b) => b.dataset.investigation === id);
@@ -130,6 +134,10 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     { key: "papers", label: "ui.sheet.col.papers" },
   ];
 
+  /** The sort state as a text arrow beside the button (aria-sort on the th says it to screen readers; the arrow is hidden from them). */
+  const sortArrow = (active: boolean, dir: 1 | -1): HTMLElement =>
+    h("span", { class: "sort-arrow", "aria-hidden": "true" }, ...(active ? [dir === 1 ? "↑" : "↓"] : []));
+
   /** A re-sort rebuilds the table head: put focus back on the new sort button. */
   function refocusSort(label: string): void {
     const next = [...body.querySelectorAll<HTMLButtonElement>("th button.sort")].find((x) => x.textContent === label);
@@ -153,7 +161,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         render();
         refocusSort(t(c.label));
       });
-      th.append(b);
+      th.append(b, sortArrow(c.key === sortKey, sortDir));
       return th;
     })));
   }
@@ -238,6 +246,64 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         cite(r.id, r.source.url, "num"),
       ]),
       [1, 2, 3]);
+  }
+
+  const TESTS_FILE = "data/tests.json";
+  const fileLink = (text: string, file: string, cls?: string): HTMLAnchorElement => h("a", cls ? { href: file, class: cls } : { href: file }, text);
+  const fmt = (n: number): string => n.toLocaleString(store.get().locale);
+
+  /** One stat tile: label above, the number (linked to the data file it was counted from), one plain line under it. */
+  function tile(key: string, value: number, file: string): HTMLElement {
+    return h("div", { class: "sd-tile", role: "listitem" },
+      h("span", { class: "sd-tile-label" }, t(`ui.sheet.sum.${key}.label`)),
+      fileLink(fmt(value), file, "sd-tile-value"),
+      h("span", { class: "sd-tile-note" }, t(`ui.sheet.sum.${key}.note`)));
+  }
+
+  /** "357 of 369 on the chart": both counts link to the tests file they were counted from. */
+  function familyCount(placed: number, total: number): (Node | string)[] {
+    return t("ui.sheet.sum.fam-count").split(/(\{\w+\})/g).map((bit) =>
+      bit === "{placed}" ? fileLink(fmt(placed), TESTS_FILE) : bit === "{total}" ? fileLink(fmt(total), TESTS_FILE) : bit);
+  }
+
+  const pct = (v: number): string => `${Number(v.toFixed(2))}%`;
+
+  /** One bar per family: length = share of all tests, blue part = share of that family placed on the chart. */
+  function familyBars(): HTMLElement {
+    const total = api.data.tests.length;
+    const inFamily = new Map<string, number>();
+    for (const r of api.data.tests) {
+      const f = api.familyOf(r.investigation);
+      if (f) inFamily.set(f, (inFamily.get(f) ?? 0) + 1);
+    }
+    const onChart = new Map<string, number>();
+    for (const p of api.placed()) onChart.set(p.family, (onChart.get(p.family) ?? 0) + 1);
+    return h("div", { class: "sd-families" },
+      h("h3", { class: "sd-h" }, t("ui.sheet.sum.fam-title")),
+      h("p", { class: "sd-caption" }, t("ui.sheet.sum.fam-caption")),
+      h("ul", { class: "sd-fam-list" }, ...FAMILIES.map((f) => {
+        const n = inFamily.get(f) ?? 0;
+        const p = onChart.get(f) ?? 0;
+        return h("li", { class: "sd-fam", "data-family": f },
+          h("span", { class: "sd-fam-name" }, t(`ui.family.${f}`)),
+          h("span", { class: "sd-track", "aria-hidden": "true" },
+            h("span", { class: "sd-bar", style: `width: ${pct(total ? (n / total) * 100 : 0)}` },
+              h("span", { class: "sd-bar-placed", style: `width: ${pct(n ? (p / n) * 100 : 0)}` }))),
+          h("span", { class: "sd-fam-count" }, ...familyCount(p, n)));
+      })));
+  }
+
+  /** The top of the Dashboard tab: four stat tiles, then coverage by family. Every value comes from ctx.api. */
+  function summary(): HTMLElement {
+    const recorded = api.data.tests.filter((r) => r.outcome !== "unknown").length;
+    return h("section", { class: "sd-summary", "aria-label": t("ui.sheet.sum.title") },
+      h("h3", { class: "sd-h" }, t("ui.sheet.sum.title")),
+      h("div", { class: "sd-tiles", role: "list" },
+        tile("investigations", api.data.experiments.length, "data/experiments.json"),
+        tile("tests", api.data.tests.length, TESTS_FILE),
+        tile("plotted", api.coverage().plotted, "data/coverage.json"),
+        tile("outcomes", recorded, TESTS_FILE)),
+      familyBars());
   }
 
   function select(id: string, options: { value: string; text: string }[], current: string | null, onChange: (v: string | null) => void): HTMLSelectElement {
@@ -331,7 +397,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         render();
         refocusSort(t(c.label));
       });
-      th.append(b);
+      th.append(b, sortArrow(c.key === testSortKey, testSortDir));
       return th;
     })));
   }
@@ -399,7 +465,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         invHead(),
         h("tbody", {}, ...rows.map((e) => h("tr", {},
           h("td", {}, openButton(e)),
-          h("td", { class: "title" }, cite(e.title, e.psi_url, "plain")),
+          h("td", { class: "title" }, titled(cite(e.title, e.psi_url, "plain"), e.title)),
           h("td", {}, h("span", {}, t(`ui.family.${e.family}`))),
           h("td", { class: "num" }, num(e.test_count, 0, "", e.psi_url)),
           h("td", { class: "num" }, range(e.o2_pct_range, t("ui.panel.unit.pct"), e.psi_url)),
@@ -463,7 +529,8 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     const next = [tab, sortKey, sortDir, testSortKey, testSortDir, store.get().family, f.fuel, f.outcome, f.plotted, f.search].join("|");
     if (sig !== next) {
       sig = next;
-      body.replaceChildren(tab === "overview" ? renderOverview(ctx) : tab === "compare" ? renderCompare(ctx) : tab === "method" ? renderMethod(ctx).element : tab === "map" ? renderMap(ctx) : tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins());
+      body.replaceChildren(...(tab === "overview" ? [summary(), renderOverview(ctx)]
+        : [tab === "compare" ? renderCompare(ctx) : tab === "method" ? renderMethod(ctx).element : tab === "map" ? renderMap(ctx) : tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins()]));
       if (tab === "investigations" && selectedInv) selectRow(selectedInv, false);
     }
     updateCount();

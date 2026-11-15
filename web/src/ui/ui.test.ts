@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppData, Ctx, DataApi, Experiment, NearestRow, PlacedTest, TestRun } from "../contract";
+import { FAMILIES } from "../contract";
 import { dicts as i18nDicts } from "../i18n/index";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import { createDataApi } from "../data/index";
@@ -125,6 +126,93 @@ describe("ui", () => {
     expect(sheet.querySelector(".margin-table")).not.toBeNull();
     expect(unlinkedNumbers(sheet)).toEqual([]);
     expect(roots().panel.querySelectorAll("a.num").length).toBeGreaterThan(0);
+  });
+
+  describe("analyst dashboard summary: stat tiles, family bars, table quality", () => {
+    const dashCss = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "dashboard.css"), "utf8");
+    const open = () => {
+      const { store, ctx } = setup();
+      store.set({ lens: "analyst" });
+      return { sheet: roots().sheet, ctx };
+    };
+    const fmt = (n: number) => n.toLocaleString("en");
+
+    it("the four tiles show the numbers computed from the data, each linked to its data file", () => {
+      const { sheet, ctx } = open();
+      const tiles = [...sheet.querySelectorAll(".sd-tiles .sd-tile")];
+      expect(tiles).toHaveLength(4);
+      const recorded = tests.filter((r) => r.outcome !== "unknown").length;
+      const want: [string, number, string][] = [
+        ["Investigations", experiments.length, "data/experiments.json"],
+        ["Tests in the data", tests.length, "data/tests.json"],
+        ["Tests on the chart", ctx.api.coverage().plotted, "data/coverage.json"],
+        ["Tests with a recorded outcome", recorded, "data/tests.json"],
+      ];
+      want.forEach(([label, value, file], i) => {
+        expect(tiles[i]!.querySelector(".sd-tile-label")!.textContent).toBe(label);
+        const a = tiles[i]!.querySelector<HTMLAnchorElement>("a.sd-tile-value")!;
+        expect(a.textContent).toBe(fmt(value));
+        expect(a.getAttribute("href")).toBe(file);
+        expect(tiles[i]!.querySelector(".sd-tile-note")!.textContent!.length).toBeGreaterThan(0);
+      });
+      expect(recorded).toBeGreaterThan(0);
+      expect(recorded).toBeLessThanOrEqual(tests.length);
+    });
+
+    it("the family bars: one row per family, widths equal the data's shares, counts in words", () => {
+      const { sheet, ctx } = open();
+      const rows = [...sheet.querySelectorAll<HTMLElement>(".sd-fam")];
+      expect(rows.map((r) => r.dataset.family)).toEqual([...FAMILIES]);
+      const placed = ctx.api.placed();
+      for (const row of rows) {
+        const f = row.dataset.family!;
+        const n = tests.filter((r) => ctx.api.familyOf(r.investigation) === f).length;
+        const p = placed.filter((x) => x.family === f).length;
+        const w = (sel: string) => parseFloat(row.querySelector<HTMLElement>(sel)!.style.width);
+        expect(Math.abs(w(".sd-bar") - (n / tests.length) * 100)).toBeLessThanOrEqual(0.1);
+        expect(Math.abs(w(".sd-bar-placed") - (n ? (p / n) * 100 : 0))).toBeLessThanOrEqual(0.1);
+        expect(row.querySelector(".sd-fam-count")!.textContent).toBe(`${fmt(p)} of ${fmt(n)} on the chart`);
+        expect(row.querySelector(".sd-fam-name")!.textContent!.length).toBeGreaterThan(0);
+      }
+      expect(sheet.querySelector(".sd-caption")!.textContent).toMatch(/grey/i);
+      expect(sheet.querySelector(".sd-caption")!.textContent).toMatch(/blue/i);
+    });
+
+    it("every number in the new blocks is inside a source link or carries data-own", () => {
+      const { sheet } = open();
+      const bad: string[] = [];
+      const walker = document.createTreeWalker(sheet.querySelector(".sd-summary")!, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (/\d/.test(n.textContent ?? "") && !n.parentElement!.closest('a[href^="https://"], a[href^="data/"], [data-own]')) bad.push(n.textContent!.trim());
+      }
+      expect(bad).toEqual([]);
+    });
+
+    it("sortable headers show the sort state as a text arrow beside aria-sort and keep sorting", () => {
+      const { sheet } = open();
+      sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
+      const arrow = () => sheet.querySelector('table.investigations th:not([aria-sort="none"]) .sort-arrow')?.textContent;
+      expect(sheet.querySelector('table.investigations th[aria-sort="ascending"]')).not.toBeNull();
+      expect(arrow()).toBe("↑");
+      sheet.querySelector<HTMLButtonElement>("table.investigations th[aria-sort=ascending] button.sort")!.click();
+      expect(sheet.querySelector('table.investigations th[aria-sort="descending"]')).not.toBeNull();
+      expect(arrow()).toBe("↓");
+      expect(sheet.querySelectorAll("table.investigations th .sort-arrow:not(:empty)")).toHaveLength(1);
+    });
+
+    it("the stylesheet sets the column, sticky tabs and head, 44 px rows, tiles and bars", () => {
+      expect(dashCss).toMatch(/--sheet-col:\s*1200px/);
+      expect(dashCss).toMatch(/--sheet-pad:\s*32px/);
+      expect(dashCss).toMatch(/#sheet \.tabs\s*\{[^}]*position:\s*sticky;\s*top:\s*0/);
+      expect(dashCss).toMatch(/#sheet thead th\s*\{[^}]*top:\s*var\(--sheet-tabs-h\)/);
+      expect(dashCss).toMatch(/tbody tr:not\(\.detail\) > td\s*\{[^}]*height:\s*44px/);
+      expect(dashCss).toMatch(/\.missing\s*\{[^}]*font-style:\s*italic/);
+      expect(dashCss).toMatch(/h3\s*\{[^}]*font-size:\s*20px;\s*font-weight:\s*700;[^}]*margin:\s*32px/);
+      expect(dashCss).toMatch(/\.sd-tiles\s*\{[^}]*repeat\(4,/);
+      expect(dashCss).toMatch(/max-width:\s*899px\)[\s\S]*?\.sd-tiles\s*\{[^}]*repeat\(2,/);
+      expect(dashCss).toMatch(/-webkit-line-clamp:\s*2/);
+      expect(dashCss).not.toMatch(/gradient|box-shadow:[^;]*(rgba|px [0-9]+px [0-9]+px)/);
+    });
   });
 
   describe("dashboard overview tab (backend lane D3)", () => {
