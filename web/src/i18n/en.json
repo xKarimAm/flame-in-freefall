@@ -16,6 +16,7 @@
   "ui.stage.coverage": "Plotted {plotted} of {total} tests",
   "ui.stage.microg-plane": "Microgravity: where every NASA PSI fire test ran",
   "ui.stage.lunar-plane": "Moon gravity (1/6 g)",
+  "ui.stage.earth-line": "Earth gravity (1 g)",
   "ui.stage.your-air": "Your air",
   "ui.stage.legend.other": "A real test",
   "ui.stage.legend.nearest": "Nearest tests to this air",

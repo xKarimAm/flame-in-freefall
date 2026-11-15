@@ -8,6 +8,7 @@ import type { AppState, AtmosphereId, DataApi, Experiment, Family, IncidentsData
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { SELECT_INVESTIGATION, mount } from "./index";
+import { TILT_MS, easeOutCubic, mountTilt, tiltPose } from "./tilt";
 import { chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { dotKind, noPressureRows, refShape } from "./plan";
@@ -640,6 +641,51 @@ describe("linked selection", () => {
     expect(same.length).toBeGreaterThan(0);
     expect(same.every((d) => d.getAttribute("class") !== "dot")).toBe(true);
     expect(dots.filter((d) => !same.includes(d)).every((d) => d.getAttribute("class") === "dot")).toBe(true);
+  });
+});
+
+describe("three.js tilt", () => {
+  it("stays on the SVG chart when WebGL is missing", () => {
+    const host = document.createElement("div");
+    mount(host, { api: fakeApi(), store: createStore(), dicts, t: makeT(() => "en") }, { size: SIZE });
+    const ctx = { api: fakeApi(), store: createStore(), dicts, t: makeT(() => "en") };
+    expect(mountTilt(host, ctx, () => {})).toBeNull();
+  });
+
+  it("stays on the SVG chart under reduced motion", () => {
+    const real = (window as unknown as Record<string, unknown>)["matchMedia"];
+    (window as unknown as Record<string, unknown>)["matchMedia"] = () => ({ matches: true });
+    try {
+      const host = document.createElement("div");
+      const ctx = { api: fakeApi(), store: createStore(), dicts, t: makeT(() => "en") };
+      expect(mountTilt(host, ctx, () => {})).toBeNull();
+    } finally {
+      if (real !== undefined) (window as unknown as Record<string, unknown>)["matchMedia"] = real;
+      else delete (window as unknown as Record<string, unknown>)["matchMedia"];
+    }
+  });
+
+  it("eases the camera over 600 ms from flat to tilted", () => {
+    expect(TILT_MS).toBe(600);
+    expect(easeOutCubic(0)).toBe(0);
+    expect(easeOutCubic(1)).toBe(1);
+    expect(easeOutCubic(0.5)).toBeCloseTo(0.875);
+    const flat = tiltPose(0);
+    const tilted = tiltPose(1);
+    expect(flat.pos[0]).toBe(0);
+    expect(flat.pos[1]).toBeCloseTo(0);
+    expect(flat.pos[2]).toBe(8);
+    expect(tilted.pos[1]).toBeLessThan(0);
+    expect(tilted.pos[2]).toBeLessThan(8);
+    expect(tilted.look).not.toEqual(flat.look);
+  });
+
+  it("keeps the SVG lunar band and a visible chart on tilt pages without WebGL", () => {
+    const { host, layer } = setup(compareStage, null, {}, SIZE);
+    expect(layer("lunar-band").querySelector("rect.lunar-band")).not.toBeNull();
+    expect(host.querySelector(".stage-tilt")!.hasAttribute("hidden")).toBe(true);
+    expect((host.querySelector(".stage-svg") as SVGSVGElement).style.display).not.toBe("none");
+    expect(en["ui.stage.earth-line"]).toBe("Earth gravity (1 g)");
   });
 });
 

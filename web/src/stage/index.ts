@@ -13,6 +13,7 @@ import type { DotKind, RefPlan } from "./plan";
 import { dialSVG, flameSVG, incidentO2 } from "./picture";
 import { renderExplainers } from "./explain";
 import { renderParade } from "./parade";
+import { TILT_MS, mountTilt, type TiltView } from "./tilt";
 import { DIAMOND, layoutRefs } from "./refs";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -82,6 +83,11 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
 
   const dots = new Map<string, SVGElement>(); // test id -> circle, reused so class changes can transition
   let selectedInv: string | null = null; // the linked selection (a dot click or a sheet row), not the story
+  const tiltBox = html("div", "stage-tilt");
+  tiltBox.hidden = true;
+  plotBox.append(tiltBox);
+  let tilt: TiltView | null | undefined; // undefined = not tried yet
+  let tiltOn = false;
   let size: Size | null = opts.size ?? null;
   // what the last full draw decided; the live draw (sliders) reuses it
   let scales: Scales | null = null;
@@ -161,6 +167,50 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const bandH = lunar ? 28 + noteLines.length * LINE_PX + 10 : 0;
     scales = chartScales(size, dom, { bandH, headH, strip: strip.length > 0 });
     const { plot, x, y } = scales;
+
+    // the three.js tilt replaces the SVG chart on the lunar-gravity pages when it can run;
+    // otherwise the SVG lunar band below stays the chart (and the accessible version).
+    // Any tilt failure falls back the same way, so a broken tilt can never break the stage.
+    const disableTilt = (): void => {
+      tiltOn = false;
+      try {
+        tilt?.dispose();
+      } catch {
+        /* already broken */
+      }
+      tilt = null;
+      tiltBox.replaceChildren();
+      tiltBox.hidden = true;
+      chart.style.display = "";
+    };
+    if (lunar && tilt === undefined) {
+      try {
+        tilt = mountTilt(tiltBox, ctx, disableTilt);
+      } catch {
+        tilt = null;
+      }
+      if (!tilt) tilt = null;
+    }
+    const useTilt = lunar && tilt != null;
+    if (useTilt !== tiltOn) {
+      tiltOn = useTilt;
+      if (useTilt) {
+        tiltBox.hidden = false;
+        tilt!.setTilted(true);
+      } else {
+        tilt!.setTilted(false);
+        window.setTimeout(() => { if (!tiltOn) tiltBox.hidden = true; }, TILT_MS);
+      }
+    }
+    chart.style.display = useTilt ? "none" : "";
+    if (useTilt && size) {
+      try {
+        tilt!.resize(size.w, size.h);
+        tilt!.update(wanted, new Set(nearestRows(state).map((r) => r.id)), scales);
+      } catch {
+        disableTilt();
+      }
+    }
 
     // axes, quiet gridlines, titles in words
     gAxes.replaceChildren();
@@ -392,7 +442,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   if (!opts.size) {
     const measure = (): void => {
       const r = plotBox.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) size = { w: r.width, h: r.height };
+      if (r.width > 0 && r.height > 0) {
+        size = { w: r.width, h: r.height };
+        tilt?.resize(r.width, r.height);
+      }
       drawAll();
     };
     if (typeof ResizeObserver !== "undefined") new ResizeObserver(measure).observe(plotBox);
