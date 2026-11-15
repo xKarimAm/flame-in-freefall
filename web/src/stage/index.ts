@@ -6,7 +6,7 @@ import { SLIDER_RANGE } from "../contract";
 import type { AppState, Ctx, Incident, NearestRow, PlacedTest } from "../contract";
 import { queryFromState } from "../store";
 import { dataLink } from "../ui/dom";
-import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartScales, niceRange, wrap } from "./layout";
+import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartHeight, chartScales, niceRange, wrap } from "./layout";
 import type { Size } from "./layout";
 import type { Scales } from "./layout";
 import { dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
@@ -126,10 +126,6 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       drawIncidents(stage.incident_ids ?? []);
       return;
     }
-    if (!size || size.w <= 0 || size.h <= 0) return;
-
-    chart.setAttribute("viewBox", `0 0 ${size.w} ${size.h}`);
-    chart.setAttribute("aria-label", t("ui.stage.title"));
 
     const empty = stage.view === "empty";
     const lunar = stage.view === "tilt-lunar";
@@ -140,6 +136,19 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const wanted = empty ? [] : drawnTests(stage, placed).filter((w) => !fam || w.family === fam);
     const strip = empty ? [] : noPressureRows(stage, api.notPlaced()).filter((r) => !fam || r.family === fam);
     noPressure = strip.length;
+    // A linked selection (dot click or sheet row) joins the beat highlight as the investigation.
+    const hl = selectedInv ? { ...stage.highlight, investigation: selectedInv } : stage.highlight;
+    // the legend (with the counter line) renders before the chart: the chart height is derived
+    // from the stage box minus this measured chrome
+    const kindSet = new Set<DotKind>();
+    for (const test of wanted) kindSet.add(dotKind(test, hl));
+    for (const row of strip) kindSet.add(dotKind(row, hl));
+    kinds = kindSet;
+    legend.replaceChildren(...legendHTML(nearestRows(state)));
+    if (!opts.size) fit();
+    if (!size || size.w <= 0 || size.h <= 0) return;
+    chart.setAttribute("viewBox", `0 0 ${size.w} ${size.h}`);
+    chart.setAttribute("aria-label", t("ui.stage.title"));
 
     // x domain: computed from the tests and references shown (see pressuresForDomain).
     // Every placed test in a shown family stays on the chart, high-pressure ones included: the axis grows
@@ -152,8 +161,6 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     // text that moves the plot down: the plane label + caption rows, and the lunar band
     const x0 = MARGIN.left + (strip.length ? STRIP_W : 0);
     const plotW = Math.max(40, size.w - MARGIN.right - x0);
-    // A linked selection (dot click or sheet row) joins the beat highlight as the investigation.
-    const hl = selectedInv ? { ...stage.highlight, investigation: selectedInv } : stage.highlight;
     const headChars = Math.max(8, Math.floor((size.w - MARGIN.left - MARGIN.right) / (CHAR_PX + 0.5)));
     const planeLines = wrap(t("ui.stage.microg-plane"), headChars);
     const caption = captionOf(wanted, hl);
@@ -262,10 +269,8 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     }
 
     // dots, one circle per drawn test; the highlight colours only the ones it names
-    const kindSet = new Set<DotKind>();
     for (const test of wanted) {
       const kind = dotKind(test, hl);
-      kindSet.add(kind);
       let c = dots.get(test.id);
       if (!c) {
         c = svg("circle", { "data-id": test.id });
@@ -290,7 +295,6 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       gStrip.append(rect);
       for (const row of strip) {
         const kind = dotKind(row, hl);
-        kindSet.add(kind);
         const tick = svg("line", { class: kind === "default" ? "ptick" : `ptick ${kind}`, x1: sx + 4, x2: sx + sw - 4, y1: y(row.o2_pct), y2: y(row.o2_pct), "data-id": row.id });
         tick.append(svg("title", {}, t("ui.stage.tick-title", { fuel: row.fuel ?? t("ui.stage.no-fuel"), o2: row.o2_pct, outcome: row.outcome })));
         const inv = row.investigation;
@@ -299,7 +303,6 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
         gStrip.append(tick);
       }
     }
-    kinds = kindSet;
 
     drawRefs(stage.annotation ?? []);
     drawLive();
@@ -379,16 +382,21 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       const left = px - scales.plot.x0 >= label.length * CHAR_PX + arm + 8;
       gYou.append(svg("text", { class: "you-label", x: left ? px - arm - 4 : px + arm + 4, y: py - arm, "text-anchor": left ? "end" : "start" }, label));
     }
+    legend.replaceChildren(...legendHTML(rows));
+  }
+
+  /** Legend in words plus the "Plotted N of M" counter line; needs no scales, so the full
+   *  draw renders it before fitting the chart height to the box minus this chrome. */
+  function legendHTML(rows: NearestRow[]): HTMLElement[] {
+    const state = store.get();
     const items = legendItems(t, { kinds, nearest: rows.length > 0, refs, you: state.sliders !== null, noPressure }, state.lens);
-    legend.replaceChildren(
-      ...items.map((item) => {
-        const li = html("li");
-        const sw = html("span", `sw sw-${item.swatch}`);
-        sw.setAttribute("aria-hidden", "true");
-        li.append(sw, item.text);
-        return li;
-      }),
-    );
+    const out = items.map((item) => {
+      const li = html("li");
+      const sw = html("span", `sw sw-${item.swatch}`);
+      sw.setAttribute("aria-hidden", "true");
+      li.append(sw, item.text);
+      return li;
+    });
     if (state.stage.coverage) {
       const { plotted, total } = api.coverage();
       const kids: (Node | string)[] = [];
@@ -401,8 +409,18 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       }
       const li = html("li", "coverage");
       li.append(...kids);
-      legend.append(li);
+      out.push(li);
     }
+    return out;
+  }
+
+  /** Chart height derived from the stage box minus the measured legend, parade and explainer
+   *  heights, with breathing room so the counter line is never cut at the stage edge. */
+  function fit(): void {
+    const chrome = legend.offsetHeight + (parade.hidden ? 0 : parade.offsetHeight) + (explainers.hidden ? 0 : explainers.offsetHeight);
+    const w = Math.max(40, root.clientWidth);
+    size = { w, h: chartHeight(root.clientHeight, chrome) };
+    plotBox.style.height = `${size.h}px`;
   }
 
   // ---------- incident view: one large page per incident ----------
@@ -481,15 +499,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   });
 
   if (!opts.size) {
-    const measure = (): void => {
-      const r = plotBox.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) {
-        size = { w: r.width, h: r.height };
-        tilt?.resize(r.width, r.height);
-      }
-      drawAll();
-    };
-    if (typeof ResizeObserver !== "undefined") new ResizeObserver(measure).observe(plotBox);
+    // the chart height is derived inside drawAll from the stage box minus the measured
+    // legend, parade and explainer heights, so measuring here only means a full redraw
+    const measure = (): void => drawAll();
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(measure).observe(root);
     else window.addEventListener("resize", measure);
     measure();
   } else drawAll();

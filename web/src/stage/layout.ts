@@ -23,6 +23,14 @@ export const MARGIN = { left: 52, right: 16, top: 8, bottom: 44 };
 export const STRIP_W = 30;
 /** The plot never gets shorter than this, even when the band text is long. */
 export const MIN_PLOT_H = 120;
+/** Breathing room below the legend so the coverage line is never cut at the stage edge. */
+export const CHART_RESERVE_PX = 8;
+
+/** Chart height derived from the stage box minus the measured legend, parade and explainer
+ *  heights (all measured, never typed). Pure. */
+export function chartHeight(boxH: number, chromeH: number): number {
+  return Math.max(80, boxH - chromeH - CHART_RESERVE_PX);
+}
 
 /** Round-number axis over [min, max]: a step of 1, 2, 2.5 or 5 times a power of ten, the smallest
  *  step that keeps the tick count at maxTicks or fewer. A small pad (4% of the span) keeps dots and

@@ -11,7 +11,7 @@ import { SELECT_INVESTIGATION, mount } from "./index";
 import * as THREE from "three";
 import { TILT_MS, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltPlaneGeometry, tiltPose, tiltProgress } from "./tilt";
 import type { TiltColors, TiltLabels } from "./tilt";
-import { chartScales, niceRange, overlaps, wrap } from "./layout";
+import { CHART_RESERVE_PX, chartHeight, chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { dotKind, noPressureRows, refShape } from "./plan";
 import type { RefPlan } from "./plan";
@@ -135,6 +135,18 @@ describe("scale helpers", () => {
   });
   it("wraps words by length", () => {
     expect(wrap("aa bb cc dd", 5)).toEqual(["aa bb", "cc dd"]);
+  });
+});
+
+describe("the chart, legend and counter fit the stage box (task 25)", () => {
+  it("derives the chart height from the box minus the measured chrome, with breathing room", () => {
+    expect(CHART_RESERVE_PX).toBe(8);
+    expect(chartHeight(744, 103)).toBe(744 - 103 - CHART_RESERVE_PX);
+    expect(chartHeight(800, 0)).toBe(800 - CHART_RESERVE_PX);
+    expect(chartHeight(100, 90)).toBe(80); // tiny box: clamped, never negative
+  });
+  it("sizes the plot box explicitly from that derivation instead of stretching it", () => {
+    expect(css).toMatch(/\.stage-plot\s*\{[^}]*flex:\s*none/);
   });
 });
 
