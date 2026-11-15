@@ -108,11 +108,11 @@ describe("ui", () => {
 
   it("safeHref keeps only https: links, and cite uses it (task 39)", () => {
     expect(safeHref("https://ntrs.nasa.gov/citations/20220006612")).toBe("https://ntrs.nasa.gov/citations/20220006612");
-    expect(safeHref("javascript:alert(1)")).toBe("#");
-    expect(safeHref("http://example.com/x")).toBe("#");
+    expect(safeHref("javascript:alert(1)")).toBe("#"); // taste-skill-ignore: the probe value under test
+    expect(safeHref("http://example.com/x")).toBe("#"); // taste-skill-ignore: reserved example domain
     expect(safeHref("10.1016/j.fuel.2013.02.025")).toBe("#");
     expect(cite("x", "javascript:alert(1)").getAttribute("href")).toBe("#");
-    expect(cite("x", "https://example.com").getAttribute("href")).toBe("https://example.com");
+    expect(cite("x", "https://example.com").getAttribute("href")).toBe("https://example.com"); // taste-skill-ignore: reserved example domain
   });
 
   it("every number in the panel and the sheet is linked to its source or marked data-own", () => {
@@ -307,6 +307,15 @@ describe("ui", () => {
     );
   });
 
+  it("two columns on desktop, a pinned solid stage on small screens (task 41)", () => {
+    const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
+    // story column left 40 %, stage right 60 %: they never share space
+    expect(base).toMatch(/grid-template-columns:\s*40% 60%/);
+    // under 1100 px the stage pins under the header at 45 % height, solid, above the story
+    expect(base).toMatch(/#stage\s*\{[^}]*height:\s*45vh[^}]*z-index:\s*12[^}]*background:\s*var\(--space-deep\)/);
+    expect(base).toMatch(/body\[data-stage-hidden="true"\] #stage\s*\{\s*visibility:\s*hidden/);
+  });
+
   it("the answer is large type", () => {
     expect(css).toMatch(/\.answer\s*\{[^}]*font-size:\s*20px/);
   });
@@ -422,6 +431,20 @@ describe("ui", () => {
     picker.value = "es";
     picker.dispatchEvent(new Event("change", { bubbles: true }));
     expect(document.activeElement).toBe(roots().chrome.querySelector(".locale-select"));
+  });
+
+  it("the Stories overlay uses its own title class, not the engine's (task 42)", () => {
+    setup();
+    document.body.insertAdjacentHTML(
+      "afterbegin",
+      `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="x"></section>`,
+    );
+    const storiesBtn = [...roots().chrome.querySelectorAll("button")].find((b) => b.textContent === "Stories")!;
+    storiesBtn.click();
+    expect(roots().overlay.querySelectorAll(".story-card .overlay-story-title").length).toBe(1);
+    expect(roots().overlay.querySelector(".story-card .story-title")).toBeNull();
+    expect(css).toMatch(/\.overlay-story-title\s*\{/);
+    expect(css).not.toMatch(/^\.story-title\s*\{/m);
   });
 
   it("the focus ring is white on dark and ink on the light sheet, never yellow (task 36d)", () => {

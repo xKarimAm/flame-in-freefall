@@ -4,7 +4,7 @@
   "ui.engine.sources": "Sources",
   "ui.engine.pages": "Story pages",
   "ui.engine.act": "Act {n}",
-  "ui.engine.chapter": "Chapter {n}",
+  "ui.engine.chapterTitle": "Chapter {n}. {title}",
   "ui.engine.page": "Page {n} of {total}",
   "ui.cover.title": "Fire, oxygen and the Moon",
   "ui.cover.lead": "NASA space-fire tests on one chart, with the ones that cannot be placed listed beside it, and where the evidence for a Moon base runs out.",

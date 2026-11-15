@@ -135,7 +135,7 @@ table.test-rows { margin-top: 12px; font-size: 14px; }
 .story-num { display: block; font-size: 56px; font-weight: 700; line-height: 1; margin-bottom: 8px; }
 .story-card:hover { border-color: var(--ink-dark); }
 .story-act { display: block; color: var(--muted-dark); font-size: 14px; }
-.story-title { display: block; font-size: 20px; font-weight: 500; }
+.overlay-story-title { display: block; font-size: 20px; font-weight: 500; }
 .library-open { margin-top: 16px; }
 .library-title { font-size: 24px; margin: 16px 0 0; }
 .lib-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 16px; }

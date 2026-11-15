@@ -122,7 +122,7 @@ export function mountOverlay(
         { type: "button", class: "story-card" },
         h("span", { class: "story-num", "aria-hidden": "true" }, sec.dataset.act ?? ""),
         h("span", { class: "story-act" }, t("ui.engine.act", { n: sec.dataset.act ?? "" })),
-        h("span", { class: "story-title" }, sec.dataset.title ?? sec.dataset.story ?? ""),
+        h("span", { class: "overlay-story-title" }, sec.dataset.title ?? sec.dataset.story ?? ""),
       );
       card.addEventListener("click", () => {
         close();

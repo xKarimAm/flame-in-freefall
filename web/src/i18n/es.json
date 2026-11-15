@@ -4,7 +4,6 @@
   "ui.engine.sources": "Fuentes",
   "ui.engine.pages": "Páginas de la historia",
   "ui.engine.act": "Acto {n}",
-  "ui.engine.chapter": "Capítulo {n}",
   "ui.engine.page": "Página {n} de {total}",
   "ui.cover.title": "Fuego, oxígeno y la Luna",
   "ui.cover.lead": "Pruebas de fuego en el espacio de NASA en un solo gráfico, con las que no se pueden ubicar en una lista al lado, y dónde se acaban las pruebas para una base en la Luna.",

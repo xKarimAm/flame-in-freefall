@@ -42,7 +42,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const texts: HTMLElement[] = [];
   const labels: HTMLElement[] = []; // the "Sources" label of each step (a detached stub when the beat has no sources)
   const pages: HTMLElement[] = []; // the "Page n of total" line of each step
-  const headings: { section: HTMLElement; label: HTMLElement; h2: HTMLElement; question: HTMLElement; key: string; act: number }[] = [];
+  const headings: { section: HTMLElement; h2: HTMLElement; question: HTMLElement; key: string; act: number }[] = [];
   const sections = new Map<string, HTMLElement>();
 
   el.replaceChildren();
@@ -60,12 +60,11 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
       section.dataset.story = story.id;
       section.dataset.act = String(story.act);
       const header = node("header", "chapter");
-      const label = node("p", "chapter-label");
       const h2 = node("h2", "story-title");
       const question = node("p", "chapter-question"); // attached in render() only when the dictionary has the key
-      header.append(label, h2);
+      header.append(h2);
       section.append(header);
-      headings.push({ section, label, h2, question, key: story.title_key, act: story.act });
+      headings.push({ section, h2, question, key: story.title_key, act: story.act });
       sections.set(story.id, section);
       el.append(section);
     }
@@ -147,6 +146,18 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     });
   }
 
+  /** The stage hides while the cover or a chapter page fills the screen. */
+  function updateStageHidden(): void {
+    const vh = window.innerHeight;
+    const inView = (n: Element): boolean => {
+      const r = n.getBoundingClientRect();
+      return r.top < vh && r.bottom > 0;
+    };
+    const cover = el.querySelector(".cover");
+    const chapter = [...el.querySelectorAll(".chapter")].some(inView);
+    document.body.dataset.stageHidden = cover && inView(cover) || chapter ? "true" : "false";
+  }
+
   function render(): void {
     const { lens, locale } = ctx.store.get();
     el.dataset.lens = lens;
@@ -166,9 +177,8 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
       texts[i].textContent = resolveText(ctx.dicts, beat.text, lens, locale);
       labels[i].textContent = ctx.t("ui.engine.sources");
     });
-    for (const { section, label, h2, question, key, act } of headings) {
-      label.textContent = ctx.t("ui.engine.chapter", { n: act });
-      h2.textContent = ctx.t(key);
+    for (const { section, h2, question, key, act } of headings) {
+      h2.textContent = ctx.t("ui.engine.chapterTitle", { n: act, title: ctx.t(key) });
       section.dataset.title = h2.textContent;
       const qKey = key.replace(/\.title$/, ".question");
       const q = ctx.t(qKey);
@@ -222,6 +232,11 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   ctx.store.subscribe((s, prev) => {
     if (s.lens !== prev.lens || s.locale !== prev.locale) render();
   });
+  const onScroll = (): void => {
+    if (el.isConnected) updateStageHidden();
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  updateStageHidden();
 
   if (steps.length === 0) return;
   makeScroller()

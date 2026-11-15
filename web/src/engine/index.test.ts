@@ -53,8 +53,8 @@ describe("engine mount", () => {
     const section = el.querySelector("#story-moon-air")!;
     expect(section.getAttribute("data-story")).toBe("moon-air");
     expect(section.getAttribute("data-act")).toBe("3");
-    expect(section.getAttribute("data-title")).toBe(dicts.en!["story.moon-air.title"]);
-    expect(section.querySelector("h2")!.textContent).toBe(dicts.en!["story.moon-air.title"]);
+    expect(section.getAttribute("data-title")).toBe(`Chapter 3. ${dicts.en!["story.moon-air.title"]}`);
+    expect(section.querySelector("h2")!.textContent).toBe(`Chapter 3. ${dicts.en!["story.moon-air.title"]}`);
     const f = flat[slidersBeat];
     const step = document.getElementById(`beat-${f.story.id}-${f.scene.id}-${f.beat.id}`)!;
     expect(step.classList.contains("step")).toBe(true);
@@ -142,8 +142,11 @@ describe("engine mount", () => {
       expect(chapter.tagName).toBe("HEADER");
       expect(chapter.classList.contains("chapter")).toBe(true);
       expect(chapter.classList.contains("step")).toBe(false);
-      expect(chapter.querySelector(".chapter-label")!.textContent).toBe(`Chapter ${story.act}`);
-      expect(chapter.querySelector("h2.story-title")!.textContent).toBe(dicts.en![story.title_key]);
+      // one line of large type, sentence case: the act and the title together, no label
+      expect(chapter.querySelector(".chapter-label")).toBeNull();
+      expect(chapter.querySelector("h2.story-title")!.textContent).toBe(
+        `Chapter ${story.act}. ${dicts.en![story.title_key]}`,
+      );
     }
   });
 
@@ -320,6 +323,45 @@ describe("engine mount", () => {
       Object.defineProperty(window, "scrollY", { configurable: true, value: 0, writable: true });
       document.documentElement.lang = "en";
     }
+  });
+
+  it("columns never share space and the stage hides behind covers and chapters (task 41)", () => {
+    expect(css).toMatch(/\.chapter\s*\{[^}]*min-height:\s*100vh/);
+    // inactive cards dim by text colour; nothing is translucent enough to show through
+    expect(css).toMatch(/\.step-card\s*\{[^}]*color:\s*var\(--muted-dark\)/);
+    expect(css).not.toMatch(/\.step-card\s*\{[^}]*opacity/);
+    expect(css).toMatch(/\.step\.is-active \.step-card\s*\{\s*color:\s*var\(--ink-dark\)/);
+  });
+
+  it("hides the stage while the cover or a chapter page is on screen (task 41c)", () => {
+    const { el } = setup();
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
+    const cover = el.querySelector(".cover")!;
+    const chapter = el.querySelector(".chapter")!;
+    const rect = (top: number, h: number): DOMRect =>
+      ({ top, bottom: top + h, left: 0, right: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+    try {
+      cover.getBoundingClientRect = () => rect(0, 800);
+      chapter.getBoundingClientRect = () => rect(2000, 400);
+      window.dispatchEvent(new Event("scroll"));
+      expect(document.body.dataset.stageHidden).toBe("true");
+      cover.getBoundingClientRect = () => rect(-900, 800);
+      chapter.getBoundingClientRect = () => rect(2000, 400);
+      window.dispatchEvent(new Event("scroll"));
+      expect(document.body.dataset.stageHidden).toBe("false");
+      chapter.getBoundingClientRect = () => rect(100, 800);
+      window.dispatchEvent(new Event("scroll"));
+      expect(document.body.dataset.stageHidden).toBe("true");
+    } finally {
+      delete document.body.dataset.stageHidden;
+    }
+  });
+
+  it("chapter titles are large sentence case with no uppercase tracking (task 42)", () => {
+    expect(css).toMatch(/\.story-title\s*\{[^}]*font-size:\s*clamp\(2\.25rem,\s*5vw,\s*3\.5rem\)/);
+    expect(css).toMatch(/\.chapter-question\s*\{[^}]*font-size:\s*1\.5rem/);
+    expect(css).not.toMatch(/text-transform:\s*uppercase/);
+    expect(css).not.toMatch(/letter-spacing/);
   });
 
   it("pages snap gently and dots sit outside the cards", () => {

@@ -34,9 +34,9 @@
 }
 .cover-cue { margin: 40px 0 0; color: var(--muted-dark); font-size: 0.875rem; font-weight: 500; }
 
-/* chapter page: full-width electric-blue field between acts */
+/* chapter page: a full viewport tall electric-blue field between acts */
 .chapter {
-  min-height: 70vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -45,7 +45,6 @@
   color: var(--ink-dark);
   pointer-events: auto;
 }
-.chapter-label { margin: 0 0 12px; font-size: 0.875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted-dark); }
 .story-title {
   max-width: 24ch;
   margin: 0;
@@ -54,7 +53,7 @@
   line-height: 1.1;
   color: var(--ink-dark);
 }
-.chapter-question { max-width: 44ch; margin: 20px 0 0; font-size: clamp(1.125rem, 1.6vw, 1.5rem); line-height: 1.4; }
+.chapter-question { max-width: 44ch; margin: 20px 0 0; font-size: 1.5rem; line-height: 1.4; }
 
 /* beat pages */
 #story .step {
@@ -63,19 +62,23 @@
   align-items: center;
 }
 #story .story:last-child .step:last-child { margin-bottom: 40vh; }
+/* cards are opaque: nothing shows through them. Inactive cards dim by text colour. */
 .step-card {
   width: min(26rem, 92vw);
   margin-left: 4vw;
   padding: 28px;
   background: var(--space-black);
-  color: var(--ink-dark);
+  color: var(--muted-dark);
   border-left: 4px solid var(--data-on-dark);
-  opacity: 0.45;
-  transition: opacity 200ms;
 }
 .step[data-kind="hook"] .step-card,
 .step[data-kind="takeaway"] .step-card { border-left-color: var(--flame); }
-.step.is-active .step-card { opacity: 1; }
+.step.is-active .step-card { color: var(--ink-dark); }
+/* desktop: cards fill the 40 % story column */
+@media (min-width: 1100px) {
+  #story .step { padding: 0 24px; }
+  .step-card { flex: 1; margin-left: 0; }
+}
 .step-page { margin: 0 0 12px; font-size: 0.875rem; color: var(--muted-dark); }
 .step-text {
   margin: 0;
@@ -112,8 +115,12 @@
 .end-btn.primary { background: var(--moon); color: var(--ink); border-color: var(--moon); font-weight: 700; }
 .end-btn.primary:hover { border-color: var(--ink-dark); }
 
-/* page turning: gentle proximity snap, one page at a time */
+/* page turning: gentle proximity snap, one page at a time.
+   Under 1100 px pages snap below the pinned 45 vh stage, never under it. */
 html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) + 8px); }
+@media (max-width: 1099px) {
+  html { scroll-padding-top: calc(var(--chrome-h) + 45vh + 8px); }
+}
 .cover, .chapter, #story .step, .ending { scroll-snap-align: start; }
 
 /* page dots: progress through the steps, fixed where the cards never sit */

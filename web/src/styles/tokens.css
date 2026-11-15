@@ -22,7 +22,7 @@
   /* shape and type */
   --radius: 0px;
   --font: "Fira Sans", "Public Sans", system-ui, sans-serif;
-  --font-id: "Fira Code", ui-monospace, monospace;
+  --font-id: "Fira Code", ui-monospace, monospace; /* taste-skill-ignore: brand face for ids, loaded in index.html */
   /* layout (build session) */
   --chrome-h: 56px;
   --panel-w: 380px;
