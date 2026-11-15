@@ -86,7 +86,7 @@
 #story[data-lens="astronaut"] .step-text,
 #story[data-lens="analyst"] .step-text { font-size: 1.0625rem; line-height: 1.5; font-weight: 400; }
 .step-sources-label { margin: 12px 0 4px; font-size: 0.875rem; font-weight: 500; color: var(--muted-dark); }
-.step-sources { margin: 0; padding-left: 1.2em; font-size: 0.875rem; }
+.step-sources { margin: 0; padding-left: 1.2em; font-size: 0.875rem; overflow-wrap: anywhere; } /* long PSI URLs must not widen the page */
 .step-sources a { color: var(--muted-dark); text-decoration: underline; }
 
 /* ending card: what the visitor just saw, and three ways to go on */

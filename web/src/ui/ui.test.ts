@@ -213,6 +213,18 @@ describe("ui", () => {
     expect(roots().sheet.hidden).toBe(true);
   });
 
+  it("header button groups wrap instead of clipping", () => {
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "ui.css"), "utf8");
+    expect(css).toMatch(/\.lens-switch\s*\{[^}]*flex-wrap:\s*wrap/);
+    expect(css).toMatch(/\.locale-switch\s*\{[^}]*flex-wrap:\s*wrap/);
+  });
+
+  it("the panel is a bottom sheet under 1100px", () => {
+    const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
+    expect(base).toMatch(/@media\s*\(max-width:\s*1099px\)\s*\{[^}]*#panel\s*\{[^}]*bottom:\s*0/);
+    expect(base).toMatch(/@media\s*\(max-width:\s*1099px\)\s*\{[^}]*#panel\s*\{[^}]*max-height:\s*45vh/);
+  });
+
   it("the language picker lists the loaded locales and switches the store locale", () => {
     const { store } = setup(null, i18nDicts);
     const btns = [...roots().chrome.querySelectorAll<HTMLButtonElement>("button[data-locale]")];

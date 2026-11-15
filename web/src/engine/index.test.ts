@@ -264,6 +264,10 @@ describe("engine mount", () => {
     expect(css).toMatch(/\.page-dots\s*\{[^}]*position:\s*fixed/);
   });
 
+  it("long source URLs never widen the page", () => {
+    expect(css).toMatch(/\.step-sources\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  });
+
   it("the ending buttons retry the sliders, open the stories and switch to the data", () => {
     const { store, el } = setup();
     const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
