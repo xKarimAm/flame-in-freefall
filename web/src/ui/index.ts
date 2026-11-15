@@ -5,6 +5,7 @@ import { mountChrome } from "./chrome";
 import { mountOverlay } from "./overlay";
 import { mountPanel } from "./panel";
 import { mountSheet } from "./sheet";
+import { mountTour } from "./tour";
 import "./ui.css";
 
 export interface UiRoots {
@@ -19,4 +20,5 @@ export function mount(els: UiRoots, ctx: Ctx): void {
   mountChrome(els.chrome, ctx, overlay.open);
   mountPanel(els.panel, ctx);
   mountSheet(els.sheet, ctx);
+  mountTour(ctx);
 }

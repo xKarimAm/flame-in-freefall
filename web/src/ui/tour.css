@@ -1,0 +1,45 @@
+/* Intro walkthrough: one lit area, one card. Tokens only; opacity is the only thing that animates. */
+.tour { position: fixed; inset: 0; z-index: 60; }
+.tour[hidden] { display: none; }
+
+/* the lit area: everything outside it is dimmed by one very large flat shadow (a mask, not decoration) */
+.tour-spot {
+  position: fixed;
+  border: 2px solid var(--ink-dark);
+  box-shadow: 0 0 0 200vmax color-mix(in srgb, var(--space-deep) 82%, transparent);
+  pointer-events: none;
+}
+
+.tour-card {
+  position: fixed;
+  width: min(380px, calc(100vw - 24px));
+  padding: 20px 22px 18px;
+  background: var(--sheet); color: var(--ink);
+  border-top: 4px solid var(--data-on-light);
+  border-radius: var(--radius);
+}
+.tour-count { margin: 0 0 6px; font-size: 13px; font-weight: 500; color: var(--muted); }
+.tour-title { margin: 0 0 8px; font-size: 22px; line-height: 1.2; font-weight: 700; }
+.tour-text { margin: 0; font-size: 17px; line-height: 1.45; }
+.tour-actions { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
+
+.tour-btn {
+  font: inherit; line-height: 1.2; min-height: 40px; padding: 8px 14px; cursor: pointer;
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.tour-btn:hover { border-color: var(--ink); }
+.tour-btn:focus-visible { outline: 2px solid var(--data-on-light); outline-offset: 2px; }
+.tour-btn[hidden] { display: none; }
+/* skipping is quiet and sits on the left; going on is the filled one on the right */
+.tour-skip { border-color: transparent; padding-left: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; margin-right: auto; }
+.tour-next { background: var(--ink); color: var(--sheet); border-color: var(--ink); font-weight: 700; }
+
+/* the way in, under the cover's own button */
+.tour-open { align-self: flex-start; margin-top: 12px; }
+
+.tour-step .tour-card, .tour-step .tour-spot { animation: tour-in 220ms cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes tour-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .tour-step .tour-card, .tour-step .tour-spot { animation: none; }
+}

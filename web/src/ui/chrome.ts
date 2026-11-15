@@ -50,9 +50,9 @@ export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: H
   }
 
   function build(): void {
-    const storiesBtn = h("button", { type: "button", class: "btn" }, t("ui.chrome.stories"));
+    const storiesBtn = h("button", { type: "button", class: "btn stories-open" }, t("ui.chrome.stories"));
     storiesBtn.addEventListener("click", () => openStories(storiesBtn));
-    const skipBtn = h("button", { type: "button", class: "btn primary" }, t("ui.chrome.skip"));
+    const skipBtn = h("button", { type: "button", class: "btn primary skip-moon" }, t("ui.chrome.skip"));
     skipBtn.addEventListener("click", skip);
     lensButtons = LENSES.map((lens) => {
       const b = h("button", { type: "button", class: "btn lens", "data-lens": lens }, t(`ui.chrome.lens.${lens}`));
