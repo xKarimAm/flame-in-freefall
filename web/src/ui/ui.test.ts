@@ -279,6 +279,13 @@ describe("ui", () => {
     expect(noIgnition).not.toContain("burned");
   });
 
+  it("chapter 3: the interactive air has two sliders and the one-sentence answer beside them (task 59)", () => {
+    setup(); // sliders live
+    const panel = roots().panel;
+    expect(panel.querySelectorAll('.sliders input[type="range"]').length).toBe(2);
+    expect(panel.querySelector(".answer")!.textContent!.length).toBeGreaterThan(20);
+  });
+
   it("the Public panel leads with the answer in large type, then sliders, presets, family (task 44c)", () => {
     setup(); // public, sliders live
     const panel = roots().panel;

@@ -17,7 +17,7 @@ import type { Rect } from "./layout";
 import { chartPasses, dotKind, noPressureRows, refShape } from "./plan";
 import type { ChartFilters } from "../contract";
 import type { RefPlan } from "./plan";
-import { DIAL_IDS, flameHeight, incidentO2, markerBottomFraction } from "./picture";
+import { DIAL_IDS, dialH, dialV, dialY, flameHeight, incidentO2, markerBottomFraction, o2Airs } from "./picture";
 import { layoutRefs } from "./refs";
 
 const read = <T>(rel: string): T => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf8")) as T;
@@ -1219,6 +1219,103 @@ describe("act 1 public picture layout (task 21)", () => {
     const flame = host.querySelector(".o2-dial .flame-guide.small") as SVGSVGElement;
     expect(flame).not.toBeNull();
     expect(Number(flame.getAttribute("y")) + Number(flame.getAttribute("height"))).toBeCloseTo(524, 5); // the dial's 0 line
+  });
+
+  it("o2Airs names the atmospheres holding an oxygen value (task 59)", () => {
+    const atms = moon.atmospheres;
+    expect(dialY(100)).toBe(28);
+    expect(dialY(0)).toBe(524);
+    expect(dialV(28)).toBeCloseTo(100, 10);
+    expect(o2Airs(21, atms)).toEqual(["iss-air"]);
+    expect(o2Airs(100, atms)).toEqual(["moon-base-brief", "suit"]); // the open 30 %+ band holds 100 too
+    expect(o2Airs(34, atms)).toEqual(["moon-base-brief", "heo-dm-1006"]);
+    expect(o2Airs(25, atms)).toEqual([]);
+    const box = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    box.setAttribute("viewBox", "0 0 300 560");
+    expect(dialH(box as unknown as SVGSVGElement)).toBe(560);
+  });
+
+  it("the dial has a draggable oxygen handle that names the air it stands in (task 59)", () => {
+    const { host } = setup(hook, null, {}, SIZE);
+    const handle = host.querySelector(".o2-dial .dial-you") as SVGSVGElement;
+    expect(handle.getAttribute("role")).toBe("slider");
+    expect(handle.getAttribute("tabindex")).toBe("0");
+    expect(handle.getAttribute("aria-label")).toBe("Oxygen level to check");
+    expect(handle.getAttribute("aria-valuenow")).toBe("100");
+    const result = host.querySelector(".picture-side .dial-result")!;
+    expect(result.textContent).toContain("100 %");
+    expect(result.textContent).toContain("Inside a spacesuit");
+    expect(result.querySelector('a[href^="https://"]')).not.toBeNull();
+    handle.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    expect(handle.getAttribute("aria-valuenow")).toBe("99");
+    expect(result.textContent).toContain("99 %");
+    for (let i = 0; i < 200; i++) handle.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    expect(handle.getAttribute("aria-valuenow")).toBe("0");
+  });
+
+  it("a handle with no mark to start from begins at station air (task 59)", () => {
+    const { host } = setup({ view: "incident", incident_ids: ["mir-1997"] } as StageState, null, {}, SIZE);
+    expect(host.querySelector(".dial-you")!.getAttribute("aria-valuenow")).toBe("21");
+  });
+
+  it("chapter 2: tapping a family lights its dots and reads its counts (task 59)", () => {
+    const fams = ["droplets", "gas jets"] as Family[];
+    const stage = { view: "micro-g", show_families: fams, highlight: { family: "droplets" } } as StageState;
+    const beat = { story: "what-nasa-tested", scene: "s", beat: "b", kind: "focus" } as AppState["beat"];
+    const { api, host } = setup(stage, null, {}, SIZE, "public", beat);
+    const btns = [...host.querySelectorAll<HTMLButtonElement>(".family-pick button")];
+    expect(btns.map((b) => b.textContent)).toEqual(fams.map((f) => en[`ui.family.${f}` as keyof typeof en]));
+    expect(btns.every((b) => b.getAttribute("aria-pressed") !== "true")).toBe(true);
+    const pick = () => [...host.querySelectorAll<HTMLButtonElement>(".family-pick button")];
+    pick()[1]!.click(); // redraws the picker: re-query the live nodes
+    expect(pick()[1]!.getAttribute("aria-pressed")).toBe("true");
+    const wanted = api.placed().filter((p) => fams.includes(p.family));
+    const n = wanted.filter((w) => dotKind(w, { family: "gas jets" }) !== "default").length;
+    expect(host.textContent).toContain(`${en["ui.family.gas jets"]}: ${n} tests plotted`);
+    pick()[1]!.click();
+    expect(pick()[0]!.getAttribute("aria-pressed")).not.toBe("true");
+  });
+
+  it("the family picker only shows on the chapter-2 chart (task 59)", () => {
+    const stage = { view: "micro-g", show_families: ["droplets", "gas jets"], highlight: { family: "droplets" } } as StageState;
+    const other = { story: "moon-air", scene: "s", beat: "b", kind: "reveal" } as AppState["beat"];
+    const { host } = setup(stage, null, {}, SIZE, "public", other);
+    expect(host.querySelectorAll(".family-pick button").length).toBe(0);
+  });
+
+  it("chapter 4: stepping through the gravity planes shows which ones hold tests (task 59)", () => {
+    const stage = { view: "tilt-lunar", show_families: ["droplets", "gas jets"], reference: ["heo-dm-1006"] } as StageState;
+    const beat = { story: "the-gap", scene: "s", beat: "b", kind: "takeaway" } as AppState["beat"];
+    const { api, host } = setup(stage, null, {}, SIZE, "public", beat);
+    const btns = [...host.querySelectorAll<HTMLButtonElement>(".plane-step button")];
+    expect(btns.map((b) => b.textContent)).toEqual(["Microgravity", "Moon gravity", "Earth gravity"]);
+    const dots = () => host.querySelectorAll('[data-layer="tests"] circle').length;
+    const micro = api.data.tests.filter((r) => (r.gravity ?? "micro-g") === "micro-g").length;
+    const plotted = api.placed().filter((p) => ["droplets", "gas jets"].includes(p.family)).length;
+    expect(plotted).toBeGreaterThan(0);
+    expect(btns[0]!.getAttribute("aria-pressed")).toBe("true");
+    expect(host.querySelector(".plane-result")!.textContent).toBe(`Microgravity holds ${micro} tests.`);
+    expect(dots()).toBe(plotted);
+    const step = () => [...host.querySelectorAll<HTMLButtonElement>(".plane-step button")];
+    step()[1]!.click();
+    expect(step()[1]!.getAttribute("aria-pressed")).toBe("true");
+    expect(host.querySelector(".plane-result")!.textContent).toBe("No test ran in Moon gravity.");
+    expect(dots()).toBe(0);
+    step()[2]!.click();
+    expect(host.querySelector(".plane-result")!.textContent).toBe("No test ran in Earth gravity.");
+    expect(dots()).toBe(0);
+  });
+
+  it("the plane stepper only shows on the chapter-4 pages (task 59)", () => {
+    const stage = { view: "tilt-lunar", show_families: ["large-scale solids"] } as StageState;
+    const other = { story: "moon-air", scene: "s", beat: "b", kind: "compare" } as AppState["beat"];
+    const { host } = setup(stage, null, {}, SIZE, "public", other);
+    expect(host.querySelectorAll(".plane-step button").length).toBe(0);
+  });
+
+  it("other lenses get no dial handle (task 59)", () => {
+    const { host } = setup(hook, null, {}, SIZE, "analyst");
+    expect(host.querySelector(".dial-you")).toBeNull();
   });
 
   it("on narrow screens the incident cards move into the story card, the dial stays (task 41b)", () => {

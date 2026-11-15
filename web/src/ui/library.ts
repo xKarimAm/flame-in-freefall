@@ -1,6 +1,6 @@
 // The experiment library: one page per story from one template (task 9).
 // Generated with Muse Spark, SI-assisted.
-import type { Ctx } from "../contract";
+import { OUTCOME_GROUP, type Ctx, type OutcomeGroup } from "../contract";
 import { DATA_URL_BASE } from "../data/index";
 import { cite, dataLink, h, numOrMissing, safeHref } from "./dom";
 
@@ -162,6 +162,49 @@ function conditionMap(story: LibraryStory, ctx: Ctx): HTMLElement {
   const pts = ctx.api.placed().filter((p) => story.investigations.includes(p.investigation));
   const wrap = h("div", { class: "lib-sig" });
   if (!pts.length) return wrap;
+  // the story's own control: pick an outcome to light its dots, with the counts beside it
+  const present = ["burned", "went-out", "other"].filter((g): g is OutcomeGroup =>
+    pts.some((p) => OUTCOME_GROUP[p.outcome] === g),
+  );
+  let lit: OutcomeGroup | null = null;
+  const dots: SVGElement[] = [];
+  const result = h("p", { class: "lib-outcome-count" });
+  result.setAttribute("aria-live", "polite");
+  const paint = (): void => {
+    const n = lit === null ? pts.length : pts.filter((p) => OUTCOME_GROUP[p.outcome] === lit).length;
+    for (const d of dots) {
+      const on = lit === null || OUTCOME_GROUP[pts[Number(d.getAttribute("data-i"))]!.outcome] === lit;
+      d.classList.toggle("dim", !on);
+    }
+    result.replaceChildren();
+    if (lit === null) return;
+    const dl = (v: number): HTMLAnchorElement => {
+      const a = dataLink(String(v));
+      a.className = "num";
+      return a;
+    };
+    result.append(dl(n), ` of `, dl(pts.length), ` dots ${t(`ui.stage.legend.${lit}`)}.`);
+  };
+  const bar = h("div", { class: "lib-outcomes", role: "group", "aria-label": t("ui.library.outcome.all") });
+  const all = h("button", { type: "button", class: "btn" }, t("ui.library.outcome.all"));
+  all.setAttribute("aria-pressed", "true");
+  all.addEventListener("click", () => {
+    lit = null;
+    for (const b of bar.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b === all));
+    paint();
+  });
+  bar.append(all);
+  for (const g of present) {
+    const b = h("button", { type: "button", class: "btn" }, t(`ui.stage.legend.${g}`));
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => {
+      lit = g;
+      for (const x of bar.querySelectorAll("button")) x.setAttribute("aria-pressed", String(x === b));
+      paint();
+    });
+    bar.append(b);
+  }
+  wrap.append(bar);
   const W = 320;
   const H = 240;
   const pad = { l: 44, r: 8, t: 8, b: 30 };
@@ -190,8 +233,8 @@ function conditionMap(story: LibraryStory, ctx: Ctx): HTMLElement {
       t("ui.stage.y-axis"),
     ),
   );
-  for (const p of pts) {
-    const c = svgEl("circle", { class: "lib-dot", cx: X(p.pressure_kpa).toFixed(1), cy: Y(p.o2_pct).toFixed(1), r: "3.5", "data-id": p.id });
+  pts.forEach((p, i) => {
+    const c = svgEl("circle", { class: "lib-dot", cx: X(p.pressure_kpa).toFixed(1), cy: Y(p.o2_pct).toFixed(1), r: "3.5", "data-id": p.id, "data-i": String(i) });
     c.append(
       svgEl(
         "title",
@@ -205,9 +248,11 @@ function conditionMap(story: LibraryStory, ctx: Ctx): HTMLElement {
       ),
     );
     svg.append(c);
-  }
+    dots.push(c);
+  });
   wrap.append(svg);
   wrap.append(h("p", { class: "lib-sig-caption" }, countCaption(t("ui.stage.parade.plotted", { n: pts.length }))));
+  wrap.append(result);
   return wrap;
 }
 
@@ -219,12 +264,55 @@ function sampleWall(story: LibraryStory, ctx: Ctx): HTMLElement {
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const wrap = h("div", { class: "lib-sig" });
   wrap.append(h("p", { class: "lib-sig-caption" }, countCaption(t("ui.sheet.tests-caption", { n: rows.length }))));
+  // the story's own control: sort the samples by burn time or oxygen, first value said aloud
+  const sortable = (["burn", "oxygen"] as const).filter((f) => {
+    const vals = rows.map((r) => (f === "burn" ? r.burn_time_s : r.o2_pct));
+    return vals.filter((v) => v != null).length >= 2;
+  });
+  let sorter: HTMLSelectElement | null = null;
+  let sortResult: HTMLElement | null = null;
+  if (rows.length > 1 && sortable.length) {
+    sorter = h("select", { class: "sort-samples", "aria-label": t("ui.library.sort-by") });
+    sortResult = h("p", { class: "lib-sort-result" });
+    sortResult.setAttribute("aria-live", "polite");
+    sorter.append(h("option", { value: "" }, t("ui.library.sort-by")));
+    if (sortable.includes("burn")) sorter.append(h("option", { value: "burn" }, t("ui.library.burn")));
+    if (sortable.includes("oxygen")) sorter.append(h("option", { value: "oxygen" }, t("ui.nearest.oxygen")));
+    sorter.addEventListener("change", () => {
+      const f = sorter!.value as "burn" | "oxygen";
+      if (!f) return;
+      const val = (r: (typeof rows)[number]): number | null => (f === "burn" ? r.burn_time_s ?? null : r.o2_pct ?? null);
+      const cards = [...list.querySelectorAll("li.lib-card")];
+      cards
+        .sort((a, b) => {
+          const va = val(rows[Number(a.getAttribute("data-i"))]!);
+          const vb = val(rows[Number(b.getAttribute("data-i"))]!);
+          if (va === null) return 1;
+          if (vb === null) return -1;
+          return vb - va;
+        })
+        .forEach((li) => list.append(li));
+      const firstLi = [...list.querySelectorAll("li.lib-card")].map((li) => rows[Number(li.getAttribute("data-i"))]!).find((r) => val(r) != null)!;
+      const unit = f === "burn" ? "s" : "%";
+      sortResult!.replaceChildren();
+      sortResult!.append(
+        `${t("ui.library.sorted-by")} `,
+        f === "burn" ? t("ui.library.burn") : t("ui.nearest.oxygen"),
+        ": ",
+        cite(`${fmt(val(firstLi)!)} ${unit}`, firstLi.source.url, "num"),
+        t("ui.library.sorted-first"),
+      );
+    });
+    const row = h("p", { class: "lib-sort" });
+    row.append(h("label", {}, t("ui.library.sort-by"), " "), sorter);
+    wrap.append(row);
+  }
   const list = h("ul", { class: "lib-cards" });
-  for (const r of rows) {
+  rows.forEach((r, i) => {
     list.append(
       h(
         "li",
-        { class: "lib-card" },
+        { class: "lib-card", "data-i": String(i) },
         cite(r.id, r.source.url, "plain"),
         h(
           "span",
@@ -241,8 +329,9 @@ function sampleWall(story: LibraryStory, ctx: Ctx): HTMLElement {
         ),
       ),
     );
-  }
+  });
   wrap.append(list);
+  if (sortResult) wrap.append(sortResult);
   return wrap;
 }
 
@@ -255,16 +344,21 @@ function outcomeStrip(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): 
   const { t } = ctx;
   const wrap = h("div", { class: "lib-sig" });
   let picked: StripVar | null = null;
+  let pickedMoment: LibraryMoment | null = null;
   for (const id of story.moments) {
     const m = momentById(moments, id);
     if (m.kind === "o2-range") picked = { field: "o2_pct", labelKey: "ui.panel.o2", unitKey: "ui.panel.unit.pct" };
     else if (m.kind === "pressure-range")
       picked = { field: "pressure_kpa", labelKey: "ui.panel.pressure", unitKey: "ui.panel.unit.kpa" };
     else if (m.kind === "flow-range") picked = { field: "flow_cm_s", labelKey: "ui.nearest.flow", unitKey: null };
-    if (picked) break;
+    if (picked) {
+      pickedMoment = m;
+      break;
+    }
   }
-  if (!picked) return wrap;
+  if (!picked || !pickedMoment) return wrap;
   const v = picked;
+  const momentUrl = pickedMoment.url;
   type Mark = { row: (typeof ctx.api.data.tests)[number]; lo: number; hi: number; point: boolean };
   const marks: Mark[] = [];
   for (const row of ctx.api.data.tests) {
@@ -297,20 +391,88 @@ function outcomeStrip(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): 
   svg.append(svgEl("text", { class: "lib-axis", x: String(W / 2), y: "48", "text-anchor": "middle" }, axisLabel));
   wrap.append(svg);
   wrap.append(h("p", { class: "lib-sig-caption" }, countCaption(t("ui.library.strip-count", { n: marks.length }))));
+  // the story's own control: drag along the recorded variable; the nearest tests read out beside it
+  const unit = v.unitKey ? t(v.unitKey) : "cm/s";
+  const drag = h("input", { class: "lib-strip-range", type: "range", "aria-label": axisLabel }) as HTMLInputElement;
+  drag.min = String(lo);
+  drag.max = String(hi);
+  drag.step = String(Math.max((hi - lo) / 100, 0.01));
+  drag.value = String((lo + hi) / 2);
+  const result = h("p", { class: "lib-strip-result" });
+  result.setAttribute("aria-live", "polite");
+  const read = (): void => {
+    const at = Number(drag.value);
+    const dist = (m: Mark): number => (at < m.lo ? m.lo - at : at > m.hi ? at - m.hi : 0);
+    const best = Math.min(...marks.map(dist));
+    const near = marks.filter((m) => dist(m) === best);
+    for (const line of svg.querySelectorAll("line.lib-mark")) {
+      line.classList.toggle("lib-near", near.some((m) => m.row.id === line.getAttribute("data-id")));
+      line.classList.toggle("dim", !near.some((m) => m.row.id === line.getAttribute("data-id")));
+    }
+    result.replaceChildren();
+    result.append(cite(`${fmt(at)} ${unit}`, momentUrl, "num"), ": ");
+    near.forEach((m, i) => {
+      if (i) result.append(", ");
+      result.append(cite(m.row.id, m.row.source.url, "num"));
+    });
+    result.append(".");
+  };
+  drag.addEventListener("input", read);
+  wrap.append(drag);
+  wrap.append(result);
+  read();
   return wrap;
 }
 
 /** The publication list: every paper of the story's investigations, each linked to its DOI or PSI page. */
 function paperTrail(story: LibraryStory, ctx: Ctx): HTMLElement {
+  const { t } = ctx;
   const wrap = h("div", { class: "lib-sig" });
   const list = h("ul", { class: "lib-papers" });
+  const pubs: { year: number | null; li: HTMLElement }[] = [];
   for (const id of story.investigations) {
     const e = ctx.api.experiment(id);
     for (const p of e?.publications ?? []) {
       const href = p.doi ? safeHref(`https://doi.org/${p.doi}`) : (e?.psi_url ?? "");
       const line = `${p.title}${p.authors ? ` — ${p.authors}` : ""}${p.year ? `, ${p.year}` : ""}`;
-      list.append(h("li", {}, href ? cite(line, href, "plain") : line));
+      const li = h("li", {}, href ? cite(line, href, "plain") : line);
+      list.append(li);
+      pubs.push({ year: typeof p.year === "number" ? p.year : null, li });
     }
+  }
+  // the story's own control: filter the publications by year. Years come from the
+  // records, so with no year on any paper there is no filter, only the plain list.
+  const years = [...new Set(pubs.map((p) => p.year).filter((y): y is number => y !== null))].sort((a, b) => b - a);
+  if (pubs.length && years.length) {
+    const result = h("p", { class: "lib-year-result" });
+    result.setAttribute("aria-live", "polite");
+    const paint = (year: number | null): void => {
+      const shown = pubs.filter((p) => year === null || p.year === year);
+      for (const p of pubs) p.li.hidden = year !== null && p.year !== year;
+      result.textContent = year === null
+        ? t("ui.library.pubs", { n: shown.length })
+        : t("ui.library.year-count", { n: shown.length, year });
+    };
+    const bar = h("div", { class: "lib-years", role: "group", "aria-label": t("ui.library.years") });
+    const all = h("button", { type: "button", class: "btn" }, t("ui.library.years"));
+    all.setAttribute("aria-pressed", "true");
+    all.addEventListener("click", () => {
+      for (const b of bar.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b === all));
+      paint(null);
+    });
+    bar.append(all);
+    for (const y of years) {
+      const b = h("button", { type: "button", class: "btn" }, String(y));
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => {
+        for (const x of bar.querySelectorAll("button")) x.setAttribute("aria-pressed", String(x === b));
+        paint(y);
+      });
+      bar.append(b);
+    }
+    wrap.append(bar);
+    wrap.append(result);
+    paint(null);
   }
   wrap.append(list);
   return wrap;

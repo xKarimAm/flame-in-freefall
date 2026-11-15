@@ -159,6 +159,15 @@ table.test-rows { margin-top: 12px; font-size: var(--text-body); }
 .lib-bignum-label { display: block; margin-top: 8px; color: var(--muted-dark); font-size: var(--text-meta); }
 .lib-conditions { border-collapse: collapse; margin: 16px 0; font-size: var(--text-body); }
 .lib-conditions caption { text-align: left; }
+/* task-59 story instruments: every control changes the data beside it, instantly (still under reduced motion) */
+.lib-outcomes, .lib-years { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.lib-sort { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: var(--text-body); }
+.sort-samples { font: inherit; min-height: 40px; }
+.lib-strip-range { width: 100%; min-height: 40px; }
+.lib-map circle.dim { opacity: 0.25; }
+.lib-strip line.dim { opacity: 0.25; }
+.lib-strip line.lib-near { stroke-width: 4; }
+.lib-outcome-count, .lib-sort-result, .lib-strip-result, .lib-year-result { font-size: var(--text-body); margin: 8px 0 0; }
 .lib-conditions th, .lib-conditions td { padding: 6px 12px 6px 0; border-bottom: 1px solid var(--rule); font-weight: 400; text-align: left; vertical-align: top; }
 .lib-moments { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
 .lib-cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }

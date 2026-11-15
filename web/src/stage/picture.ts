@@ -53,7 +53,29 @@ export function flameOverhangUnits(mark: number | null): number {
   return Math.max(0, TOP - (y(mark) - flameHeight(mark)));
 }
 
-const y = (v: number): number => BOTTOM - (v / 100) * (BOTTOM - TOP);
+/** ViewBox y for an oxygen percent on the dial scale. */
+export function dialY(v: number): number {
+  return BOTTOM - (v / 100) * (BOTTOM - TOP);
+}
+
+/** Height of the dial viewBox (the axis spans dialY(100)..dialY(0) of it). */
+export function dialH(dial: SVGSVGElement): number {
+  const h = dial.viewBox?.baseVal?.height;
+  return typeof h === "number" && h > 0 ? h : H;
+}
+
+/** Oxygen percent for a ViewBox y on the dial scale. */
+export function dialV(units: number): number {
+  return ((BOTTOM - units) / (BOTTOM - TOP)) * 100;
+}
+
+/** Ids of the atmospheres whose recorded oxygen range holds v (an open band holds
+ *  everything above its min). Pure. */
+export function o2Airs(v: number, atms: { id: string; o2_pct_min: number; o2_pct_max: number | null }[]): string[] {
+  return atms.filter((a) => v >= a.o2_pct_min && (a.o2_pct_max === null || v <= a.o2_pct_max)).map((a) => a.id);
+}
+
+const y = dialY;
 
 /** Tall vertical gauge, 0 to 100 % oxygen, with the atmosphere marks and one marker per numeric incident. */
 export function dialSVG(ctx: Ctx, shown: Incident[]): SVGSVGElement {
@@ -114,6 +136,14 @@ const FLAME_LAYERS: { fill: string; d: string }[] = [
   { fill: "var(--flame)", d: "M50 52 C54 68 70 82 70 104 A20 22 0 1 1 30 104 C30 82 46 68 50 52 Z" },
   { fill: "var(--flame-amber)", d: "M50 84 C52 94 60 100 60 112 A10 11 0 1 1 40 112 C40 100 48 94 50 84 Z" },
 ];
+
+/** The draggable oxygen handle: a slider line across the axis plus a fat transparent
+ *  grab rect (a thin line alone is no thumb target). Positioned by the caller. */
+export function dialHandleSVG(): { line: SVGElement; hit: SVGElement } {
+  const line = svg("line", { class: "dial-you", x1: AXIS_X - 18, x2: AXIS_X + 18, y1: 0, y2: 0 });
+  const hit = svg("rect", { class: "dial-hit", x: AXIS_X - 40, y: -22, width: 80, height: 44, fill: "transparent" });
+  return { line, hit };
+}
 
 /** The flame guide, standing on the current mark inside the dial: small and calm on the
  *  ground with no marker, otherwise at least 160 tall and growing with the mark. */

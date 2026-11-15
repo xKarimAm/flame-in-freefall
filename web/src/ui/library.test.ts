@@ -313,6 +313,103 @@ describe("library", () => {
     expect(full.querySelector(".lib-bignum")!.textContent).toContain(m.label);
   });
 
+  it("condition-map lights one outcome's dots and reads its counts (task 59)", () => {
+    const c = ctx();
+    const page = renderLibraryPage(story("flex"), moments, c);
+    const btns = [...page.querySelectorAll<HTMLButtonElement>(".lib-outcomes button")];
+    expect(btns.map((b) => b.textContent)).toEqual(["All outcomes", "Kept burning", "Went out by itself", "A real test"]);
+    const dots = () => [...page.querySelectorAll("svg.lib-map circle")];
+    expect(dots().every((d) => !d.classList.contains("dim"))).toBe(true);
+    const placed = c.api.placed().filter((p) => story("flex").investigations.includes(p.investigation));
+    const wentOut = placed.filter((p) => ["extinction", "self-extinguished"].includes(p.outcome));
+    expect(wentOut.length).toBeGreaterThan(0);
+    btns.find((b) => b.textContent === "Went out by itself")!.click();
+    const lit = dots().filter((d) => !d.classList.contains("dim"));
+    expect(lit.length).toBe(wentOut.length);
+    expect(page.querySelector(".lib-outcome-count")!.textContent).toBe(
+      `${wentOut.length} of ${placed.length} dots Went out by itself.`,
+    );
+    btns.find((b) => b.textContent === "All outcomes")!.click();
+    expect(dots().every((d) => !d.classList.contains("dim"))).toBe(true);
+    expect(page.querySelector(".lib-outcome-count")!.textContent).toBe("");
+  });
+
+  it("sample-wall sorts by burn time or oxygen with the first value said aloud (task 59)", () => {
+    const c = ctx();
+    const val = (id: string, f: "burn" | "oxygen"): number | null => {
+      const r = c.api.data.tests.find((t) => t.id === id)!;
+      return f === "burn" ? (r.burn_time_s ?? null) : (r.o2_pct ?? null);
+    };
+    const first = (page: Element, f: "burn" | "oxygen"): number => {
+      const li = page.querySelector("li.lib-card")!;
+      return val(li.querySelector("a")!.textContent!, f)!;
+    };
+    // saffire burns longest: the top card carries the longest burn after sorting
+    const saff = renderLibraryPage(story("saffire"), moments, c);
+    const sel = saff.querySelector<HTMLSelectElement>("select.sort-samples")!;
+    expect([...sel.options].map((o) => o.value)).toEqual(["", "burn", "oxygen"]);
+    sel.value = "burn";
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    const burns = c.api.data.tests.filter((t) => story("saffire").investigations.includes(t.investigation)).map((t) => t.burn_time_s ?? -1);
+    expect(first(saff, "burn")).toBe(Math.max(...burns));
+    expect(saff.querySelector(".lib-sort-result")!.textContent).toContain("Sorted by Burn time");
+    // bass-ii has oxygen but no burn: oxygen only, and bass has neither so no control at all
+    const bass2 = renderLibraryPage(story("bass-ii"), moments, c);
+    const sel2 = bass2.querySelector<HTMLSelectElement>("select.sort-samples")!;
+    expect([...sel2.options].map((o) => o.value)).toEqual(["", "oxygen"]);
+    sel2.value = "oxygen";
+    sel2.dispatchEvent(new Event("change", { bubbles: true }));
+    const o2s = c.api.data.tests.filter((t) => story("bass-ii").investigations.includes(t.investigation)).map((t) => t.o2_pct ?? -1);
+    expect(first(bass2, "oxygen")).toBe(Math.max(...o2s));
+    expect(renderLibraryPage(story("bass"), moments, c).querySelector("select.sort-samples")).toBeNull();
+  });
+
+  it("outcome-strip drag reads the tests at that value (task 59)", () => {
+    const c = ctx();
+    const page = renderLibraryPage(story("spice"), moments, c);
+    const drag = page.querySelector<HTMLInputElement>("input.lib-strip-range")!;
+    const target = c.api.data.tests.find((t) => story("spice").investigations.includes(t.investigation) && t.flow_cm_s != null)!;
+    drag.value = String(target.flow_cm_s);
+    drag.dispatchEvent(new Event("input", { bubbles: true }));
+    const result = page.querySelector(".lib-strip-result")!;
+    expect(result.textContent).toContain(target.id);
+    const near = page.querySelector(`line.lib-near[data-id="${target.id}"]`);
+    expect(near).not.toBeNull();
+    expect(result.querySelector(`a[href="${target.source.url}"]`)).not.toBeNull();
+  });
+
+  it("paper-trail filters by year when years exist, and stays a plain list when they do not (task 59)", () => {
+    const c = ctx();
+    const pubs = [
+      { title: "Alpha", authors: "A", doi: null, year: 2020 },
+      { title: "Beta", authors: "B", doi: null, year: 2021 },
+      { title: "Gamma", authors: "C", doi: null, year: 2020 },
+      { title: "Undated", authors: "D", doi: null, year: null },
+    ];
+    const dated = {
+      ...c,
+      api: {
+        ...c.api,
+        experiment: (() => ({ publications: pubs, psi_url: "https://example.test" })) as unknown as Ctx["api"]["experiment"],
+      },
+    };
+    const page = renderLibraryPage({ ...story("bre"), investigations: ["PSI-20"] }, moments, dated);
+    const btns = [...page.querySelectorAll<HTMLButtonElement>(".lib-years button")];
+    expect(btns.map((b) => b.textContent)).toEqual(["All years", "2021", "2020"]);
+    const visible = () => [...page.querySelectorAll(".lib-papers li")].filter((li) => !(li as HTMLElement).hidden);
+    expect(visible().length).toBe(4);
+    btns.find((b) => b.textContent === "2020")!.click();
+    expect(visible().length).toBe(2);
+    expect(page.querySelector(".lib-year-result")!.textContent).toBe("2 publications in 2020.");
+    btns.find((b) => b.textContent === "All years")!.click();
+    expect(visible().length).toBe(4);
+    expect(page.querySelector(".lib-year-result")!.textContent).toBe("4 publications.");
+    // the real archive records no year on any paper: no filter, just the list
+    const real = renderLibraryPage(story("bre"), moments, c);
+    expect(real.querySelector(".lib-years")).toBeNull();
+    expect(real.querySelectorAll(".lib-papers li").length).toBeGreaterThan(0);
+  });
+
   it("engineer text is optional, shape-checked and survives a round trip (task 53)", () => {
     const raw = read("../../../data/build/library.json");
     expect(parseLibrary(raw)[0].engineer).toBeNull();

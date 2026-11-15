@@ -3,15 +3,15 @@
 // reserves space for them. Generated with Claude, SI-assisted.
 import "./stage.css";
 import { SLIDER_RANGE } from "../contract";
-import type { AppState, Ctx, Incident, NearestRow, NotPlacedRow, PlacedTest } from "../contract";
+import type { AppState, AtmosphereId, Ctx, Family, Incident, NearestRow, NotPlacedRow, PlacedTest } from "../contract";
 import { queryFromState } from "../store";
-import { dataLink, safeHref } from "../ui/dom";
+import { airName, cite, dataLink, safeHref } from "../ui/dom";
 import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartHeight, chartScales, niceRange, wrap } from "./layout";
 import type { Size } from "./layout";
 import type { Scales } from "./layout";
 import { chartPasses, dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
-import { DIAL_IDS, dialSVG, flameOverhangUnits, incidentO2 } from "./picture";
+import { DIAL_IDS, dialH, dialHandleSVG, dialSVG, dialV, dialY, flameOverhangUnits, incidentO2, o2Airs } from "./picture";
 import { renderExplainers } from "./explain";
 import { renderParade } from "./parade";
 import { TILT_MS, lunarLabelFor, mountTilt, tiltAllowed, type TiltView } from "./tilt";
@@ -73,17 +73,24 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   chart.append(gAxes, gHead, gBand, gStrip, gTests, gRefs, gNearest, gYou);
   plotBox.append(chart);
   const legend = html("ul", "stage-legend");
+  const famPick = html("div", "family-pick");
+  famPick.hidden = true;
+  const planeStep = html("div", "plane-step");
+  planeStep.hidden = true;
   const parade = html("div", "stage-parade");
   parade.hidden = true;
   const explainers = html("div", "stage-explainers");
   explainers.hidden = true;
-  root.append(plotBox, legend, parade, explainers);
+  root.append(plotBox, legend, famPick, planeStep, parade, explainers);
   const incidents = html("div", "stage-incidents");
   incidents.hidden = true;
   el.append(root, incidents);
 
   const dots = new Map<string, SVGElement>(); // test id -> circle, reused so class changes can transition
   let selectedInv: string | null = null; // the linked selection (a dot click or a sheet row), not the story
+  let youO2: number | null = null; // chapter 1's oxygen handle: the visitor's value, kept across redraws
+  let selectedFam: Family | null = null; // chapter 2's family tap: a local highlight, not the story
+  let selectedPlane: "micro" | "lunar" | "earth" = "micro"; // chapter 4's plane step: micro-g holds the tests
   const tiltBox = html("div", "stage-tilt");
   tiltBox.hidden = true;
   plotBox.append(tiltBox);
@@ -154,11 +161,22 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       const e = api.experiment(p.investigation);
       return `${p.investigation} ${e?.acronym ?? ""} ${e?.title ?? ""} ${p.family ?? ""} ${p.fuel ?? ""}`;
     };
-    const wanted = empty ? [] : drawnTests(stage, placed).filter((w) => chartPasses(w, f, placedIds, hayOf(w)));
-    const strip = empty ? [] : noPressureRows(stage, api.notPlaced()).filter((r) => chartPasses(r, f, placedIds, hayOf(r)));
+    const wantAll = empty ? [] : drawnTests(stage, placed).filter((w) => chartPasses(w, f, placedIds, hayOf(w)));
+    const stripAll = empty ? [] : noPressureRows(stage, api.notPlaced()).filter((r) => chartPasses(r, f, placedIds, hayOf(r)));
+    // Chapter 4's plane step keeps only the tests that ran in the stepped-to gravity.
+    // Every row in the archive ran in micro-g, so the lunar and Earth steps empty the chart.
+    const storyId = store.get().beat?.story ?? "";
+    const isCh4 = storyId === "the-gap" && chartView && !empty;
+    const planeG = selectedPlane === "lunar" ? "lunar-g" : selectedPlane === "earth" ? "earth-g" : "micro-g";
+    const gravMap = isCh4 ? new Map(api.data.tests.map((r) => [r.id, r.gravity ?? "micro-g"] as const)) : null;
+    const gravOf = (id: string): string => gravMap?.get(id) ?? "micro-g";
+    const wanted = isCh4 ? wantAll.filter((w) => gravOf(w.id) === planeG) : wantAll;
+    const strip = isCh4 ? stripAll.filter((r) => gravOf(r.id) === planeG) : stripAll;
     noPressure = strip.length;
     // A linked selection (dot click or sheet row) joins the beat highlight as the investigation.
-    const hl = selectedInv ? { ...stage.highlight, investigation: selectedInv } : stage.highlight;
+    const hl0 = selectedInv ? { ...stage.highlight, investigation: selectedInv } : stage.highlight;
+    // Chapter 2's family tap overrides the beat's family but never leaves the page.
+    const hl = selectedFam && storyId === "what-nasa-tested" ? { ...hl0, family: selectedFam } : hl0;
     // the legend (with the counter line) renders before the chart: the chart height is derived
     // from the stage box minus this measured chrome
     const kindSet = new Set<DotKind>();
@@ -166,6 +184,8 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     for (const row of strip) kindSet.add(dotKind(row, hl));
     kinds = kindSet;
     legend.replaceChildren(...legendHTML(nearestRows(state)));
+    renderFamPick(chartView && !empty);
+    renderPlaneStep(chartView && !empty);
     if (!opts.size) fit();
     if (!size || size.w <= 0 || size.h <= 0) return;
     chart.setAttribute("viewBox", `0 0 ${size.w} ${size.h}`);
@@ -430,10 +450,73 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     return out;
   }
 
+  /** Chapter 2's instrument: one button per family of the beat; tapping lights that
+   *  family's dots and the head caption reads its counts. Local state, instant redraw. */
+  function renderFamPick(chartView: boolean): void {
+    famPick.replaceChildren();
+    const fams = store.get().stage.show_families ?? [];
+    const isCh2 = (store.get().beat?.story ?? "") === "what-nasa-tested";
+    if (!chartView || !isCh2 || !fams.length) {
+      famPick.hidden = true;
+      return;
+    }
+    famPick.hidden = false;
+    famPick.setAttribute("role", "group");
+    famPick.setAttribute("aria-label", t("ui.stage.family-pick"));
+    for (const f of fams) {
+      const b = html("button", "btn fam");
+      b.type = "button";
+      b.textContent = t(`ui.family.${f}`);
+      b.setAttribute("aria-pressed", String(selectedFam === f));
+      b.addEventListener("click", () => {
+        selectedFam = selectedFam === f ? null : f;
+        drawAll();
+      });
+      famPick.append(b);
+    }
+  }
+
+  /** Chapter 4's instrument: step through the three gravity planes and see which ones
+   *  hold tests. Each step keeps only that gravity on the chart and says its count;
+   *  every archive row ran in micro-g, so the lunar and Earth steps empty it. */
+  function renderPlaneStep(chartView: boolean): void {
+    planeStep.replaceChildren();
+    const isCh4 = (store.get().beat?.story ?? "") === "the-gap";
+    if (!chartView || !isCh4) {
+      planeStep.hidden = true;
+      return;
+    }
+    planeStep.hidden = false;
+    planeStep.setAttribute("role", "group");
+    planeStep.setAttribute("aria-label", t("ui.stage.planes"));
+    const planes = ["micro", "lunar", "earth"] as const;
+    const grav = { micro: "micro-g", lunar: "lunar-g", earth: "earth-g" } as const;
+    const counts = new Map(api.data.tests.map((r) => [r.id, r.gravity ?? "micro-g"] as const));
+    const inPlane = (g: string): number => api.data.tests.filter((r) => (counts.get(r.id) ?? "micro-g") === g).length;
+    for (const p of planes) {
+      const b = html("button", "btn plane");
+      b.type = "button";
+      b.textContent = t(`ui.stage.plane.${p}`);
+      b.setAttribute("aria-pressed", String(selectedPlane === p));
+      b.addEventListener("click", () => {
+        selectedPlane = p;
+        drawAll();
+      });
+      planeStep.append(b);
+    }
+    const n = inPlane(grav[selectedPlane]);
+    const result = html("p", "plane-result");
+    result.setAttribute("aria-live", "polite");
+    result.textContent = n > 0
+      ? t("ui.stage.plane.holds", { plane: t(`ui.stage.plane.${selectedPlane}`), n })
+      : t("ui.stage.plane.empty", { plane: t(`ui.stage.plane.${selectedPlane}`) });
+    planeStep.append(result);
+  }
+
   /** Chart height derived from the stage box minus the measured legend, parade and explainer
    *  heights, with breathing room so the counter line is never cut at the stage edge. */
   function fit(): void {
-    const chrome = legend.offsetHeight + (parade.hidden ? 0 : parade.offsetHeight) + (explainers.hidden ? 0 : explainers.offsetHeight);
+    const chrome = legend.offsetHeight + (famPick.hidden ? 0 : famPick.offsetHeight) + (planeStep.hidden ? 0 : planeStep.offsetHeight) + (parade.hidden ? 0 : parade.offsetHeight) + (explainers.hidden ? 0 : explainers.offsetHeight);
     const w = Math.max(40, root.clientWidth);
     size = { w, h: chartHeight(root.clientHeight, chrome) };
     plotBox.style.height = `${size.h}px`;
@@ -507,11 +590,89 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     place(side, src, overhangUnits, ...cards);
   }
 
+  /** Chapter 1's instrument: a draggable oxygen handle on the dial that names the air it
+   *  stands in. Pointer drag for thumbs and mice, arrows for keyboards; the result names
+   *  the atmospheres from moon.json whose recorded range holds the value. */
+  function wireDialCheck(side: HTMLElement, dial: SVGSVGElement, pages: Incident[]): void {
+    const marks = pages.map((i) => incidentO2(i.oxygen)).filter((v): v is number => v !== null);
+    if (youO2 === null) youO2 = marks.length ? Math.max(...marks) : 21;
+    const { line, hit } = dialHandleSVG();
+    line.setAttribute("role", "slider");
+    line.setAttribute("tabindex", "0");
+    line.setAttribute("aria-label", t("ui.stage.dial-handle"));
+    line.setAttribute("aria-valuemin", "0");
+    line.setAttribute("aria-valuemax", "100");
+    dial.append(line, hit);
+    const result = html("p", "dial-result");
+    result.setAttribute("aria-live", "polite");
+    side.append(result);
+    const show = (v: number): string => (Number.isInteger(v) ? String(v) : String(Number(v.toFixed(1))));
+    const paint = (): void => {
+      const v = youO2!;
+      line.setAttribute("y1", String(dialY(v)));
+      line.setAttribute("y2", String(dialY(v)));
+      line.setAttribute("aria-valuenow", String(show(v)));
+      hit.setAttribute("y", String(dialY(v) - 22));
+      const ids = o2Airs(v, ctx.api.data.moon.atmospheres);
+      result.replaceChildren();
+      if (!ids.length) {
+        const brief = ctx.api.atmosphere("moon-base-brief");
+        result.append(cite(`${show(v)} %`, brief.url, "num"), " ", t("ui.stage.dial-noair"));
+        return;
+      }
+      const atms = ids.map((id) => ctx.api.atmosphere(id as AtmosphereId));
+      result.append(cite(`${show(v)} %`, atms[0]!.url, "num"), ": ");
+      atms.forEach((a, i) => {
+        if (i) result.append(", ");
+        result.append(cite(airName(store.get().lens, a, t), a.url, "num"));
+      });
+    };
+    const nudge = (d: number): void => {
+      youO2 = Math.min(100, Math.max(0, Math.round((youO2! + d) * 10) / 10));
+      paint();
+    };
+    const keys = (e: KeyboardEvent): void => {
+      const d = e.key === "ArrowUp" || e.key === "ArrowRight" ? 1 : e.key === "ArrowDown" || e.key === "ArrowLeft" ? -1 : e.key === "PageUp" ? 10 : e.key === "PageDown" ? -10 : 0;
+      if (!d) return;
+      e.preventDefault();
+      e.stopPropagation();
+      nudge(d);
+    };
+    line.addEventListener("keydown", keys);
+    const move = (clientY: number): void => {
+      const rect = dial.getBoundingClientRect();
+      if (rect.height <= 0) return;
+      // clientY into dial viewBox units, then into oxygen: the axis spans dialY(100)..dialY(0) of the box
+      const units = ((clientY - rect.top) / rect.height) * dialH(dial);
+      youO2 = Math.min(100, Math.max(0, Math.round(dialV(units) * 10) / 10));
+      paint();
+    };
+    hit.addEventListener("pointerdown", (e) => {
+      try {
+        hit.setPointerCapture(e.pointerId);
+      } catch {
+        /* synthetic or already-released pointers have nothing to capture */
+      }
+      move(e.clientY);
+      const gl = (ev: PointerEvent): void => move(ev.clientY);
+      const up = (): void => {
+        window.removeEventListener("pointermove", gl as EventListener);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+      };
+      window.addEventListener("pointermove", gl as EventListener);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
+    });
+    paint();
+  }
+
   /** The oxygen dial with its flame and source line (the public picture beside the cards). */
   function dialSide(pages: Incident[]): { side: HTMLElement; src: HTMLElement; overhangUnits: number } {
     const side = html("div", "picture-side");
     const dial = dialSVG(ctx, pages);
     side.append(dial);
+    wireDialCheck(side, dial, pages);
     const overhangUnits = flameOverhangUnits(pages.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== undefined) ?? null);
     const seen = new Set<string>();
     const src = html("p", "dial-source");

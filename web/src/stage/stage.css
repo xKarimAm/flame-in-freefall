@@ -124,6 +124,17 @@
 .o2-dial .dial-band { fill: var(--data-on-dark); fill-opacity: 0.12; stroke: var(--data-on-dark); stroke-width: 1.5; }
 .o2-dial .dial-mark { fill: var(--ink-dark); }
 .o2-dial .dial-marker { stroke: var(--ink-dark); stroke-width: 3; }
+/* chapter 1's oxygen handle: the visitor's own mark, draggable along the axis */
+.o2-dial .dial-you { stroke: var(--data-on-dark); stroke-width: 3; cursor: ns-resize; }
+.o2-dial .dial-hit { fill: transparent; cursor: ns-resize; }
+/* chapter 2's family tap: one button per family under the legend */
+.family-pick { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+.family-pick[hidden] { display: none; }
+/* chapter 4's plane step: three gravity buttons and the count they hold */
+.plane-step { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+.plane-step[hidden] { display: none; }
+.plane-step .plane-result { flex-basis: 100%; margin: 0; font-size: var(--text-body); color: var(--ink-dark); }
+.picture-side .dial-result { margin: 8px 0 0; font-size: var(--text-body); color: var(--ink-dark); }
 .flame-guide { display: block; height: auto; }
 .flame-guide .flame-sway { transform-box: fill-box; transform-origin: 50% 90%; animation: flame-sway 1.6s steps(1) infinite alternate; }
 @keyframes flame-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
