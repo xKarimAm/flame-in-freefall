@@ -317,7 +317,7 @@ describe("ui", () => {
   });
 
   it("the answer is large type", () => {
-    expect(css).toMatch(/\.answer\s*\{[^}]*font-size:\s*20px/);
+    expect(css).toMatch(/\.answer\s*\{[^}]*font-size:\s*var\(--text-card\)/);
   });
 
   it("Astronaut and Analyst keep the full list with no answer sentence", () => {
@@ -445,6 +445,27 @@ describe("ui", () => {
     expect(roots().overlay.querySelector(".story-card .story-title")).toBeNull();
     expect(css).toMatch(/\.overlay-story-title\s*\{/);
     expect(css).not.toMatch(/^\.story-title\s*\{/m);
+  });
+
+  it("every font size is a type token, nothing else (task 43)", () => {
+    const files = ["../styles/base.css", "../styles/tokens.css", "../engine/engine.css", "../stage/stage.css", "./ui.css"];
+    // 40 px is the task-43 phone exception for the cover title only
+    const allowed = /^var\(--text-(meta|body|card|chapter|cover)\)$|^(inherit|initial|unset|0|smaller|larger|40px)$|em$|%$/;
+    const bad: string[] = [];
+    for (const f of files) {
+      const cssText = readFileSync(join(dirname(fileURLToPath(import.meta.url)), f), "utf8");
+      for (const m of cssText.matchAll(/font-size\s*:\s*([^;}{]+)/g)) {
+        if (!allowed.test(m[1].trim())) bad.push(`${f}: ${m[1].trim()}`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it("the five type tokens carry the house scale (task 43)", () => {
+    const tokens = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/tokens.css"), "utf8");
+    for (const [name, size] of [["--text-meta", "14px"], ["--text-body", "17px"], ["--text-card", "24px"], ["--text-chapter", "44px"], ["--text-cover", "64px"]] as const) {
+      expect(tokens).toContain(`${name}: ${size}`);
+    }
   });
 
   it("the focus ring is white on dark and ink on the light sheet, never yellow (task 36d)", () => {

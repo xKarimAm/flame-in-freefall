@@ -1243,7 +1243,7 @@ describe("act 1 public picture layout (task 21)", () => {
     expect(css).toMatch(/\.public-picture \.o2-dial\s*\{[^}]*width:\s*120px/);
     expect(css).toMatch(/\.picture-side\s*\{[^}]*width:\s*251px/);
     expect(css).toMatch(/\.flame-at-mark\s*\{[^}]*position:\s*absolute/);
-    expect(css).toMatch(/\.public-picture \.incident-card\s*\{[^}]*font-size:\s*16px/);
+    expect(css).toMatch(/\.public-picture \.incident-card\s*\{[^}]*font-size:\s*var\(--text-body\)/);
     expect(css).toMatch(/\.stage-incidents\.public-picture\[data-count="2"\]\s*\{[^}]*251px minmax\(0,\s*1fr\) minmax\(0,\s*1fr\)/);
     expect(css).toMatch(/\.picture-side\s*\{[^}]*padding-top:\s*var\(--flame-overhang/);
   });

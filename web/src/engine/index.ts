@@ -76,7 +76,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     const page = node("p", "step-page");
     const text = node("p", "step-text");
     card.append(page, text);
-    const label = node("h3", "step-sources-label");
+    const label = node("p", "step-sources-label");
     if (beat.sources.length) {
       const list = node("ul", "step-sources");
       for (const s of beat.sources) {

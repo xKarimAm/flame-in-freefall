@@ -19,6 +19,12 @@
   --muted: #3d4551;
   --rule: #8d9297;
   --link: #005ea2;
+  /* type: five sizes only. 14 meta, 17 body, 24 story card, 44 chapter title, 64 cover title */
+  --text-meta: 14px;
+  --text-body: 17px;
+  --text-card: 24px;
+  --text-chapter: 44px;
+  --text-cover: 64px;
   /* shape and type */
   --radius: 0px;
   --font: "Fira Sans", "Public Sans", system-ui, sans-serif;

@@ -134,6 +134,15 @@ describe("engine mount", () => {
     expect(covers[0].querySelector(".cover-cue")!.textContent).toBe(dicts.en!["ui.cover.cue"]);
   });
 
+  it("story text is a paragraph in a 30rem card, never a heading (task 43)", () => {
+    const { steps } = setup();
+    for (const s of steps) {
+      expect(s.querySelector(".step-text")!.tagName).toBe("P");
+      expect(s.querySelector(".step-card .step-sources-label")!.tagName).toBe("P");
+    }
+    expect(css).toMatch(/\.step-card\s*\{[^}]*width:\s*min\(30rem/);
+  });
+
   it("starts each story with a chapter page that is not a step", () => {
     const { el } = setup();
     for (const story of stories) {
@@ -358,8 +367,8 @@ describe("engine mount", () => {
   });
 
   it("chapter titles are large sentence case with no uppercase tracking (task 42)", () => {
-    expect(css).toMatch(/\.story-title\s*\{[^}]*font-size:\s*clamp\(2\.25rem,\s*5vw,\s*3\.5rem\)/);
-    expect(css).toMatch(/\.chapter-question\s*\{[^}]*font-size:\s*1\.5rem/);
+    expect(css).toMatch(/\.story-title\s*\{[^}]*font-size:\s*var\(--text-chapter\)/);
+    expect(css).toMatch(/\.chapter-question\s*\{[^}]*font-size:\s*var\(--text-card\)/);
     expect(css).not.toMatch(/text-transform:\s*uppercase/);
     expect(css).not.toMatch(/letter-spacing/);
   });
