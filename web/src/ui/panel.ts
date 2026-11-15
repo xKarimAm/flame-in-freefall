@@ -216,4 +216,31 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
 
   build();
   store.subscribe((s, prev) => (s.locale !== prev.locale ? build() : sync()));
+  keepClearOfText(root);
+}
+
+/** K5: from 1100px up the panel shares the story column with the active page's text.
+ *  Its top follows the bottom of that text (measured, not guessed), so the panel never
+ *  covers the sentences or the Sources line at any screen height or scroll position. */
+function keepClearOfText(root: HTMLElement): void {
+  let queued = false;
+  const place = (): void => {
+    queued = false;
+    const wide = window.innerWidth >= 1100;
+    const card = document.querySelector<HTMLElement>("#story .step.is-active .step-card");
+    if (!wide || root.hidden || !card) {
+      root.style.removeProperty("top");
+      root.style.removeProperty("max-height");
+      return;
+    }
+    const chrome = document.getElementById("chrome")?.getBoundingClientRect().bottom ?? 0;
+    const top = Math.max(chrome + 16, card.getBoundingClientRect().bottom + 24);
+    root.style.top = `${Math.round(top)}px`;
+    root.style.maxHeight = "none";
+  };
+  const queue = (): void => { if (!queued) { queued = true; requestAnimationFrame(place); } };
+  window.addEventListener("scroll", queue, { passive: true });
+  window.addEventListener("resize", queue);
+  new MutationObserver(queue).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class", "hidden"] });
+  queue();
 }
