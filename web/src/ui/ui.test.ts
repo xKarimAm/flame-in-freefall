@@ -151,7 +151,7 @@ describe("ui", () => {
     setup();
     const text = roots().panel.textContent!;
     expect(text).toContain("Nearest tested conditions, not a prediction. All tests ran in microgravity.");
-    expect(text).toContain("When measuring distance, 5 points of oxygen count the same as 25 kPa of pressure.");
+    expect(text).toContain("Distance counts 5 oxygen points the same as 25 kPa of pressure.");
   });
 
   it("public sentences read like plain words, with every number kept (task 27)", () => {
@@ -173,7 +173,7 @@ describe("ui", () => {
       "So the tests are real, but only some are dots on the chart. Next, the air a Moon base would have.");
     // the legend and the distance rule in plain words too
     expect(en["ui.stage.legend.paper"]).toBe("Published in a paper, not in NASA's data archive");
-    expect(en["ui.nearest.weighting"]).toBe("When measuring distance, 5 points of oxygen count the same as 25 kPa of pressure.");
+    expect(en["ui.nearest.weighting"]).toBe("Distance counts 5 oxygen points the same as 25 kPa of pressure.");
     // the old phrasing appears in no public string anymore
     const publicText = Object.entries(en)
       .filter(([k]) => k.endsWith(".public") || k.startsWith("ui.stage.") || k.startsWith("ui.panel.") || k.startsWith("ui.nearest."))

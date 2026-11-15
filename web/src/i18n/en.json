@@ -137,7 +137,7 @@
   "ui.panel.show-details": "Show the details",
   "ui.panel.hide-details": "Hide the details",
   "ui.nearest.heading": "Nearest tested conditions, not a prediction. All tests ran in microgravity.",
-  "ui.nearest.weighting": "When measuring distance, 5 points of oxygen count the same as 25 kPa of pressure.",
+  "ui.nearest.weighting": "Distance counts 5 oxygen points the same as 25 kPa of pressure.",
   "ui.nearest.mix-item": "{count} {family}",
   "ui.nearest.empty": "No tested condition to list.",
   "ui.nearest.none": "none recorded",
