@@ -4,8 +4,32 @@
     {
       "name": "firebreak-preview",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "web", "run", "preview", "--", "--port", "4173", "--strictPort"],
+      "runtimeArgs": [
+        "--prefix",
+        "web",
+        "run",
+        "preview",
+        "--",
+        "--port",
+        "4173",
+        "--strictPort"
+      ],
       "port": 4173
+    },
+    {
+      "name": "firebreak-night",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "E:/fif-wt/night-web/web",
+        "run",
+        "preview",
+        "--",
+        "--port",
+        "4174",
+        "--strictPort"
+      ],
+      "port": 4174
     }
   ]
 }
