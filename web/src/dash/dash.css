@@ -1,0 +1,113 @@
+/* Dashboard overview tab (backend lane D3). Tokens from tokens.css only: flat colour,
+   no gradients, no glows, square corners, the five type sizes, no motion. */
+/* Generated with Muse Spark, SI-assisted. */
+.dash-overview {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+  padding: var(--gap) 0;
+}
+.dash-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap) calc(var(--gap) * 2);
+  margin: 0;
+}
+.dash-figure-wrap {
+  min-width: 8rem;
+}
+.dash-figure {
+  margin: 0;
+}
+.dash-num {
+  display: block;
+  font-size: var(--text-chapter);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.dash-figure figcaption {
+  font-size: var(--text-meta);
+  color: var(--muted);
+}
+.dash-ranked h3,
+.dash-multiples h3 {
+  font-size: var(--text-body);
+  margin: 0 0 var(--gap) 0;
+}
+.dash-rule {
+  font-size: var(--text-meta);
+  color: var(--muted);
+  margin: 0 0 var(--gap) 0;
+}
+.dash-ranked ol,
+.dash-ranked ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dash-ranked-row,
+.dash-unranked-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--text-body);
+}
+.dash-name {
+  font: inherit;
+  color: var(--link);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+}
+.dash-id {
+  font-size: var(--text-meta);
+  color: var(--muted);
+}
+.dash-nums {
+  font-size: var(--text-meta);
+}
+.dash-unranked {
+  margin-top: var(--gap);
+}
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--gap);
+}
+.dash-multiple,
+.dash-missing {
+  padding: var(--gap) 0;
+  border-top: 1px solid var(--rule);
+  font-size: var(--text-body);
+}
+.dash-multiple svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.dash-dot {
+  fill: var(--data-on-light);
+}
+.dash-tick {
+  font-size: var(--text-meta);
+  fill: var(--muted);
+}
+.dash-axis {
+  font-size: var(--text-meta);
+  fill: var(--muted);
+}
+.dash-multiple-count {
+  font-size: var(--text-meta);
+  margin: 0.25rem 0 0 0;
+}
+.dash-missing p {
+  font-size: var(--text-meta);
+  color: var(--muted);
+  margin: 0.25rem 0 0 0;
+}

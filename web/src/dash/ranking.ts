@@ -1,7 +1,7 @@
 // Ranking investigations for a chosen air (contracts/DISTANCE.md, web-lane task 50).
 // Pure computation over the DataApi; rendering lives in overview.ts (task 56).
 // Generated with Muse Spark, SI-assisted.
-import type { Atmosphere, DataApi, NearestQuery } from "../contract";
+import type { Atmosphere, DataApi, NearestQuery, PlacedTest } from "../contract";
 
 /** Fixed scales from contracts/DISTANCE.md: 25 kPa of pressure counts the same as 5 O2 points. Never fitted. */
 const PRESSURE_SCALE_KPA = 25;
@@ -54,6 +54,38 @@ function distance(o2_pct: number, pressure_kpa: number, q: { p: number; lo: numb
 
 const byAcronym = (a: { acronym: string }, b: { acronym: string }): number =>
   a.acronym < b.acronym ? -1 : a.acronym > b.acronym ? 1 : 0;
+
+export interface NearestPlacedRef {
+  id: string;
+  url: string;
+  /** 3 dp, the same distance the ranking sorts by. */
+  d: number;
+}
+
+/**
+ * The placed test of one investigation nearest the queried air, for source links.
+ * Null when the investigation has no placed test. `atmosphere` is only read for
+ * kind "atmosphere" (the Moon box).
+ */
+export function nearestPlacedTest(
+  api: DataApi,
+  investigation: string,
+  query: NearestQuery,
+  atmosphere: Atmosphere | null,
+): NearestPlacedRef | null {
+  const q = resolve(query, atmosphere);
+  let best: PlacedTest | null = null;
+  let bestD = Infinity;
+  for (const t of api.placed()) {
+    if (t.investigation !== investigation) continue;
+    const d = distance(t.o2_pct, t.pressure_kpa, q);
+    if (d < bestD || (d === bestD && best !== null && t.id < best.id)) {
+      best = t;
+      bestD = d;
+    }
+  }
+  return best ? { id: best.id, url: best.url, d: round3(bestD) } : null;
+}
 
 /**
  * Rank every investigation for the queried air, per contracts/DISTANCE.md.

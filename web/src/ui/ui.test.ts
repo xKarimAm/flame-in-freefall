@@ -120,10 +120,37 @@ describe("ui", () => {
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
     for (const root of [roots().panel, sheet]) expect(unlinkedNumbers(root)).toEqual([]);
-    buttons(sheet)[1].click(); // margins tab
+    buttons(sheet).find((b) => b.getAttribute("role") === "tab" && b.textContent === "Moon-gravity margins")!.click(); // margins tab
     expect(sheet.querySelector(".margin-table")).not.toBeNull();
     expect(unlinkedNumbers(sheet)).toEqual([]);
     expect(roots().panel.querySelectorAll("a.num").length).toBeGreaterThan(0);
+  });
+
+  describe("dashboard overview tab (backend lane D3)", () => {
+    const overviewTab = () =>
+      [...roots().sheet.querySelectorAll('[role="tab"]')].find((b) => b.getAttribute("data-tab") === "overview")!;
+
+    it("mounts as the first tab with figures, ranking and multiples", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      expect([...sheet.querySelectorAll('[role="tab"]')][0]!.textContent).toBe("Dashboard");
+      (overviewTab() as HTMLButtonElement).click();
+      expect(sheet.querySelectorAll(".dash-figures .dash-figure")).toHaveLength(5);
+      expect(sheet.querySelector(".dash-ranked ol")!.children.length).toBeGreaterThan(0);
+      expect(sheet.querySelector(".dash-multiples svg")).not.toBeNull();
+      expect(sheet.querySelector(".dash-multiples .dash-missing")).not.toBeNull();
+    });
+
+    it("selecting a ranked row notifies the stage", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      (overviewTab() as HTMLButtonElement).click();
+      const seen: string[] = [];
+      window.addEventListener(SELECT_INVESTIGATION, (e) => seen.push((e as CustomEvent).detail.investigation));
+      (roots().sheet.querySelector(".dash-ranked ol li button") as HTMLButtonElement).click();
+      expect(seen).toHaveLength(1);
+    });
   });
 
   describe("plain air names (task 22)", () => {
@@ -716,7 +743,7 @@ describe("ui", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
-    sheet.querySelectorAll<HTMLButtonElement>("button.tab")[2]!.click();
+    sheet.querySelectorAll<HTMLButtonElement>("button.tab")[3]!.click(); // tests tab (overview tab is first)
     const rows = () => [...sheet.querySelectorAll("table.tests-table tbody tr")];
     expect(rows().length).toBe(tests.length);
     expect(sheet.querySelector("table.tests-table caption")!.textContent).toContain(`${tests.length} matching test rows`);
@@ -744,7 +771,7 @@ describe("ui", () => {
       const { store } = setup();
       store.set({ lens: "analyst" });
       const sheet = roots().sheet;
-      sheet.querySelectorAll<HTMLButtonElement>("button.tab")[2]!.click();
+      sheet.querySelectorAll<HTMLButtonElement>("button.tab")[3]!.click(); // tests tab (overview tab is first)
       const rows = () => [...sheet.querySelectorAll("table.tests-table tbody tr")];
       const caption = () => sheet.querySelector("table.tests-table caption")!.textContent!;
       expect(caption()).toBe(`${tests.length} matching test rows`);
@@ -823,7 +850,7 @@ describe("ui", () => {
     expect(selected()).toBe("All investigations");
     store.set({ beat: { story: "s", scene: "a", beat: "b", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "lunar-margins" } });
     expect(selected()).toBe("Moon-gravity margins");
-    buttons(roots().sheet)[0].click();
+    buttons(roots().sheet).find((b) => b.getAttribute("data-tab") === "investigations")!.click();
     expect(selected()).toBe("All investigations");
     store.set({ beat: { story: "s", scene: "a", beat: "c", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "table" } });
     expect(selected()).toBe("All investigations");
@@ -835,16 +862,21 @@ describe("ui", () => {
     const sheet = roots().sheet;
     const tabs = () => [...sheet.querySelectorAll<HTMLButtonElement>("button.tab")];
     const selected = () => tabs().findIndex((b) => b.getAttribute("aria-selected") === "true");
-    tabs()[0]!.focus();
-    expect(selected()).toBe(0);
-    tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    // investigations is selected by default; the overview tab sits first
+    expect(tabs()[1]!.textContent).toBe("All investigations");
+    tabs()[1]!.focus();
+    expect(selected()).toBe(1);
+    tabs()[1]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(selected()).toBe(2);
+    expect(document.activeElement).toBe(tabs()[2]);
+    tabs()[2]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
     expect(selected()).toBe(1);
     expect(document.activeElement).toBe(tabs()[1]);
     tabs()[1]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
     expect(selected()).toBe(0);
     expect(document.activeElement).toBe(tabs()[0]);
     tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
-    expect(selected()).toBe(2); // wraps around
+    expect(selected()).toBe(3); // wraps around to the last of the four tabs
   });
 
   it("the brand is the Firebreak mark, the name and a blue ug; it scrolls to the top", () => {

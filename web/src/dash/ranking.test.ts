@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createDataApi } from "../data/index";
 import type { AppData, Atmosphere, Experiment, MoonData, NearestQuery, TestRun } from "../contract";
-import { rankForAir } from "./ranking";
+import { nearestPlacedTest, rankForAir } from "./ranking";
 
 const read = (rel: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8"));
 
@@ -133,6 +133,20 @@ describe("ranking order rules (DISTANCE.md)", () => {
     const got = rankForAir(createDataApi(data), q, null);
     expect(got.ranked).toEqual([]);
     expect(got.unrankable).toEqual([{ investigation: "PSI-A", acronym: "Aaa" }]);
+  });
+
+  it("nearestPlacedTest returns the investigation's closest placed test for source links", () => {
+    const { query, atmosphere } = queryFor("heo-dm-1006");
+    const ranked = rankForAir(api, query, atmosphere).ranked;
+    for (const r of ranked) {
+      const hit = nearestPlacedTest(api, r.investigation, query, atmosphere)!;
+      expect(hit, `${r.investigation} has a nearest placed test`).toBeDefined();
+      expect(hit.id.startsWith(`${r.investigation}#`)).toBe(true);
+      expect(hit.d).toBe(r.d_min);
+      const row = tests.find((t) => t.id === hit.id)!;
+      expect(hit.url).toBe(row.source.url);
+    }
+    expect(nearestPlacedTest(api, "PSI-98", query, atmosphere)).toBeNull();
   });
 
   it("refuses an open band as a query and a missing atmosphere", () => {
