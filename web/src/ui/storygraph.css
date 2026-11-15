@@ -1,0 +1,25 @@
+/* The evidence fan (K13). Generated with Claude, SI-assisted. Tokens only; motion = stroke-dashoffset and opacity. */
+.sg { grid-column: 1 / -1; min-width: 0; margin: 0 0 8px; padding: var(--gap); background: var(--space-black); border: 1px solid var(--rule); overflow: hidden; }
+.sg-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sg-line { fill: none; stroke: var(--rule); stroke-width: 1.5; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke 0.15s ease-out; }
+.sg-svg.go .sg-line { animation: sg-draw 900ms ease-out forwards; animation-delay: calc(var(--i) * 40ms); }
+.sg-line.on { stroke: var(--moon); stroke-width: 2.5; }
+.sg-node { opacity: 0; font-family: var(--font); font-size: var(--text-meta); fill: var(--ink-dark); }
+.sg-svg.go .sg-node { animation: sg-fade 300ms ease-out forwards; animation-delay: calc(700ms + var(--n, 0) * 15ms); }
+.sg-node rect { fill: var(--space-deep); stroke: var(--fam, var(--rule)); stroke-width: 1.5; }
+.sg-hub rect { fill: var(--moon); stroke: var(--moon); }
+.sg-hub text { fill: var(--space-black); font-weight: 700; }
+.sg-fam text { font-weight: 500; }
+.sg-chip { fill: var(--space-black); stroke: var(--rule); stroke-width: 1; }
+.sg-chip-text { fill: var(--muted-dark); }
+.sg-inv[role="button"] { cursor: pointer; }
+.sg-inv[role="button"]:hover .sg-box, .sg-inv[role="button"]:focus-visible .sg-box { stroke: var(--moon); stroke-width: 2.5; }
+.sg-inv:focus { outline: none; }
+.sg-inv:focus-visible .sg-box { stroke: var(--ink-dark); stroke-width: 3; }
+@keyframes sg-draw { to { stroke-dashoffset: 0; } }
+@keyframes sg-fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .sg-line { stroke-dashoffset: 0; transition: none; }
+  .sg-node { opacity: 1; }
+  .sg-svg.go .sg-line, .sg-svg.go .sg-node { animation: none; }
+}

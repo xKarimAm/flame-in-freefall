@@ -3,6 +3,7 @@
 import "./library.css";
 import { FAMILIES, OUTCOME_GROUP, type Ctx, type Family, type OutcomeGroup } from "../contract";
 import { DATA_URL_BASE } from "../data/index";
+import { renderStoryGraph } from "./storygraph";
 import { cite, dataLink, h, numOrMissing, safeHref } from "./dom";
 
 export type Signature = "condition-map" | "sample-wall" | "outcome-strip" | "paper-trail";
@@ -634,6 +635,8 @@ function testCount(story: LibraryStory, ctx: Ctx): number {
 export function renderLibraryList(stories: LibraryStory[], ctx: Ctx, onOpen: (id: string) => void): HTMLElement {
   const { t } = ctx;
   const list = h("div", { class: "lib-list" });
+  const fan = renderStoryGraph(stories, ctx, onOpen);
+  if (fan) list.append(fan);
   let current: Family | null | undefined;
   let grid: HTMLElement | null = null;
   for (const s of shelfOrder(stories, ctx)) {
