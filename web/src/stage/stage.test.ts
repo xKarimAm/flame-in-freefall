@@ -1720,3 +1720,21 @@ describe("family parade", () => {
     expect(rules.join("")).not.toContain("--moon");
   });
 });
+
+describe("K8/K9 tilt focus and idle drift", () => {
+  it("focuses each plane head-on and keeps the idle sway small", async () => {
+    const { focusPose, idleDrift } = await import("./tilt");
+    const geo = tiltPlaneGeometry();
+    for (const p of ["lunar", "earth"] as const) {
+      const f = focusPose(p, 1.6);
+      expect(f.look).toEqual(geo[p].center);
+      expect(f.pos[2]).toBeGreaterThan(geo[p].center[2]);
+    }
+    expect(focusPose("all", 1.6)).toEqual(tiltPose(1, 1.6));
+    for (let ms = 0; ms < 60000; ms += 997) {
+      const [dx, dy] = idleDrift(ms);
+      expect(Math.abs(dx)).toBeLessThanOrEqual(0.45);
+      expect(Math.abs(dy)).toBeLessThanOrEqual(0.15);
+    }
+  });
+});
