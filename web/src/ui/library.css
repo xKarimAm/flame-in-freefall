@@ -1,0 +1,86 @@
+/* The experiment shelf and the story pages. Generated with Muse Spark, SI-assisted.
+   Flat colour from tokens only, square corners, motion = transform only on one ease-out curve. */
+
+/* One colour role per family, used on the shelf cards and on the story page.
+   No yellow: yellow is the Moon box and the one primary action. */
+.fam-large-scale-solids { --fam: var(--flame); }
+.fam-solids-in-flow-duct { --fam: var(--data-on-dark); }
+.fam-gas-jets { --fam: var(--ink-dark); }
+.fam-droplets { --fam: var(--link); }
+.fam-smoke-detection { --fam: var(--muted-dark); }
+.fam-ground-modeling { --fam: var(--rule); }
+
+#overlay .overlay-inner { max-width: 1120px; }
+
+/* ---- the shelf ---- */
+.lib-group { margin-top: 24px; }
+.lib-group[hidden] { display: none; }
+.lib-group-title { margin: 0 0 12px; font-size: var(--text-body); font-weight: 500; color: var(--muted-dark); }
+.lib-grid { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: stretch; }
+@media (min-width: 700px) { .lib-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .lib-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+#overlay .lib-grid > .library-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink-dark);
+  background: var(--space-black);
+  border: 0;
+  border-top: 4px solid var(--fam, var(--rule));
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform 150ms var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+#overlay .lib-grid > .library-card[hidden] { display: none; }
+#overlay .lib-grid > .library-card:hover { transform: translateY(-2px); background: var(--space-deep); }
+#overlay .lib-grid > .library-card:focus-visible { outline: 3px solid var(--ink-dark); outline-offset: 2px; }
+.lib-card-title {
+  font-size: clamp(var(--text-body), 1.6vw, var(--text-card));
+  font-weight: 500;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+.lib-card-voice { color: var(--muted-dark); font-size: var(--text-meta); line-height: 1.4; }
+.lib-card-family, .lib-card-count { font-size: var(--text-meta); color: var(--muted-dark); }
+.lib-card-family { margin-top: auto; padding-top: 8px; color: var(--ink-dark); }
+
+/* ---- the story page: a picture-book spread ---- */
+#overlay .lib-book { max-width: none; border-top: 4px solid var(--fam, var(--rule)); padding-top: 16px; }
+#overlay .lib-book .lib-title { font-size: clamp(var(--text-card), 2.6vw, var(--text-chapter)); line-height: 1.15; margin: 0 0 8px; }
+#overlay .lib-title:focus { outline: none; }
+#overlay .lib-title:focus-visible { outline: 3px solid var(--ink-dark); outline-offset: 4px; }
+.lib-spread { display: grid; grid-template-columns: 1fr; gap: 24px; margin: 16px 0 24px; align-items: start; }
+@media (min-width: 900px) { .lib-spread { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 40px; } }
+.lib-beats { display: grid; gap: 20px; }
+#overlay .lib-beats .lib-hook { margin: 0; font-size: clamp(var(--text-card), 2.2vw, 32px); font-weight: 500; line-height: 1.3; }
+#overlay .lib-beats .lib-bridge { margin: 0; font-size: clamp(var(--text-body), 1.5vw, 21px); line-height: 1.6; color: var(--muted-dark); }
+.lib-hero { padding: 0 0 0 20px; border-left: 4px solid var(--data-on-dark); }
+.lib-hero .lib-bignum { margin: 0 0 12px; }
+.lib-hero .lib-bignum a { display: block; }
+.lib-hero .lib-bignum-value { font-size: clamp(var(--text-chapter), 5vw, var(--text-cover)); color: var(--data-on-dark); }
+.lib-hero .lib-bignum-label { font-size: var(--text-body); line-height: 1.4; color: var(--ink-dark); }
+.lib-hero .lib-psi, .lib-no-moment { margin: 0; font-size: var(--text-meta); color: var(--muted-dark); }
+
+/* ---- previous / next ---- */
+.lib-pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin: 32px 0 8px; }
+.lib-pager .btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; min-height: 48px; }
+.lib-pager .btn[disabled] { opacity: 0.4; cursor: default; }
+.lib-pager-title { font-size: var(--text-meta); color: var(--muted-dark); }
+
+@media (prefers-reduced-motion: reduce) {
+  #overlay .lib-grid > .library-card { transition: none; }
+  #overlay .lib-grid > .library-card:hover { transform: none; }
+}
+
+/* each family group takes the full width of the shelf, whatever grid its parent uses */
+.lib-group { grid-column: 1 / -1; width: 100%; }

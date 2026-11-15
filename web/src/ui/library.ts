@@ -1,6 +1,7 @@
 // The experiment library: one page per story from one template (task 9).
 // Generated with Muse Spark, SI-assisted.
-import { OUTCOME_GROUP, type Ctx, type OutcomeGroup } from "../contract";
+import "./library.css";
+import { FAMILIES, OUTCOME_GROUP, type Ctx, type Family, type OutcomeGroup } from "../contract";
 import { DATA_URL_BASE } from "../data/index";
 import { cite, dataLink, h, numOrMissing, safeHref } from "./dom";
 
@@ -543,17 +544,29 @@ function psiLink(story: LibraryStory, ctx: Ctx): HTMLElement | null {
   return exp ? cite(ctx.t("ui.sheet.detail.psi-link"), exp.psi_url, "plain") : null;
 }
 
-/** Public: the signature view first, the hook, one moment as a large number, the bridge. */
+/** The story's family by its core investigation; null when the data does not know it. */
+function familyOfStory(story: LibraryStory, ctx: Ctx): Family | null {
+  return ctx.api.familyOf(story.core.investigation);
+}
+
+/** One CSS class per family ("ground/modeling" becomes fam-ground-modeling); colours live in library.css. */
+function famClass(family: Family | null): string {
+  return family ? `fam-${family.replace(/[^a-z0-9]+/g, "-")}` : "";
+}
+
+/** Public: a picture-book spread (beats left, the moment right), then the signature view, then the AI tag. */
 function renderPublic(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): HTMLElement {
   const { t } = ctx;
-  const page = h("article", { class: "lib-page", "data-story": story.id });
+  const page = h("article", { class: `lib-page lib-book ${famClass(familyOfStory(story, ctx))}`.trim(), "data-story": story.id });
   page.append(h("h3", { class: "lib-title" }, story.title));
-  page.append(signatureView(story, moments, ctx));
   page.append(h("p", { class: "lib-voice" }, t("ui.library.voice", { voice: story.voice })));
-  page.append(h("p", { class: "lib-hook" }, story.hook));
-  const big = bigMoment(story, moments);
-  if (big) page.append(big);
-  page.append(h("p", { class: "lib-bridge" }, story.bridge));
+  const beats = h("div", { class: "lib-beats" }, h("p", { class: "lib-hook" }, story.hook), h("p", { class: "lib-bridge" }, story.bridge));
+  const hero = h("aside", { class: "lib-hero", "aria-label": t("ui.library.moment-label") });
+  hero.append(bigMoment(story, moments) ?? h("p", { class: "lib-no-moment" }, t("ui.library.no-moment")));
+  const link = psiLink(story, ctx);
+  if (link) hero.append(h("p", { class: "lib-psi" }, link));
+  page.append(h("div", { class: "lib-spread" }, beats, hero));
+  page.append(signatureView(story, moments, ctx));
   page.append(aiTag(story, t));
   return page;
 }
@@ -602,19 +615,54 @@ export function renderLibraryPage(story: LibraryStory, moments: LibraryMoment[],
   return renderPublic(story, moments, ctx);
 }
 
-/** The library shelf: one button per story. */
+/** The shelf order: families in FAMILIES order, stories in file order inside a family (unknown family last). */
+export function shelfOrder(stories: LibraryStory[], ctx: Ctx): LibraryStory[] {
+  const rank = (s: LibraryStory): number => {
+    const f = familyOfStory(s, ctx);
+    const i = f ? FAMILIES.indexOf(f) : -1;
+    return i < 0 ? FAMILIES.length : i;
+  };
+  return [...stories].sort((a, b) => rank(a) - rank(b)); // Array.sort is stable
+}
+
+/** Tests the story's investigations hold in the data; 0 means text and papers only. */
+function testCount(story: LibraryStory, ctx: Ctx): number {
+  return story.investigations.reduce((n, id) => n + (ctx.api.experiment(id)?.test_count ?? 0), 0);
+}
+
+/** The library shelf: stories grouped under family headings, one equal-height button per story. */
 export function renderLibraryList(stories: LibraryStory[], ctx: Ctx, onOpen: (id: string) => void): HTMLElement {
+  const { t } = ctx;
   const list = h("div", { class: "lib-list" });
-  for (const s of stories) {
+  let current: Family | null | undefined;
+  let grid: HTMLElement | null = null;
+  for (const s of shelfOrder(stories, ctx)) {
+    const fam = familyOfStory(s, ctx);
+    const famName = fam ? t(`ui.family.${fam}`) : t("ui.library.family-other");
+    if (!grid || fam !== current) {
+      current = fam;
+      grid = h("div", { class: "lib-grid" });
+      list.append(
+        h("section", { class: "lib-group", "data-family": fam ?? "" }, h("h4", { class: "lib-group-title" }, famName), grid),
+      );
+    }
+    const n = testCount(s, ctx);
     const card = h(
       "button",
-      { type: "button", class: "library-card" },
-      h("span", { class: "story-title" }, s.title),
-      h("span", { class: "story-voice" }, ctx.t("ui.library.voice", { voice: s.voice })),
+      { type: "button", class: `library-card ${famClass(fam)}`.trim() },
+      h("span", { class: "lib-card-title" }, s.title),
+      h("span", { class: "lib-card-voice" }, t("ui.library.voice", { voice: s.voice })),
+      h("span", { class: "lib-card-family" }, famName),
+      // a count from the data, inside a button so it cannot be a link: marked as the data's own
+      h(
+        "span",
+        { class: "lib-card-count", "data-own": true },
+        n ? t(n === 1 ? "ui.library.card.test-one" : "ui.library.card.tests", { n }) : t("ui.library.card.text-only"),
+      ),
     );
-    card.dataset.hay = `${s.id} ${s.title} ${s.voice} ${s.investigations.join(" ")}`.toLowerCase();
+    card.dataset.hay = `${s.id} ${s.title} ${s.voice} ${famName} ${s.investigations.join(" ")}`.toLowerCase();
     card.addEventListener("click", () => onOpen(s.id));
-    list.append(card);
+    grid.append(card);
   }
   return list;
 }
