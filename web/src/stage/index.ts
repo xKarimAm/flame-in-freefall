@@ -656,7 +656,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     hint.textContent = t("ui.stage.dial-hint");
     const result = html("p", "dial-result");
     result.setAttribute("aria-live", "polite");
-    side.append(hint, result);
+    // hint above the readout in one column beside the dial, so the two never run into each other
+    const notes = html("div", "dial-notes");
+    notes.append(hint, result);
+    side.append(notes);
     // one gentle nudge of the marker the first time the dial is on screen (CSS skips it under reduced motion)
     if (typeof IntersectionObserver !== "undefined") {
       const seen = new IntersectionObserver((es) => {
