@@ -52,13 +52,17 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
       ...(row ? rowBody(row) : [h("span", {}, t("ui.nearest.none"))]));
   }
 
-  /** One sentence from the nearest row; placeholders keep word order localizable. */
+  /** One sentence from the nearest row; placeholders keep word order localizable.
+   *  The verb is "tested", never "burned": the row may record no ignition or no outcome at all. */
   function answer(r: NearestRow): HTMLElement {
     const parts: Record<string, Node> = {
-      fuel: r.fuel ? cite(r.fuel, r.url, "num fuel") : h("span", { class: "missing" }, t("ui.nearest.fuel-unknown")),
+      fuel: r.fuel ? cite(r.fuel, r.url, "num fuel") : h("span", { class: "missing" }, t("ui.panel.answer.nofuel")),
       oxygen: num(r.o2_pct, 1, "%", r.url),
       pressure: num(r.pressure_kpa, 1, "kPa", r.url),
-      outcome: h("span", {}, t(`ui.outcome.${r.outcome}`)),
+      outcome:
+        r.outcome === "unknown"
+          ? h("span", { class: "missing" }, t("ui.panel.answer.unrecorded"))
+          : h("span", {}, t("ui.panel.answer.recorded", { outcome: t(`ui.outcome.${r.outcome}`) })),
     };
     const kids: (Node | string)[] = [];
     for (const bit of t("ui.panel.answer").split(/(\{\w+\})/g)) {

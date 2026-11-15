@@ -235,6 +235,49 @@ describe("ui", () => {
     expect(details().hasAttribute("hidden")).toBe(true);
   });
 
+  it("the answer says tested, with plain words for a missing fuel or outcome (task 34)", () => {
+    // real rows from data/build: no fuel + unknown outcome, fuel + unknown outcome, no ignition
+    const buildTests = read("../../../data/build/tests.json") as TestRun[];
+    const buildExps = read("../../../data/build/experiments.json") as Experiment[];
+    const row = (id: string): NearestRow => {
+      const t = buildTests.find((r) => r.id === id)!;
+      expect(t, `real row ${id}`).not.toBeUndefined();
+      return {
+        id: t.id, investigation: t.investigation, family: buildExps.find((e) => e.id === t.investigation)!.family,
+        fuel: t.fuel, o2_pct: t.o2_pct!, pressure_kpa: t.pressure_kpa!,
+        flow_cm_s: t.flow_cm_s ?? null, outcome: t.outcome, url: t.source.url,
+        ppo2_kpa: Math.round(t.pressure_kpa! * t.o2_pct!) / 100, gravity: "micro-g" as const, d: 0,
+      };
+    };
+    const answerFor = (id: string): string => {
+      document.body.innerHTML = `<header id="chrome"></header><div id="story"></div><aside id="panel" hidden></aside><section id="sheet" hidden></section><div id="overlay" hidden></div>`;
+      const store = createStore({ ...initialState, sliders: { pressure_kpa: 56.5, o2_pct: 34 } });
+      const base = fakeApi();
+      const api: DataApi = {
+        ...base,
+        nearest: (query) => ({ query, rows: [row(id)], familyMix: [], nearestBurned: null, nearestWentOut: null }),
+      };
+      mount(roots(), { api, store, dicts: {}, t: makeT(() => "en") });
+      return roots().panel.querySelector(".answer")!.textContent!;
+    };
+    // no fuel, outcome unknown: verb and both missing parts in plain words
+    const noFuel = answerFor("PSI-10#56-1");
+    expect(noFuel).toContain("tested");
+    expect(noFuel).toContain("a fuel that was not recorded");
+    expect(noFuel).toContain("The outcome was not recorded.");
+    expect(noFuel).not.toContain("burned");
+    // fuel recorded, outcome unknown: fuel named, outcome in plain words
+    const unknown = answerFor("PSI-39#1");
+    expect(unknown).toContain("tested C12H26");
+    expect(unknown).toContain("The outcome was not recorded.");
+    expect(unknown).not.toContain("burned");
+    // recorded no-ignition: tested, not burned; the record names what happened
+    const noIgnition = answerFor("PSI-159#20");
+    expect(noIgnition).toContain("tested 50% butane");
+    expect(noIgnition).toContain("The record says: Did not ignite.");
+    expect(noIgnition).not.toContain("burned");
+  });
+
   it("the Public panel leads with the answer in large type, then sliders, presets, Show the details", () => {
     setup(); // public, sliders live
     const panel = roots().panel;
