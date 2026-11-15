@@ -25,6 +25,8 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?
 /** The ending card talks to the rest of the app without importing it: scrolling is DOM,
  *  the data lens is the store, and the Stories overlay listens for this event (see ui/overlay.ts). */
 export const OPEN_OVERLAY_EVENT = "firebreak:open-overlay";
+/** The ending card's "See every experiment" opens the library, not the story list. */
+export const OPEN_LIBRARY_EVENT = "firebreak:open-library";
 
 function scrollCenter(el: Element | null): void {
   if (!el) return;
@@ -125,7 +127,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
         document.querySelector(`#story-${MOON_STORY_ID}`),
     ),
   );
-  libraryBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent(OPEN_OVERLAY_EVENT, { detail: libraryBtn })));
+  libraryBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent(OPEN_LIBRARY_EVENT, { detail: libraryBtn })));
   dataBtn.addEventListener("click", () => {
     ctx.store.set({ lens: "analyst" });
     scrollCenter(document.getElementById("sheet"));

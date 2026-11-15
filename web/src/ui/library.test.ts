@@ -1,0 +1,255 @@
+// @vitest-environment jsdom
+// Generated with Muse Spark, SI-assisted. Library view tests: real data/build files, no typed-in content.
+import { readFileSync } from "node:fs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Ctx, DataApi } from "../contract";
+import { createDataApi } from "../data/index";
+import { makeT } from "../i18n/index";
+import { createStore, initialState } from "../store";
+import {
+  parseLibrary,
+  parseMoments,
+  renderLibraryList,
+  renderLibraryPage,
+  type LibraryMoment,
+  type LibraryStory,
+} from "./library";
+import { mountOverlay } from "./overlay";
+
+const read = (rel: string): any => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf8"));
+const stories: LibraryStory[] = parseLibrary(read("../../../data/build/library.json"));
+const moments: LibraryMoment[] = parseMoments(read("../../../data/build/moments.json"));
+
+function ctx(): Ctx {
+  const api: DataApi = createDataApi({
+    experiments: read("../../../data/build/experiments.json"),
+    tests: read("../../../data/build/tests.json"),
+    moon: read("../../../data/curated/moon.json"),
+    incidents: read("../../../data/curated/incidents.json"),
+  });
+  const store = createStore({ ...initialState });
+  return { api, store, dicts: { en: read("../i18n/en.json") }, t: makeT(() => "en") };
+}
+
+const story = (id: string): LibraryStory => stories.find((s) => s.id === id)!;
+const mom = (id: string): LibraryMoment => moments.find((m) => m.id === id)!;
+/** The same formatting the page uses: integers plain, others trimmed to two decimals. */
+const fmtCheck = (v: number): string => (Number.isInteger(v) ? String(v) : String(Number(v.toFixed(2))));
+
+/** Text nodes with a digit outside a link, outside data-own provenance, outside the title and the quoted source text. */
+function unlinkedDataNumbers(root: Element): string[] {
+  const out: string[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const el = n.parentElement!;
+    if (el.closest("svg title")) continue; // tooltips are never rendered text
+    if (!/\d/.test(n.textContent ?? "")) continue;
+    if (el.closest('a[href^="https://"], a[href^="data/"], [data-own]')) continue;
+    if (el.closest("h3.lib-title, blockquote.lib-quote")) continue; // names and verbatim source quotes
+    out.push(n.textContent!.trim());
+  }
+  return out;
+}
+
+describe("library", () => {
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  it("parses the real library file: 19 stories, every moment id resolves", () => {
+    expect(stories).toHaveLength(19);
+    const ids = new Set(moments.map((m) => m.id));
+    for (const s of stories) for (const m of s.moments) expect(ids.has(m)).toBe(true);
+  });
+
+  it("rejects garbage instead of guessing", () => {
+    expect(() => parseLibrary(null)).toThrow();
+    expect(() => parseLibrary([{ id: "x" }])).toThrow();
+    expect(() => parseLibrary([{ ...stories[0], signature: "confetti" }])).toThrow();
+    expect(() => parseMoments([{ id: "PSI-69.x", value: "lots" }])).toThrow();
+  });
+
+  it("the drafted text holds no digits: numbers come only from moments", () => {
+    for (const s of stories) {
+      expect(s.hook).not.toMatch(/\d/);
+      expect(s.reveal).not.toMatch(/\d/);
+      expect(s.bridge).not.toMatch(/\d/);
+    }
+  });
+
+  it("one template renders every story: title, voice, quote with PSI link, hook, reveal, moments, bridge, AI tag", () => {
+    for (const s of stories) {
+      const c = ctx();
+      const page = renderLibraryPage(s, moments, c);
+      expect(page.querySelector("h3.lib-title")!.textContent).toContain(s.title);
+      expect(page.querySelector(".lib-voice")!.textContent).toContain(s.voice);
+      const quote = page.querySelector("blockquote.lib-quote")!;
+      expect(quote.textContent).toContain(s.core.quote);
+      const psiUrl = c.api.experiment(s.core.investigation)!.psi_url;
+      expect(quote.querySelector(`a[href="${psiUrl}"]`)).not.toBeNull();
+      expect(page.textContent).toContain(s.hook);
+      expect(page.textContent).toContain(s.reveal);
+      expect(page.textContent).toContain(s.bridge);
+      const ai = page.querySelector(".lib-ai")!;
+      expect(ai.textContent).toContain("AI summary");
+      expect(ai.textContent).toContain(s.ai.model);
+      expect(ai.textContent).toContain(s.ai.made_at);
+      const items = [...page.querySelectorAll(".lib-moment")];
+      expect(items.length).toBe(s.moments.length);
+      for (const id of s.moments) {
+        const m = mom(id);
+        const li = items.find((el) => el.textContent!.startsWith(`${m.label}: `))!;
+        expect(li).not.toBeUndefined();
+        const link = li.querySelector(`a[href="${m.url}"]`)!;
+        expect(link).not.toBeNull();
+        expect(link.textContent).toContain(m.label);
+        expect(link.textContent).toContain(fmtCheck(m.value));
+        if (m.value_max != null) expect(link.textContent).toContain(fmtCheck(m.value_max));
+      }
+      expect(unlinkedDataNumbers(page)).toEqual([]);
+    }
+  });
+
+  it("signature charts are labelled for screen readers", () => {
+    const c = ctx();
+    expect(renderLibraryPage(story("flex"), moments, c).querySelector("svg.lib-map")!.getAttribute("aria-label")).toBe(
+      "One dot per real test",
+    );
+    expect(renderLibraryPage(story("spice"), moments, c).querySelector("svg.lib-strip")!.getAttribute("aria-label")).toBe(
+      "One mark per real test",
+    );
+  });
+
+  it("condition-map draws one dot per placed test of the story", () => {
+    const c = ctx();
+    const s = story("flex");
+    const page = renderLibraryPage(s, moments, c);
+    const dots = page.querySelectorAll("svg.lib-map circle");
+    const placed = c.api.placed().filter((p) => s.investigations.includes(p.investigation));
+    expect(placed.length).toBeGreaterThan(100);
+    expect(dots.length).toBe(placed.length);
+    const caption = page.querySelector(".lib-sig-caption a")!;
+    expect(caption.getAttribute("href")).toBe("data/tests.json");
+    expect(caption.textContent).toContain(String(placed.length));
+  });
+
+  it("sample-wall draws one card per test row of the story, each with a source link", () => {
+    const c = ctx();
+    const s = story("bass");
+    const page = renderLibraryPage(s, moments, c);
+    const rows = c.api.data.tests.filter((t) => s.investigations.includes(t.investigation));
+    expect(rows.length).toBe(122);
+    const cards = page.querySelectorAll(".lib-card");
+    expect(cards.length).toBe(rows.length);
+    for (const card of cards) expect(card.querySelector('a[href^="https://"]')).not.toBeNull();
+  });
+
+  it("sample-wall shows recorded oxygen linked and missing pressure as not recorded", () => {
+    const c = ctx();
+    const page = renderLibraryPage(story("bass-ii"), moments, c);
+    expect(page.querySelector(".lib-card a.num")).not.toBeNull();
+    expect(page.querySelector(".lib-card .missing")!.textContent).toContain("not recorded");
+  });
+
+  it("outcome-strip names its variable with its unit", () => {
+    const c = ctx();
+    expect(renderLibraryPage(story("spice"), moments, c).querySelector("svg.lib-strip .lib-axis")!.textContent).toBe(
+      "Flow (cm/s)",
+    );
+    expect(renderLibraryPage(story("flex-2"), moments, c).querySelector("svg.lib-strip .lib-axis")!.textContent).toBe(
+      "Oxygen (%)",
+    );
+  });
+
+  it("outcome-strip marks one row per test with the recorded variable (flow for SPICE, oxygen for FLEX-2)", () => {
+    const c = ctx();
+    const spice = story("spice");
+    const spiceMarks = renderLibraryPage(spice, moments, c).querySelectorAll("svg.lib-strip line.lib-mark");
+    const spiceRows = c.api.data.tests.filter(
+      (t) => spice.investigations.includes(t.investigation) && t.flow_cm_s != null,
+    );
+    expect(spiceRows.length).toBe(444);
+    expect(spiceMarks.length).toBe(spiceRows.length);
+    const flex2 = story("flex-2");
+    const flex2Page = renderLibraryPage(flex2, moments, c);
+    const flex2Marks = flex2Page.querySelectorAll("svg.lib-strip line.lib-mark");
+    // FLEX-2 rows record oxygen only as a range: one bar per row, never a midpoint
+    const flex2Rows = c.api.data.tests.filter(
+      (t) => flex2.investigations.includes(t.investigation) && (t.o2_pct ?? t.o2_pct_min) != null,
+    );
+    expect(flex2Rows.length).toBe(8);
+    expect(flex2Marks.length).toBe(flex2Rows.length);
+    expect(flex2Page.querySelectorAll("svg.lib-strip line.lib-mark.lib-range").length).toBe(8);
+  });
+
+  it("paper-trail lists every publication with a DOI or PSI link", () => {
+    const c = ctx();
+    const s = story("bre");
+    const pubs = c.api.experiment("PSI-20")!.publications;
+    expect(pubs.length).toBeGreaterThan(0);
+    const page = renderLibraryPage(s, moments, c);
+    const items = page.querySelectorAll(".lib-papers li");
+    expect(items.length).toBe(pubs.length);
+    for (const [i, li] of [...items].entries()) {
+      const p = pubs[i]!;
+      expect(li.textContent).toContain(p.title);
+      const href = li.querySelector("a")!.getAttribute("href")!;
+      expect(href).toBe(p.doi ? `https://doi.org/${p.doi}` : c.api.experiment("PSI-20")!.psi_url);
+    }
+  });
+
+  it("the overlay library mode lists, filters and opens stories", async () => {
+    document.body.innerHTML = `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="x"></section><div id="overlay" hidden></div>`;
+    const c = ctx();
+    const root = document.getElementById("overlay")!;
+    const { open, openLibrary } = mountOverlay(root, c, async () => ({ stories, moments }));
+    const opener = document.createElement("button");
+    document.body.append(opener);
+    await openLibrary(opener);
+    expect(root.hidden).toBe(false);
+    expect(root.querySelectorAll(".library-card").length).toBe(19);
+    expect(root.querySelector(".overlay-count")!.textContent).toBe("19 of 19 experiments");
+    const box = root.querySelector<HTMLInputElement>("#overlay-search")!;
+    box.value = "grows differently";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    const visible = () => [...root.querySelectorAll<HTMLElement>(".library-card")].filter((el) => !el.hidden);
+    expect(visible().length).toBe(1);
+    expect(root.querySelector(".overlay-count")!.textContent).toBe("1 of 19 experiments");
+    visible()[0]!.click();
+    expect(root.querySelector(".lib-page .lib-title")!.textContent).toContain("SAME / SAME-R");
+    root.querySelector<HTMLButtonElement>(".library-back")!.click();
+    await Promise.resolve();
+    expect(root.querySelectorAll(".library-card").length).toBe(19);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    expect(root.hidden).toBe(true);
+    expect(document.activeElement).toBe(opener);
+    void open;
+  });
+
+  it("the open-library event opens the library and the open-overlay event still opens stories", async () => {
+    document.body.innerHTML = `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="Build your Moon-base air"></section><div id="overlay" hidden></div>`;
+    const c = ctx();
+    const root = document.getElementById("overlay")!;
+    mountOverlay(root, c, async () => ({ stories, moments }));
+    const opener = document.createElement("button");
+    window.dispatchEvent(new CustomEvent("firebreak:open-library", { detail: opener }));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(root.hidden).toBe(false);
+    expect(root.querySelector(".library-title")!.textContent).toBe("Every experiment");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    window.dispatchEvent(new CustomEvent("firebreak:open-overlay", { detail: opener }));
+    expect(root.querySelectorAll(".story-card").length).toBe(1);
+    expect(root.querySelector(".library-card")).toBeNull();
+  });
+
+  it("the list shows all 19 stories and opens the clicked one", () => {
+    const c = ctx();
+    let opened: string | null = null;
+    const list = renderLibraryList(stories, c, (id) => (opened = id));
+    const cards = list.querySelectorAll<HTMLButtonElement>(".library-card");
+    expect(cards.length).toBe(19);
+    [...cards].find((b) => b.textContent!.includes("putting fire out"))!.click();
+    expect(opened).toBe("flex");
+  });
+});

@@ -71,9 +71,9 @@ This project was built with AI tools, and every AI-made part is labelled.
 
 ## What is not done
 
-- The story library (one page per investigation) waits on the backend lane's `data/build/library.json`.
+- The experiment library ("See every experiment") is in, but its eight new English strings have no Spanish or Hindi translations yet (they fall back to English until the backend lane re-runs `translate.py`).
 - Arabic is not translated yet (`contracts/I18N.md` plans it last, with right-to-left layout).
-- The 3D tilt of the chart, search/sort/filter across the tables, and the plain-language explainer boxes are still queued.
+- The site search still computes its index from the loaded data instead of reading `data/build/search.json`.
 - Narrow screens were checked in headless Chrome only; real-device and full keyboard walkthroughs are still open.
 
 ## Repository map

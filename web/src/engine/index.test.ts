@@ -268,12 +268,12 @@ describe("engine mount", () => {
     expect(css).toMatch(/\.step-sources\s*\{[^}]*overflow-wrap:\s*anywhere/);
   });
 
-  it("the ending buttons retry the sliders, open the stories and switch to the data", () => {
+  it("the ending buttons retry the sliders, open the library and switch to the data", () => {
     const { store, el } = setup();
     const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
     const [retry, library, data] = [...el.querySelectorAll<HTMLButtonElement>(".ending button")];
     const opened: Event[] = [];
-    window.addEventListener("firebreak:open-overlay", (e) => opened.push(e));
+    window.addEventListener("firebreak:open-library", (e) => opened.push(e));
     library!.click();
     expect(opened).toHaveLength(1);
     expect((opened[0] as CustomEvent).detail).toBe(library);

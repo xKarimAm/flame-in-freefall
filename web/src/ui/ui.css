@@ -110,6 +110,34 @@ table.test-rows { margin-top: 12px; font-size: 14px; }
 .story-card:hover { border-color: var(--ink-dark); }
 .story-act { display: block; color: var(--muted-dark); font-size: 14px; }
 .story-title { display: block; font-size: 20px; font-weight: 500; }
+.library-open { margin-top: 16px; }
+.library-title { font-size: 24px; margin: 16px 0 0; }
+.lib-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 16px; }
+.library-card { display: block; text-align: left; font: inherit; padding: 16px; background: var(--space-black); color: var(--ink-dark); border: 1px solid var(--rule); border-top: 4px solid var(--data-on-dark); border-radius: var(--radius); cursor: pointer; }
+.library-card:hover { border-color: var(--ink-dark); }
+.library-card .story-voice { display: block; color: var(--muted-dark); font-size: 14px; margin-top: 8px; }
+.lib-page { max-width: 44rem; margin-top: 16px; }
+.lib-page .lib-title { font-size: 24px; margin: 0 0 4px; }
+.lib-voice { color: var(--muted-dark); font-size: 14px; margin: 0 0 12px; }
+.lib-quote { border-left: 4px solid var(--data-on-dark); margin: 0 0 12px; padding: 8px 12px; }
+.lib-page > p { line-height: 1.5; }
+.lib-sig { margin: 16px 0; }
+.lib-map, .lib-strip { display: block; width: 100%; max-width: 420px; height: auto; }
+.lib-dot { fill: var(--data-on-dark); }
+.lib-rail { stroke: var(--muted-dark); stroke-width: 2; }
+.lib-mark { stroke: var(--data-on-dark); stroke-width: 2; }
+.lib-axis { fill: var(--muted-dark); font-size: 12px; }
+.lib-sig-caption { color: var(--muted-dark); font-size: 14px; }
+.lib-moments-title { font-size: 18px; margin: 16px 0 8px; }
+.lib-moments { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.lib-cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.lib-card { border: 1px solid var(--rule); padding: 8px 12px; }
+.lib-card .lib-row { display: block; margin-top: 4px; font-size: 14px; }
+.lib-papers { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; }
+.lib-ai { color: var(--muted-dark); font-size: 14px; }
+#overlay a.num, #overlay a.plain { color: var(--data-on-dark); text-decoration: underline; text-underline-offset: 2px; }
+#overlay .ai-tag { display: inline-block; padding: 1px 8px; margin-right: 8px; background: var(--ink-dark); color: var(--space-black); font-weight: 700; font-size: 14px; }
+#overlay .missing { color: var(--muted-dark); font-style: italic; }
 
 @media (max-width: 1099px) {
   /* numbers only; the titles stay readable to screen readers */
