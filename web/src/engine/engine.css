@@ -89,6 +89,29 @@
 .step-sources { margin: 0; padding-left: 1.2em; font-size: 0.875rem; }
 .step-sources a { color: var(--muted-dark); text-decoration: underline; }
 
+/* ending card: what the visitor just saw, and three ways to go on */
+.ending { min-height: 90vh; display: flex; align-items: center; }
+.end-card {
+  width: min(30rem, 92vw);
+  margin-left: 4vw;
+  padding: 28px;
+  background: var(--space-black);
+  color: var(--ink-dark);
+  border-left: 4px solid var(--flame);
+}
+.end-title { margin: 0; font-size: clamp(1.75rem, 4vw, 2.5rem); line-height: 1.1; font-weight: 700; }
+.end-summary { max-width: 44ch; margin: 16px 0 0; font-size: clamp(1.125rem, 1.6vw, 1.5rem); line-height: 1.4; }
+.end-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.end-btn {
+  font: inherit; font-size: 15px; line-height: 1.2;
+  min-height: 40px; padding: 8px 14px; border-radius: var(--radius);
+  background: transparent; color: var(--ink-dark);
+  border: 1px solid var(--rule); cursor: pointer;
+}
+.end-btn:hover { border-color: var(--ink-dark); }
+.end-btn.primary { background: var(--moon); color: var(--ink); border-color: var(--moon); font-weight: 700; }
+.end-btn.primary:hover { border-color: var(--ink-dark); }
+
 /* narrow screens: cards sit at the bottom so the chart above stays readable */
 @media (max-width: 1099px) {
   #story .step { align-items: flex-end; padding-bottom: 5vh; }

@@ -5,6 +5,8 @@ import { h, prefersReducedMotion } from "./dom";
 export function mountOverlay(root: HTMLElement, ctx: Ctx): { open(opener: HTMLElement): void } {
   const { t } = ctx;
   let opener: HTMLElement | null = null;
+  // the engine's ending card opens the overlay without importing it (see web/src/engine/index.ts)
+  window.addEventListener("firebreak:open-overlay", (e) => open((e as CustomEvent<HTMLElement>).detail ?? root));
 
   function close(): void {
     root.hidden = true;

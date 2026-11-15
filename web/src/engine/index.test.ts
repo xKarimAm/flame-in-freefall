@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Generated with Claude, SI-assisted
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppState, Ctx, DataApi } from "../contract";
 import { dicts, makeT } from "../i18n/index";
 import { createStore } from "../store";
@@ -30,6 +30,9 @@ function setup() {
 }
 
 describe("engine mount", () => {
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
+  });
   const flat = flattenBeats(stories);
   const hook = flat.findIndex((f) => f.beat.kind === "hook");
   // the moon-air compare beat: the only compare beat with an astronaut key
@@ -178,5 +181,38 @@ describe("engine mount", () => {
   it("keeps step ids and order", () => {
     const { steps } = setup();
     expect(steps.map((s) => s.id)).toEqual(flat.map((f) => `beat-${f.story.id}-${f.scene.id}-${f.beat.id}`));
+  });
+
+  it("renders one ending card after the last story that is not a step", () => {
+    const { el, steps } = setup();
+    const endings = el.querySelectorAll(".ending");
+    expect(endings).toHaveLength(1);
+    expect(endings[0]!.classList.contains("step")).toBe(false);
+    expect(el.lastElementChild).toBe(endings[0]);
+    expect(steps).toHaveLength(flat.length); // the ending adds no steps
+    expect(endings[0]!.querySelector(".end-title")!.textContent).toBe(dicts.en!["ui.ending.title"]);
+    expect(endings[0]!.querySelector(".end-summary")!.textContent).toBe(dicts.en!["ui.ending.summary"]);
+    const btns = [...endings[0]!.querySelectorAll("button")];
+    expect(btns.map((b) => b.textContent)).toEqual([
+      dicts.en!["ui.ending.retry"],
+      dicts.en!["ui.ending.library"],
+      dicts.en!["ui.ending.data"],
+    ]);
+    expect(btns[0]!.classList.contains("primary")).toBe(true);
+  });
+
+  it("the ending buttons retry the sliders, open the stories and switch to the data", () => {
+    const { store, el } = setup();
+    const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
+    const [retry, library, data] = [...el.querySelectorAll<HTMLButtonElement>(".ending button")];
+    const opened: Event[] = [];
+    window.addEventListener("firebreak:open-overlay", (e) => opened.push(e));
+    library!.click();
+    expect(opened).toHaveLength(1);
+    expect((opened[0] as CustomEvent).detail).toBe(library);
+    data!.click();
+    expect(store.get().lens).toBe("analyst");
+    retry!.click();
+    expect(scroll.mock.contexts.at(-1)).toBe(document.getElementById("beat-moon-air-moon-air-main-interactive"));
   });
 });

@@ -354,4 +354,17 @@ describe("ui", () => {
     expect(roots().overlay.hidden).toBe(true);
     expect(document.activeElement).toBe(stories);
   });
+
+  it("the engine ending card opens the Stories overlay through the open-overlay event", () => {
+    setup();
+    document.getElementById("story")!.innerHTML =
+      `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="Build your Moon-base air"></section>`;
+    expect(roots().overlay.hidden).toBe(true);
+    const opener = document.createElement("button");
+    window.dispatchEvent(new CustomEvent("firebreak:open-overlay", { detail: opener }));
+    expect(roots().overlay.hidden).toBe(false);
+    const cards = roots().overlay.querySelectorAll(".story-card");
+    expect(cards.length).toBe(1);
+    expect(cards[0]!.textContent).toContain("Build your Moon-base air");
+  });
 });

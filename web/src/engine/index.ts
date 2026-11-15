@@ -1,6 +1,7 @@
 // Scroll engine: stories -> steps -> active beat -> store. Coder C owns this folder (T5).
 // Generated with Claude, SI-assisted.
 import scrollama from "scrollama";
+import { MOON_STORY_ID } from "../contract";
 import type { Ctx } from "../contract";
 import "./engine.css";
 import { flattenBeats, stories } from "./stories";
@@ -19,6 +20,17 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?
   if (cls) e.className = cls;
   if (text !== undefined) e.textContent = text;
   return e;
+}
+
+/** The ending card talks to the rest of the app without importing it: scrolling is DOM,
+ *  the data lens is the store, and the Stories overlay listens for this event (see ui/overlay.ts). */
+export const OPEN_OVERLAY_EVENT = "firebreak:open-overlay";
+
+function scrollCenter(el: Element | null): void {
+  if (!el) return;
+  const behavior =
+    typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  (el as HTMLElement).scrollIntoView({ block: "center", behavior });
 }
 
 export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = scrollama): void {
@@ -84,12 +96,45 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     labels.push(label);
   }
 
+  // ending card: what the visitor just saw, and three ways to go on
+  const ending = node("section", "ending");
+  const endTitle = node("h2", "end-title");
+  const endSummary = node("p", "end-summary");
+  const endActions = node("div", "end-actions");
+  const retryBtn = node("button", "end-btn primary");
+  retryBtn.type = "button";
+  const libraryBtn = node("button", "end-btn");
+  libraryBtn.type = "button";
+  const dataBtn = node("button", "end-btn");
+  dataBtn.type = "button";
+  retryBtn.addEventListener("click", () =>
+    scrollCenter(
+      document.querySelector(`#story-${MOON_STORY_ID} .step[data-sliders="true"]`) ??
+        document.querySelector(`#story-${MOON_STORY_ID}`),
+    ),
+  );
+  libraryBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent(OPEN_OVERLAY_EVENT, { detail: libraryBtn })));
+  dataBtn.addEventListener("click", () => {
+    ctx.store.set({ lens: "analyst" });
+    scrollCenter(document.getElementById("sheet"));
+  });
+  endActions.append(retryBtn, libraryBtn, dataBtn);
+  const endCard = node("div", "end-card");
+  endCard.append(endTitle, endSummary, endActions);
+  ending.append(endCard);
+  el.append(ending);
+
   function render(): void {
     const { lens, locale } = ctx.store.get();
     el.dataset.lens = lens;
     coverTitle.textContent = ctx.t("ui.cover.title");
     coverLead.textContent = ctx.t("ui.cover.lead");
     coverCue.textContent = ctx.t("ui.cover.cue");
+    endTitle.textContent = ctx.t("ui.ending.title");
+    endSummary.textContent = ctx.t("ui.ending.summary");
+    retryBtn.textContent = ctx.t("ui.ending.retry");
+    libraryBtn.textContent = ctx.t("ui.ending.library");
+    dataBtn.textContent = ctx.t("ui.ending.data");
     flat.forEach(({ beat }, i) => {
       pages[i].textContent = ctx.t("ui.engine.page", { n: i + 1, total: flat.length });
       texts[i].textContent = resolveText(ctx.dicts, beat.text, lens, locale);
