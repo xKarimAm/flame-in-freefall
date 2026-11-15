@@ -28,6 +28,26 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   let testSortKey: TestSortKey = "investigation";
   let testSortDir: 1 | -1 = 1;
   let selectedInv: string | null = null;
+  // A number's link to its own data file opens a short readable note with a download,
+  // not the raw JSON in the page. Links to NASA pages and real downloads are untouched.
+  root.addEventListener("click", (ev) => {
+    const a = (ev.target as Element | null)?.closest?.("a[href^='data/']") as HTMLAnchorElement | null;
+    if (!a || a.hasAttribute("download") || ev.defaultPrevented) return;
+    ev.preventDefault();
+    const file = (a.getAttribute("href") ?? "").replace(/^data\//, "").split("#")[0];
+    const dlg = document.createElement("dialog");
+    dlg.className = "source-note";
+    const close = h("button", { type: "button", class: "source-close" }, t("ui.source.close"));
+    close.addEventListener("click", () => dlg.close());
+    dlg.append(
+      h("h2", {}, t("ui.source.title")),
+      h("p", {}, t("ui.source.body", { file })),
+      h("p", { class: "source-actions" }, h("a", { href: `data/${file}`, download: file }, t("ui.source.download", { file })), close),
+    );
+    dlg.addEventListener("close", () => dlg.remove());
+    document.body.append(dlg);
+    if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+  });
   let searchEl: HTMLInputElement | null = null;
   let famSelEl: HTMLSelectElement | null = null;
   let fuelSelEl: HTMLSelectElement | null = null;
