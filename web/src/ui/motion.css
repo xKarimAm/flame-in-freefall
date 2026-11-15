@@ -5,54 +5,42 @@
    the page ready, and everything stops under prefers-reduced-motion.
    Generated with Muse Spark, SI-assisted. */
 
-:root { --motion-ease: cubic-bezier(0.22, 1, 0.36, 1); }
+:root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* One entrance for text and pictures everywhere: rise 20 px while fading in, 650 ms, parts trail by 75 ms. */
+  --motion-enter-dur: 650ms;
+  --motion-enter-dist: 20px;
+  --motion-stagger: 75ms;
+}
 
-/* ---------- R8b: cards and chapter pages enter in parts ---------- */
-/* The engine marks the scrolled-to step .is-active; page, sentence and sources
-   rise 16 to 24 px with opacity, staggered, and settle back on scroll back. */
-.step-card .step-page,
-.step-card .step-text,
-.step-card .step-sources {
-  transition: transform 0.45s var(--motion-ease), opacity 0.45s var(--motion-ease);
-}
-body[data-motion="on"] .step:not(.is-active) .step-card .step-page {
-  opacity: 0.25; transform: translateY(16px); transition-delay: 0s;
-}
-body[data-motion="on"] .step:not(.is-active) .step-card .step-text {
-  opacity: 0.25; transform: translateY(20px); transition-delay: 0s;
-}
-body[data-motion="on"] .step:not(.is-active) .step-card .step-sources {
-  opacity: 0.25; transform: translateY(24px); transition-delay: 0s;
-}
-.step.is-active .step-card .step-page { transition-delay: 0s; }
-.step.is-active .step-card .step-text { transition-delay: 0.08s; }
-.step.is-active .step-card .step-sources { transition-delay: 0.16s; }
-/* Chapter titles slide in from the left when first seen; questions follow, then the photograph. */
+/* ---------- R8b: chapter pages, cover and ending enter in parts ---------- */
+/* Story-page parts (label, sentences, sources, cue) use the same tokens in engine/reveal.css.
+   Chapter titles, questions and the photograph rise once when first seen: heading, then text, then picture. */
 .chapter .story-title,
 .chapter .chapter-question,
 .chapter .chapter-picture {
-  transition: transform 0.5s var(--motion-ease), opacity 0.5s var(--motion-ease);
+  transition: transform var(--motion-enter-dur) var(--motion-ease), opacity var(--motion-enter-dur) var(--motion-ease);
 }
 body[data-motion="on"] .chapter:not(.is-seen) .story-title {
-  opacity: 0.25; transform: translateX(-24px);
+  opacity: 0; transform: translateY(var(--motion-enter-dist));
 }
 body[data-motion="on"] .chapter:not(.is-seen) .chapter-question {
-  opacity: 0.25; transform: translateX(-16px); transition-delay: 0.08s;
+  opacity: 0; transform: translateY(var(--motion-enter-dist)); transition-delay: var(--motion-stagger);
 }
 body[data-motion="on"] .chapter:not(.is-seen) .chapter-picture {
-  opacity: 0.25; transform: translateX(-24px); transition-delay: 0.16s;
+  opacity: 0; transform: translateY(var(--motion-enter-dist)); transition-delay: calc(var(--motion-stagger) * 2);
 }
 /* Cover and ending arrive once, in parts, on load: pure CSS so a script failure
    still shows the whole page. */
-.cover-title { animation: rise-in 0.5s var(--motion-ease) both; }
-.cover-lead { animation: rise-in 0.5s var(--motion-ease) 0.08s both; }
-.cover-audience { animation: rise-in 0.5s var(--motion-ease) 0.16s both; }
-.cover-explore { animation: rise-in 0.5s var(--motion-ease) 0.24s both; }
-.end-card { animation: rise-in 0.5s var(--motion-ease) both; }
-/* Incident cards arrive stacked in parts; later cards trail by 60 to 90 ms. */
-.stage-incidents .incident-card { animation: rise-in 0.45s var(--motion-ease) both; }
-.stage-incidents .incident-card:nth-child(2) { animation-delay: 0.075s; }
-.stage-incidents .incident-card:nth-child(3) { animation-delay: 0.15s; }
+.cover-title { animation: rise-in var(--motion-enter-dur) var(--motion-ease) both; }
+.cover-lead { animation: rise-in var(--motion-enter-dur) var(--motion-ease) var(--motion-stagger) both; }
+.cover-audience { animation: rise-in var(--motion-enter-dur) var(--motion-ease) calc(var(--motion-stagger) * 2) both; }
+.cover-explore { animation: rise-in var(--motion-enter-dur) var(--motion-ease) calc(var(--motion-stagger) * 3) both; }
+.end-card { animation: rise-in var(--motion-enter-dur) var(--motion-ease) both; }
+/* Incident cards arrive stacked in parts; later cards trail by one stagger. */
+.stage-incidents .incident-card { animation: rise-in var(--motion-enter-dur) var(--motion-ease) both; }
+.stage-incidents .incident-card:nth-child(2) { animation-delay: var(--motion-stagger); }
+.stage-incidents .incident-card:nth-child(3) { animation-delay: calc(var(--motion-stagger) * 2); }
 
 /* ---------- R8a: continuity on the stage ---------- */
 /* Dots keep their nodes across beats (see stage/index.ts) and slide on cx/cy;
@@ -81,6 +69,9 @@ body[data-motion="on"] .chapter:not(.is-seen) .chapter-picture {
 /* The dial handle follows the pointer with no lag (paint is synchronous) and its
    halo settles with a short ease. */
 .o2-dial .dial-you { transition: opacity 0.18s ease-out; }
+/* K4: once, when the dial first scrolls into view, the marker bobs to show it can be dragged. */
+@keyframes dial-nudge { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-16px); } 65% { transform: translateY(9px); } }
+@media (prefers-reduced-motion: no-preference) { .o2-dial .dial-you.dial-nudge { animation: dial-nudge 1.2s ease-in-out 1; } }
 /* Slider thumbs answer at once and settle with a short ease. */
 .slider input[type="range"] { transition: opacity 0.3s var(--motion-ease); }
 .slider input[type="range"]::-webkit-slider-thumb { transition: transform 0.18s ease-out; }
@@ -124,7 +115,7 @@ label.family select { transition: background-color 0.12s ease-out, border-color 
 .dash-bar-fill { transform-box: fill-box; transform-origin: left center; animation: bar-grow 0.5s var(--motion-ease) both; }
 .dash-multiple svg, .lib-map, .lib-strip { animation: tab-in 0.45s var(--motion-ease); }
 
-@keyframes rise-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(var(--motion-enter-dist)); } to { opacity: 1; transform: none; } }
 @keyframes slide-in-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
 @keyframes tab-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes num-in { from { opacity: 0.3; transform: translateY(6px); } to { opacity: 1; transform: none; } }

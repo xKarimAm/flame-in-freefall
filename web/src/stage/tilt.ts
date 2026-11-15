@@ -277,6 +277,8 @@ export interface TiltScene {
   setDots(placed: PlacedTest[], nearest: Set<string>, input: TiltDotsInput, texts: TiltLabels): void;
   setFrame(w: number, h: number): void;
   setPose(k: number): void;
+  /** place the camera at an explicit pose (focus moves and the idle drift) */
+  setCamera(pose: Pose): void;
   dispose(): void;
 }
 
@@ -508,6 +510,11 @@ export function buildTiltScene(colors: TiltColors, initial: TiltLabels): TiltSce
       camera.lookAt(...pose.look);
       reposition();
     },
+    setCamera(pose) {
+      camera.position.set(...pose.pos);
+      camera.lookAt(...pose.look);
+      reposition();
+    },
     dispose() {
       scene.traverse((o) => {
         const mesh = o as THREE.Mesh;
@@ -527,6 +534,8 @@ export interface TiltView {
   update(placed: PlacedTest[], nearest: Set<string>, s: Scales, extras: TiltExtras): void;
   /** ease the camera to the tilted view (true) or back to flat (false) */
   setTilted(tilted: boolean): void;
+  /** ease the camera to one plane (or back to the overview); no-op if already there */
+  setFocus(plane: "micro" | "lunar" | "earth" | "all"): void;
   resize(w: number, h: number): void;
   dispose(): void;
 }
@@ -537,6 +546,19 @@ export interface TiltExtras {
   microLabel: string;
   lunarLabel: string;
   earthLabel: string;
+}
+
+/** Camera pose that frames one plane, tipped a little so it still reads as a plane. Pure. */
+export function focusPose(plane: "micro" | "lunar" | "earth" | "all", aspect: number): Pose {
+  if (plane === "all") return tiltPose(1, aspect);
+  const c = tiltPlaneGeometry()[plane].center;
+  const dist = Math.max(2.6 / TAN_HALF, 4.3 / (TAN_HALF * aspect)) * 1.25;
+  return { pos: [c[0], c[1] - 1.6, c[2] + dist], look: c };
+}
+
+/** Slow idle sway of the camera, in world units. Pure, so a test can bound it. */
+export function idleDrift(ms: number): [number, number] {
+  return [Math.sin(ms / 3200) * 0.45, Math.cos(ms / 4100) * 0.15];
 }
 
 /**
@@ -561,6 +583,7 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
     if (dead) return;
     dead = true;
     cancelAnimationFrame(raf);
+    cancelAnimationFrame(driftRaf);
     try {
       renderer.dispose();
     } catch {
@@ -595,9 +618,24 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
   let animToken = 0;
   let k = 0;
   let size = { w: 0, h: 0 };
+  let aspectNow = 1.3;
+  let focusKey: "micro" | "lunar" | "earth" | "all" = "all";
+  let hold: Pose | null = null; // the eased focus pose; null = the plain k pose
+  let moving = false;
+  let driftRaf = 0;
   const applyPose = (): void => {
-    view.setPose(k);
+    const base = hold ?? tiltPose(k, aspectNow);
+    // ponytail: the idle sway only plays once fully tipped, never during the flat-to-tipped ease
+    const [dx, dy] = k === 1 ? idleDrift(performance.now()) : [0, 0];
+    view.setCamera({ pos: [base.pos[0] + dx, base.pos[1] + dy, base.pos[2]], look: base.look });
     renderer.render(view.scene, view.camera);
+  };
+  const drift = (): void => {
+    if (dead || k !== 1) return;
+    if (!moving && !document.hidden) {
+      try { applyPose(); } catch (e) { fail(e); return; }
+    }
+    driftRaf = requestAnimationFrame(drift);
   };
 
   return {
@@ -628,6 +666,9 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
       const to = tilted ? 1 : 0;
       const start = performance.now();
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(driftRaf);
+      if (!tilted) { hold = null; focusKey = "all"; }
+      moving = true;
       const step = (): void => {
         if (token !== animToken || dead) return;
         try {
@@ -635,12 +676,41 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
           applyPose();
         } catch (e) { fail(e); return; }
         if (k !== to) raf = requestAnimationFrame(step);
+        else { moving = false; if (to === 1) driftRaf = requestAnimationFrame(drift); }
+      };
+      raf = requestAnimationFrame(step);
+    },
+    setFocus(plane) {
+      if (plane === focusKey || dead) return;
+      focusKey = plane;
+      const token = ++animToken;
+      const from = hold ?? tiltPose(k, aspectNow);
+      const to = focusPose(plane, aspectNow);
+      const start = performance.now();
+      cancelAnimationFrame(raf);
+      moving = true;
+      const step = (): void => {
+        if (token !== animToken || dead) return;
+        const p = easeOutCubic(Math.min(1, (performance.now() - start) / TILT_MS));
+        const m = (a: number, b: number): number => a + (b - a) * p;
+        hold = {
+          pos: [m(from.pos[0], to.pos[0]), m(from.pos[1], to.pos[1]), m(from.pos[2], to.pos[2])],
+          look: [m(from.look[0], to.look[0]), m(from.look[1], to.look[1]), m(from.look[2], to.look[2])],
+        };
+        try { applyPose(); } catch (e) { fail(e); return; }
+        if (p < 1) raf = requestAnimationFrame(step);
+        else {
+          moving = false;
+          if (plane === "all") hold = null;
+          if (k === 1) { cancelAnimationFrame(driftRaf); driftRaf = requestAnimationFrame(drift); }
+        }
       };
       raf = requestAnimationFrame(step);
     },
     resize(w, h) {
       if (w <= 0 || h <= 0) return;
       size = { w, h };
+      aspectNow = w / h;
       try {
         renderer.setSize(w, h, false);
         view.setFrame(w, h);
@@ -649,6 +719,7 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
     },
     dispose() {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(driftRaf);
       animToken++;
       view.dispose();
       renderer.dispose();
