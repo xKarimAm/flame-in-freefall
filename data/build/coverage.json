@@ -1,0 +1,43 @@
+{
+  "total": 1883,
+  "plotted": 986,
+  "not_plotted": 897,
+  "by_family": {
+    "large-scale solids": {
+      "total": 17,
+      "plotted": 0,
+      "not_plotted": 17
+    },
+    "solids in flow duct": {
+      "total": 251,
+      "plotted": 0,
+      "not_plotted": 251
+    },
+    "droplets": {
+      "total": 369,
+      "plotted": 357,
+      "not_plotted": 12
+    },
+    "gas jets": {
+      "total": 1129,
+      "plotted": 629,
+      "not_plotted": 500
+    },
+    "smoke detection": {
+      "total": 117,
+      "plotted": 0,
+      "not_plotted": 117
+    },
+    "ground/modeling": {
+      "total": 0,
+      "plotted": 0,
+      "not_plotted": 0
+    }
+  },
+  "by_reason": {
+    "no pressure recorded": 164,
+    "no oxygen recorded": 11,
+    "no oxygen or pressure recorded": 722,
+    "not microgravity": 0
+  }
+}
