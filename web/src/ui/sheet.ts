@@ -1,17 +1,22 @@
 // Analyst sheet: all investigations, and the Moon-gravity margins from moon.json.
 // Generated with Claude, SI-assisted.
-import type { Ctx, Experiment, Publication, StageState } from "../contract";
-import { cite, h, num } from "./dom";
+import { FAMILIES, type Ctx, type Experiment, type Family, type Publication, type StageState } from "../contract";
+import { cite, h, num, numOrMissing } from "./dom";
 
 type Tab = "investigations" | "margins";
 const tabFor = (s: StageState["analyst_sheet"]): Tab => (s === "lunar-margins" || s === "failing-materials" ? "margins" : "investigations");
+
+type SortKey = "acronym" | "title" | "family" | "tests" | "o2" | "pressure" | "outcomes" | "papers";
 
 export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   const { api, store, t } = ctx;
   let tab: Tab = tabFor(store.get().stage.analyst_sheet);
   let tabBtns: [Tab, HTMLButtonElement][] = [];
   let body: HTMLElement;
-  let shown: Tab | null = null;
+  let sig: string | null = null;
+  let sortKey: SortKey = "family";
+  let sortDir: 1 | -1 = 1;
+  let famFilter: Family | null = null;
 
   const table = (cls: string, caption: Node, head: string[], rows: Node[][]): HTMLElement =>
     h("table", { class: cls },
@@ -52,6 +57,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         : h("p", {}, missing()),
       h("h4", {}, t("ui.sheet.detail.papers")),
       e.publications.length ? h("ul", { class: "papers" }, ...e.publications.map((p) => paper(p, e.psi_url))) : h("p", {}, missing()),
+      testRows(e),
       h("p", {}, cite(t("ui.sheet.detail.psi-link"), e.psi_url, "plain")));
   }
 
@@ -76,22 +82,111 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     return btn;
   }
 
-  function investigations(): HTMLElement {
-    const rows = [...api.data.experiments].sort(
-      (a: Experiment, b: Experiment) => a.family.localeCompare(b.family) || a.acronym.localeCompare(b.acronym));
-    return table("investigations",
-      h("span", { "data-own": true }, t("ui.sheet.caption", { investigations: rows.length, tests: api.data.tests.length })),
-      ["ui.sheet.col.acronym", "ui.sheet.col.title", "ui.sheet.col.family", "ui.sheet.col.tests", "ui.sheet.col.o2", "ui.sheet.col.pressure", "ui.sheet.col.outcomes", "ui.sheet.col.papers"],
-      rows.map((e) => [
-        openButton(e),
-        cite(e.title, e.psi_url, "plain"),
-        h("span", {}, t(`ui.family.${e.family}`)),
-        num(e.test_count, 0, "", e.psi_url),
-        range(e.o2_pct_range, t("ui.panel.unit.pct"), e.psi_url),
-        range(e.pressure_kpa_range, t("ui.panel.unit.kpa"), e.psi_url),
-        h("span", {}, t(e.has_outcomes ? "ui.sheet.yes" : "ui.sheet.no")),
-        num(e.publications.length, 0, "", e.psi_url),
+  const sortVal = (e: Experiment, k: SortKey): string | number =>
+    k === "acronym" ? e.acronym : k === "title" ? e.title : k === "family" ? e.family :
+    k === "tests" ? e.test_count : k === "o2" ? (e.o2_pct_range?.[0] ?? Infinity) :
+    k === "pressure" ? (e.pressure_kpa_range?.[0] ?? Infinity) : k === "outcomes" ? (e.has_outcomes ? 0 : 1) :
+    e.publications.length;
+
+  const cols: { key: SortKey; label: string }[] = [
+    { key: "acronym", label: "ui.sheet.col.acronym" },
+    { key: "title", label: "ui.sheet.col.title" },
+    { key: "family", label: "ui.sheet.col.family" },
+    { key: "tests", label: "ui.sheet.col.tests" },
+    { key: "o2", label: "ui.sheet.col.o2" },
+    { key: "pressure", label: "ui.sheet.col.pressure" },
+    { key: "outcomes", label: "ui.sheet.col.outcomes" },
+    { key: "papers", label: "ui.sheet.col.papers" },
+  ];
+
+  function invHead(): HTMLElement {
+    return h("thead", {}, h("tr", {}, ...cols.map((c) => {
+      const th = h("th", { scope: "col", "aria-sort": c.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none" });
+      const b = h("button", { type: "button", class: "sort" }, t(c.label));
+      b.addEventListener("click", () => {
+        if (sortKey === c.key) sortDir = sortDir === 1 ? -1 : 1;
+        else { sortKey = c.key; sortDir = 1; }
+        render();
+      });
+      th.append(b);
+      return th;
+    })));
+  }
+
+  function sortedFiltered(): Experiment[] {
+    const rows = api.data.experiments.filter((e) => !famFilter || e.family === famFilter);
+    return [...rows].sort((a, b) => {
+      const va = sortVal(a, sortKey);
+      const vb = sortVal(b, sortKey);
+      const r = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb));
+      return (r || a.family.localeCompare(b.family) || a.acronym.localeCompare(b.acronym)) * sortDir;
+    });
+  }
+
+  /** Every test row of the investigation, values as recorded, each linked to its PSI row. */
+  function testRows(e: Experiment): Node {
+    const rows = api.data.tests.filter((x) => x.investigation === e.id);
+    if (!rows.length) return h("p", {}, missing());
+    return table("test-rows",
+      h("span", { "data-own": true }, t("ui.sheet.tests-caption", { n: rows.length })),
+      ["ui.sheet.col.fuel", "ui.nearest.oxygen", "ui.nearest.pressure", "ui.nearest.flow", "ui.nearest.outcome", "ui.sheet.col.source"],
+      rows.map((r) => [
+        r.fuel ? cite(r.fuel, r.source.url, "num fuel") : missing(),
+        numOrMissing(t, r.o2_pct, 1, "%", r.source.url),
+        numOrMissing(t, r.pressure_kpa, 1, "kPa", r.source.url),
+        numOrMissing(t, r.flow_cm_s ?? null, 1, "cm/s", r.source.url),
+        h("span", {}, t(`ui.outcome.${r.outcome}`)),
+        cite(r.id, r.source.url, "num"),
       ]));
+  }
+
+  function filterRow(): HTMLElement {
+    const sel = h("select", { id: "sheet-family" },
+      h("option", { value: "" }, t("ui.panel.family-all")),
+      ...FAMILIES.filter((f) => api.data.experiments.some((e) => e.family === f))
+        .map((f) => h("option", { value: f }, t(`ui.family.${f}`))));
+    sel.value = famFilter ?? "";
+    sel.addEventListener("change", () => { famFilter = (sel.value || null) as Family | null; render(); });
+    return h("div", { class: "sheet-filter" }, h("label", { for: "sheet-family" }, t("ui.sheet.family")), sel);
+  }
+
+  function coverage(): HTMLElement {
+    const { plotted, total } = api.coverage();
+    const byReason = new Map<string, number>();
+    for (const r of api.notPlaced()) byReason.set(r.reason, (byReason.get(r.reason) ?? 0) + 1);
+    return h("div", { class: "coverage" },
+      h("h3", {}, t("ui.sheet.coverage.title")),
+      h("p", { "data-own": true }, t("ui.stage.coverage", { plotted, total })),
+      h("ul", {}, ...[...byReason].map(([reason, n]) =>
+        h("li", {}, `${reason}: `, h("span", { "data-own": true }, String(n))))));
+  }
+
+  function downloads(): HTMLElement {
+    return h("div", { class: "downloads" },
+      h("h3", {}, t("ui.sheet.downloads.title")),
+      h("ul", {}, ...["tests.json", "experiments.json", "moments.json"].map((f) =>
+        h("li", {}, h("a", { href: `data/${f}`, download: true }, f)))));
+  }
+
+  function investigations(): HTMLElement {
+    const rows = sortedFiltered();
+    return h("div", { class: "investigations-tab" },
+      coverage(),
+      filterRow(),
+      h("table", { class: "investigations" },
+        h("caption", {}, h("span", { "data-own": true }, t("ui.sheet.caption", { investigations: rows.length, tests: api.data.tests.length }))),
+        invHead(),
+        h("tbody", {}, ...rows.map((e) => h("tr", {},
+          h("td", {}, openButton(e)),
+          h("td", {}, cite(e.title, e.psi_url, "plain")),
+          h("td", {}, h("span", {}, t(`ui.family.${e.family}`))),
+          h("td", {}, num(e.test_count, 0, "", e.psi_url)),
+          h("td", {}, range(e.o2_pct_range, t("ui.panel.unit.pct"), e.psi_url)),
+          h("td", {}, range(e.pressure_kpa_range, t("ui.panel.unit.kpa"), e.psi_url)),
+          h("td", {}, h("span", {}, t(e.has_outcomes ? "ui.sheet.yes" : "ui.sheet.no"))),
+          h("td", {}, num(e.publications.length, 0, "", e.psi_url)),
+        )))),
+      downloads());
   }
 
   function margins(): HTMLElement {
@@ -119,8 +214,9 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
 
   function render(): void {
     for (const [k, b] of tabBtns) b.setAttribute("aria-selected", String(k === tab));
-    if (shown !== tab) {
-      shown = tab;
+    const next = [tab, sortKey, sortDir, famFilter].join("|");
+    if (sig !== next) {
+      sig = next;
       body.replaceChildren(tab === "investigations" ? investigations() : margins());
     }
   }
@@ -133,7 +229,8 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     });
     body = h("div", { class: "sheet-body", role: "tabpanel" });
     root.replaceChildren(h("div", { class: "tabs", role: "tablist", "aria-label": t("ui.sheet.tabs-label") }, ...tabBtns.map(([, b]) => b)), body);
-    shown = null;
+    document.body.dataset.lens = store.get().lens;
+    sig = null;
     render();
   }
 
@@ -142,6 +239,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   root.hidden = store.get().lens !== "analyst";
   store.subscribe((s, prev) => {
     root.hidden = s.lens !== "analyst";
+    document.body.dataset.lens = s.lens;
     if (s.locale !== prev.locale) build();
     if (key(s) !== key(prev) || s.stage.analyst_sheet !== prev.stage.analyst_sheet) tab = tabFor(s.stage.analyst_sheet);
     render();

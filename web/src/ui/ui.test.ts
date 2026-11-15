@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // Generated with Claude, SI-assisted. Real golden and curated files; fixtures only for the two missing experiments.
 import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppData, Ctx, DataApi, Experiment, NearestRow, PlacedTest, TestRun } from "../contract";
@@ -218,6 +219,91 @@ describe("ui", () => {
     expect(rows.map((r) => r.children[2].textContent)).toEqual(["droplets", "gas jets", "large-scale solids"]);
     expect(roots().sheet.querySelector("caption")!.textContent).toBe(`3 investigations, ${tests.length} tests in the data`);
     expect(rows[2].textContent).toContain("not recorded"); // PSI-98 has no pressure range
+  });
+
+  it("Analyst replaces the story column with a full-height sheet", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    expect(document.body.dataset.lens).toBe("analyst");
+    expect(roots().sheet.hidden).toBe(false);
+    const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
+    expect(base).toMatch(/body\[data-lens="analyst"\] #story\s*\{\s*display:\s*none/);
+    expect(base).toMatch(/body\[data-lens="analyst"\] #sheet\s*\{[^}]*width:\s*min\(52rem, 46vw\)/);
+  });
+
+  it("columns sort both ways and the family filter narrows the rows", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    const acros = () => [...sheet.querySelectorAll("table.investigations tbody tr")].map((r) => r.children[0].textContent);
+    const sortBtn = (label: string) => [...sheet.querySelectorAll<HTMLButtonElement>("th button.sort")].find((b) => b.textContent === label)!;
+    const th = (label: string) => sortBtn(label).closest("th")!;
+    sortBtn("Investigation").click();
+    const asc = [...experiments].map((e) => e.acronym).sort((a, b) => a.localeCompare(b));
+    expect(acros()).toEqual(asc);
+    expect(th("Investigation").getAttribute("aria-sort")).toBe("ascending");
+    sortBtn("Investigation").click();
+    expect(acros()).toEqual([...asc].reverse());
+    expect(th("Investigation").getAttribute("aria-sort")).toBe("descending");
+    const sel = sheet.querySelector<HTMLSelectElement>("#sheet-family")!;
+    sel.value = "droplets";
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(acros()).toEqual(experiments.filter((e) => e.family === "droplets").map((e) => e.acronym));
+    sel.value = "";
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect([...sheet.querySelectorAll("table.investigations tbody tr")].length).toBe(experiments.length);
+  });
+
+  it("a row opens its test rows with recorded values and source links", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const target = experiments.find((e) => e.id === "PSI-98")!;
+    const btn = [...roots().sheet.querySelectorAll<HTMLButtonElement>("button.row-open")].find((b) => b.textContent === target.acronym)!;
+    btn.click();
+    const detail = roots().sheet.querySelector("tr.detail")!;
+    const rows = tests.filter((r) => r.investigation === "PSI-98");
+    expect(rows.length).toBeGreaterThan(0);
+    const body = detail.querySelectorAll("table.test-rows tbody tr");
+    expect(body.length).toBe(rows.length);
+    rows.forEach((r, i) => {
+      const cells = body[i]!.querySelectorAll("td");
+      const link = cells[5]!.querySelector("a")!;
+      expect(link.textContent).toBe(r.id);
+      expect(link.getAttribute("href")).toBe(r.source.url);
+      if (r.fuel) expect(cells[0]!.textContent).toContain(r.fuel);
+      if (r.o2_pct !== null) expect(cells[1]!.textContent).toContain(String(Number(r.o2_pct.toFixed(1))));
+      if (r.pressure_kpa !== null) expect(cells[2]!.textContent).toContain(String(Number(r.pressure_kpa.toFixed(1))));
+    });
+    expect(unlinkedNumbers(roots().sheet)).toEqual([]);
+  });
+
+  it("the coverage panel counts every reason and the downloads link the data files", () => {
+    const extra: TestRun = {
+      id: "PSI-101#1", investigation: "PSI-101", fuel: null, fuel_class: "smoke", gravity: "micro-g",
+      o2_pct: null, pressure_kpa: null, outcome: "unknown",
+      source: { file: "csv_101_0.csv", row: 1, url: "https://psi.nasa.gov/physci/repo/data/investigations/PSI-101" },
+    };
+    tests.push(extra);
+    try {
+      const { store, ctx } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      const { plotted, total } = ctx.api.coverage();
+      expect(sheet.textContent).toContain(`Plotted ${plotted} of ${total} tests`);
+      const reasons = new Map<string, number>();
+      for (const r of ctx.api.notPlaced()) reasons.set(r.reason, (reasons.get(r.reason) ?? 0) + 1);
+      expect(reasons.size).toBeGreaterThan(0);
+      for (const [reason, n] of reasons) {
+        const li = [...sheet.querySelectorAll(".coverage li")].find((e) => e.textContent!.startsWith(reason));
+        expect(li!.textContent).toContain(String(n));
+      }
+      const hrefs = [...sheet.querySelectorAll(".downloads a")].map((a) => (a as HTMLAnchorElement).getAttribute("href"));
+      expect(hrefs).toEqual(["data/tests.json", "data/experiments.json", "data/moments.json"]);
+      expect(sheet.querySelectorAll(".downloads a[download]").length).toBe(3);
+      expect(unlinkedNumbers(sheet)).toEqual([]);
+    } finally {
+      tests.pop();
+    }
   });
 
   it("the default sheet tab follows the beat; the person can switch freely", () => {

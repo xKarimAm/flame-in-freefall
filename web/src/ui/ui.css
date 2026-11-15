@@ -64,6 +64,14 @@ a.num { font-variant-numeric: tabular-nums; }
 #sheet .tab[aria-selected="true"] { background: var(--ink); color: var(--sheet); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; border-color: var(--ink); }
 #sheet a { color: var(--link); text-decoration: underline; }
 #sheet table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+#sheet th button.sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+#sheet th[aria-sort="ascending"] button.sort, #sheet th[aria-sort="descending"] button.sort { text-decoration: underline; text-underline-offset: 3px; }
+.sheet-filter { display: flex; gap: 8px; align-items: center; margin: 12px 0; }
+.sheet-filter select { font: inherit; min-height: 40px; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius); }
+.coverage, .downloads { margin: 12px 0; }
+.coverage ul, .downloads ul { margin: 8px 0; padding-left: 1.2em; }
+tr.detail td { padding: 12px 16px; background: var(--sheet-ground); }
+table.test-rows { margin-top: 12px; font-size: 14px; }
 #sheet caption { text-align: left; color: var(--muted); padding-bottom: 6px; }
 #sheet th, #sheet td { text-align: left; vertical-align: top; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--rule); }
 #sheet th { font-weight: 700; }

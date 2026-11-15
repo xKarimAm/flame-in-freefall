@@ -57,6 +57,16 @@ a { color: inherit; }
   left: 0; right: 0; bottom: 0; max-height: 70vh; overflow: auto;
   background: var(--sheet); color: var(--ink);
 }
+
+/* analyst workspace: the sheet goes full height instead of the story column */
+body[data-lens="analyst"] #story { display: none; }
+@media (min-width: 1100px) {
+  body[data-lens="analyst"] #stage { padding-left: 0; }
+  body[data-lens="analyst"] #sheet {
+    top: var(--chrome-h); bottom: 0; left: 0; right: auto;
+    width: min(52rem, 46vw); max-height: none;
+  }
+}
 #sheet a { color: var(--link); }
 
 /* Stories overlay: full screen */

@@ -15,7 +15,7 @@ const useBuild = ["experiments.json", "tests.json"].every((name) => existsSync(j
 const from = useBuild ? buildDir : goldenDir;
 
 for (const name of ["experiments.json", "tests.json"]) copyFileSync(join(from, name), join(dest, name));
-for (const name of ["psi-text.json", "summaries.json"]) {
+for (const name of ["psi-text.json", "summaries.json", "moments.json"]) {
   if (existsSync(join(buildDir, name))) copyFileSync(join(buildDir, name), join(dest, name));
 }
 for (const name of ["moon.json", "incidents.json"]) copyFileSync(join(root, "data", "curated", name), join(dest, name));
