@@ -8,7 +8,7 @@ Karim switches between three Claude accounts. Every session, on every account, *
 Times are local (UTC+3).
 
 ## Last action
-2026-11-15 18:28, build session 3 (Fable orchestrator): **the Boston submission deadline is 20:00 local (possibly 19:00), not 21:00: see `docs/SUBMISSION-CHECKLIST.md`. Submit an early complete version first, then improve and re-submit (allowed until Mon 07:59).** `main` is green and rebuilt with: intro walkthrough (#19), page reveal (#18), chart/header/cover fixes (#20), `docs/SUBMISSION.md` + README (#21, numbers re-counted), Analyst dashboard tiles and coverage bars (#23). The repo is public (Karim's choice in the checklist chat, 18:21). **Waiting on Karim:** merge PR #22 (GitHub Pages deploy) to get the public site link; upload the deck to a public link; fill and submit the form. Still open: experiment shelf and pages (`E:\fif-wt\B`, 1 failing test; also Muse R21 on `release/web`), the story node-graph from Karim's Dribbble reference (`STATE.md`), README still says 326 strings in 2 places (now 349).
+2026-11-15 18:55, build session 3 handing over (context limit): **read the first block of `STATE.md`, then `docs/SUBMISSION-CHECKLIST.md`.** The site is live at https://xkarimam.github.io/flame-in-freefall/ , `main` is green (399 web tests), `docs/SUBMISSION.md` is ready. Missing for the form: the public demo link (Karim). Open UI work: K3 to K13 in `STATE.md`. Nothing is running.
 
 ## Action table (the plan)
 | # | Action | Who | Status | Done when |
@@ -112,3 +112,4 @@ Times are local (UTC+3).
 | 18:40 | build 3 | Muse lane finished R20-R22. Kept only its experiment shelf and pages (its dashboard and submission text duplicated what is already on main); fixed the shelf (family groups were squeezed side by side); merged PR #24, check green (399 web tests), seen at 1536x864. main rebuilt. PR #22 (Pages deploy) still open, waiting on Karim | all planned UI pieces merged except the story node-graph |
 | 18:46 | build 3 | Karim: "Yes, merge #22". Merged; Pages deploy succeeded; **the site is live at https://xkarimam.github.io/flame-in-freefall/** (opened it: 18 pages load, the walkthrough opens, no console errors). Every push to main redeploys | public project link ready for the form |
 | 18:53 | build 3 | Karim's screenshots and list (flame jumps, overlaps, plane buttons, sharp text, use the taste skill). Ran the taste inspector on main: 5 FAIL. Fixed and merged PR #25 (cover title two lines, scale fits, panel hidden over chapter pages); 4 FAIL left. His full list is in STATE.md as K1-K13 | K1, K2 done; K3-K13 open |
+| 18:55 | build 3 | Handover written: current status block at the top of STATE.md | next account continues at K3-K13 |

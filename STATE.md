@@ -1,3 +1,28 @@
+# STATE: CURRENT STATUS at 18:55 on 2026-11-15. This block wins over anything below it.
+
+**Deadline:** Boston submission 20:00 local (possibly 19:00). Re-submitting is allowed until Mon 07:59. Karim fills and submits the form himself; `docs/SUBMISSION-CHECKLIST.md` lists every field.
+
+**Ready for the form**
+- Live site: https://xkarimam.github.io/flame-in-freefall/ (GitHub Pages; every push to `main` redeploys in about a minute)
+- Code: https://github.com/xKarimAm/flame-in-freefall (public)
+- Form text: `docs/SUBMISSION.md` (numbers re-counted from `data/build` at 18:23)
+- Still missing: the public demo link (deck, 7 slides at most, `docs/presentation/Firebreak-deck.pptx`, or a 30 s video). Karim uploads it.
+
+**`main` is green** (`scripts/check.ps1`: 95 pipeline tests, 399 web tests, build). Merged today from this session: PRs #16 to #25. Nothing is running: no Sonnet agents (this account's limit, resets 22:20), no Muse lane.
+
+**What to do next, in order**
+1. The list "Karim's UI list" below, K3 to K13. Smallest fix first: K5 (page 17 panel over the Sources line), K9 (chapter 4 Moon and Earth plane buttons show nothing), K4 (hint that the dial marker can be dragged), K6 (page 17 label leader lines), K3 (flame jumps between pages), then K7, K8, K12, K13.
+2. For every UI change: use the taste skill (`design-taste-frontend`), look at it in the browser at 1280x720, 1536x864 and 1920x1080 before merging, then run `node C:\Users\Admin\.claude\skills\taste-skill\scripts\inspect.mjs <url>`.
+3. Per change: branch from `origin/main` in a free worktree (`E:\fif-wt\E`, `C`, `D`, `B` are free; check `git status` first), `scripts\check.ps1` green, push, `gh pr create`, `gh pr merge --squash`, then tick the K item here and add a line to the log in `ACTIONS.md`.
+4. Local preview of a worktree: `cd <worktree>\web; npx vite preview --port 4195 --strictPort` (ports 4173 to 4193 are taken by old previews).
+
+**Traps met today**
+- A test forbids any `font-size` that is not a `--text-*` token, and forbids `!important` on it.
+- `README.md` still says "326 strings" in two places; the count is 349.
+- Muse Spark cannot commit and cannot see the page: check, look and commit for it. Start it only with a short queue in `E:\fif-wt\release\docs\RELEASE-QUEUE.md` via `scripts\night.ps1 -Lane release`.
+- Do not touch `E:\fif-wt\A`, `pipe`, `pipeline`, `web`, `night-web`, `night-backend` (Karim's call).
+
+---
 # STATE: LIVE HANDOVER, written 17:54 on 2026-11-15 (build session 3, Fable orchestrator). Read this block first.
 
 **Karim's words that authorise this work (17:50 and 17:52):** "Finish exactly every task that we agreed upon: the intro, the rest of the stories, everything ... spin as many sonnet agents. Build with Muse ... Multi-develop everything that you can and merge it at the end ... I want everything done in an hour." and "lay everything down so that ... other Claude accounts connect flawlessly". A new account still needs Karim to type his go-ahead in its own conversation (global rule), then it continues from here.
