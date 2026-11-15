@@ -239,7 +239,6 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     el.dataset.lens = lens;
     document.documentElement.lang = locale;
     dotsNav.setAttribute("aria-label", ctx.t("ui.engine.pages"));
-    dots.forEach((d, i) => d.setAttribute("aria-label", ctx.t("ui.engine.page", { n: i + 1, total: dots.length })));
     coverTitle.textContent = ctx.t("ui.cover.title");
     coverLead.textContent = ctx.t("ui.cover.lead");
     coverAudience.textContent = ctx.t("ui.cover.audience");
@@ -279,6 +278,14 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
         h2.after(question);
       }
     }
+    // each dot names its page and chapter: the aria-label for screen readers, data-label for the hover/focus tooltip
+    dots.forEach((d, i) => {
+      const page = ctx.t("ui.engine.page", { n: i + 1, total: dots.length });
+      const title = (steps[i].parentElement as HTMLElement | null)?.dataset.title;
+      const label = title ? ctx.t("ui.engine.dot-label", { page, title }) : page;
+      d.setAttribute("aria-label", label);
+      d.dataset.label = label;
+    });
   }
 
   function pageEls(): HTMLElement[] {

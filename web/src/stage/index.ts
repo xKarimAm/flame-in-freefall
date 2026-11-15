@@ -646,9 +646,20 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     line.setAttribute("aria-valuemin", "0");
     line.setAttribute("aria-valuemax", "100");
     dial.append(line, hit);
+    const hint = html("p", "dial-hint");
+    hint.textContent = t("ui.stage.dial-hint");
     const result = html("p", "dial-result");
     result.setAttribute("aria-live", "polite");
-    side.append(result);
+    side.append(hint, result);
+    // one gentle nudge of the marker the first time the dial is on screen (CSS skips it under reduced motion)
+    if (typeof IntersectionObserver !== "undefined") {
+      const seen = new IntersectionObserver((es) => {
+        if (!es.some((e) => e.isIntersecting)) return;
+        seen.disconnect();
+        line.classList.add("dial-nudge");
+      });
+      seen.observe(dial);
+    }
     const show = (v: number): string => (Number.isInteger(v) ? String(v) : String(Number(v.toFixed(1))));
     const paint = (): void => {
       const v = youO2!;
