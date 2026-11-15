@@ -95,10 +95,6 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   const tiltBox = html("div", "stage-tilt");
   tiltBox.hidden = true;
   plotBox.append(tiltBox);
-  // K9: the sentence for an empty plane sits over the picture (fades in), not only under the buttons
-  const planeNote = html("p", "plane-note");
-  planeNote.setAttribute("aria-hidden", "true"); // the live .plane-result below says it for screen readers
-  plotBox.append(planeNote);
   let tilt: TiltView | null | undefined; // undefined = not tried yet
   let tiltOn = false;
   let size: Size | null = opts.size ?? null;
@@ -517,7 +513,6 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     planeStep.replaceChildren();
     const isCh4 = (store.get().beat?.story ?? "") === "the-gap";
     if (!chartView || !isCh4) {
-      planeNote.classList.remove("show");
       planeStep.hidden = true;
       return;
     }
@@ -560,8 +555,8 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     } else {
       result.textContent = t("ui.stage.plane.empty", { plane: planeName });
     }
-    planeNote.textContent = n === 0 ? (result.textContent ?? "") : "";
-    planeNote.classList.toggle("show", n === 0 && selectedPlane !== "micro");
+    // on the Moon plane the picture's own heading says it (K9): keep this live line for screen readers only
+    if (n === 0 && selectedPlane === "lunar") result.classList.add("sr-only");
     planeStep.append(result);
   }
 

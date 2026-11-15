@@ -279,6 +279,8 @@ export interface TiltScene {
   setPose(k: number): void;
   /** place the camera at an explicit pose (focus moves and the idle drift) */
   setCamera(pose: Pose): void;
+  /** with a plane focused, the other planes' labels are hidden (they crowd the axis titles) */
+  setLabelFocus(plane: "micro" | "lunar" | "earth" | "all"): void;
   dispose(): void;
 }
 
@@ -363,6 +365,7 @@ export function buildTiltScene(colors: TiltColors, initial: TiltLabels): TiltSce
   let frame = { w: 0, h: 0 };
   let aspect = 1.3;
   let youAnchor: [number, number, number] | null = null;
+  let labelFocus: "micro" | "lunar" | "earth" | "all" = "all";
 
   const defs = tiltLabelAnchors();
   labelEls.you.hidden = true;
@@ -393,7 +396,11 @@ export function buildTiltScene(colors: TiltColors, initial: TiltLabels): TiltSce
       return { x: (v.x * 0.5 + 0.5) * frame.w, y: (-v.y * 0.5 + 0.5) * frame.h };
     };
     const specs: TiltLabelSpec[] = [];
+    for (const id of ["micro", "lunar", "earth"] as const) {
+      if (labelFocus !== "all" && labelFocus !== id) elOf(id).hidden = true;
+    }
     for (const [id, def] of Object.entries(defs) as [TiltFixedLabelId, TiltAnchor][]) {
+      if (labelFocus !== "all" && (id === "micro" || id === "lunar" || id === "earth") && id !== labelFocus) continue;
       const size = sizes.get(id) ?? { w: 0, h: 0 };
       specs.push({ id, anchor: project(def.group, def.local), w: size.w, h: size.h });
     }
@@ -513,6 +520,10 @@ export function buildTiltScene(colors: TiltColors, initial: TiltLabels): TiltSce
     setCamera(pose) {
       camera.position.set(...pose.pos);
       camera.lookAt(...pose.look);
+      reposition();
+    },
+    setLabelFocus(plane) {
+      labelFocus = plane;
       reposition();
     },
     dispose() {
@@ -667,7 +678,7 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
       const start = performance.now();
       cancelAnimationFrame(raf);
       cancelAnimationFrame(driftRaf);
-      if (!tilted) { hold = null; focusKey = "all"; }
+      if (!tilted) { hold = null; focusKey = "all"; view.setLabelFocus("all"); }
       moving = true;
       const step = (): void => {
         if (token !== animToken || dead) return;
@@ -683,6 +694,7 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
     setFocus(plane) {
       if (plane === focusKey || dead) return;
       focusKey = plane;
+      view.setLabelFocus(plane);
       const token = ++animToken;
       const from = hold ?? tiltPose(k, aspectNow);
       const to = focusPose(plane, aspectNow);
