@@ -60,6 +60,15 @@ export function paradeActive(ctx: Ctx): boolean {
   );
 }
 
+/** A count from the data files, linked to the built tests file it was counted from. */
+function dataLink(text: string): HTMLAnchorElement {
+  const a = document.createElement("a");
+  a.href = "data/tests.json";
+  a.setAttribute("download", "");
+  a.textContent = text;
+  return a;
+}
+
 /** Counts the number up over 600 ms; still and complete under reduced motion. */
 export function countUp(num: HTMLElement, target: number): void {
   const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -95,9 +104,8 @@ export function renderParade(el: HTMLElement, ctx: Ctx): void {
   const head = document.createElement("p");
   head.className = "parade-count";
   head.setAttribute("aria-live", "off");
-  const num = document.createElement("span");
+  const num = dataLink("0");
   num.className = "parade-num";
-  num.setAttribute("data-own", "");
   head.append(num, ` ${t("ui.stage.parade.dots-label")}`);
   const target = placed.filter((p) => (shown as Family[]).includes(p.family)).length;
   frag.append(head);
@@ -111,11 +119,10 @@ export function renderParade(el: HTMLElement, ctx: Ctx): void {
     name.textContent = t(`ui.family.${family}`);
     li.append(name);
     const n = placed.filter((p) => p.family === family).length;
-    const count = document.createElement("span");
+    const count = n > 0
+      ? dataLink(t("ui.stage.parade.plotted", { n }))
+      : dataLink(t("ui.stage.parade.listed", { n: api.notPlaced(family).length }));
     count.className = "parade-n";
-    count.setAttribute("data-own", "");
-    if (n > 0) count.textContent = t("ui.stage.parade.plotted", { n });
-    else count.textContent = t("ui.stage.parade.listed", { n: api.notPlaced(family).length });
     li.append(count);
     list.append(li);
   }

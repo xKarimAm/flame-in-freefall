@@ -10,7 +10,7 @@ import type { Size } from "./layout";
 import type { Scales } from "./layout";
 import { dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
-import { dialSVG, flameSVG, incidentO2 } from "./picture";
+import { DIAL_IDS, dialSVG, flameSVG, incidentO2 } from "./picture";
 import { renderExplainers } from "./explain";
 import { renderParade } from "./parade";
 import { TILT_MS, mountTilt, type TiltView } from "./tilt";
@@ -100,6 +100,14 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   function nearestRows(state: AppState): NearestRow[] {
     const query = queryFromState(state);
     return query ? api.nearest(query, 10, state.family ?? undefined).rows : [];
+  }
+
+  /** A number from the data files, linked to the built tests file it was counted from. */
+  function dataLink(text: string): HTMLAnchorElement {
+    const a = html("a", undefined, text);
+    a.href = "data/tests.json";
+    a.setAttribute("download", "");
+    return a;
   }
 
   function dotTitle(row: PlacedTest): string {
@@ -384,7 +392,17 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     );
     if (state.stage.coverage) {
       const { plotted, total } = api.coverage();
-      legend.append(html("li", "coverage", t("ui.stage.coverage", { plotted, total })));
+      const kids: (Node | string)[] = [];
+      for (const bit of t("ui.stage.coverage").split(/(\{\w+\})/g)) {
+        const m = bit.match(/^\{(\w+)\}$/);
+        if (!m) kids.push(bit);
+        else if (m[1] === "plotted") kids.push(dataLink(String(plotted)));
+        else if (m[1] === "total") kids.push(dataLink(String(total)));
+        else kids.push(bit);
+      }
+      const li = html("li", "coverage");
+      li.append(...kids);
+      legend.append(li);
     }
   }
 
@@ -424,7 +442,20 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     incidents.classList.add("public-picture");
     const side = html("div", "picture-side");
     side.append(dialSVG(ctx, pages), flameSVG(pages.some((i) => incidentO2(i.oxygen) !== null)));
-    incidents.replaceChildren(side, ...cards);
+    const seen = new Set<string>();
+    const src = html("p", "dial-source");
+    src.append(`${t("ui.stage.dial-source")}: `);
+    for (const id of DIAL_IDS) {
+      const a = api.atmosphere(id);
+      if (seen.has(a.url)) continue;
+      seen.add(a.url);
+      if (src.querySelectorAll("a").length) src.append(", ");
+      const link = html("a", undefined, a.source);
+      link.href = a.url;
+      link.rel = "noopener";
+      src.append(link);
+    }
+    incidents.replaceChildren(side, src, ...cards);
   }
 
   // ---------- wiring ----------

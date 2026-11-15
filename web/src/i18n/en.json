@@ -14,6 +14,7 @@
   "ui.stage.x-axis": "Air pressure (kPa)",
   "ui.stage.y-axis": "Oxygen in the air (%)",
   "ui.stage.coverage": "Plotted {plotted} of {total} tests",
+  "ui.stage.dial-source": "Air data",
   "ui.stage.microg-plane": "Microgravity: where every NASA PSI fire test ran",
   "ui.stage.lunar-plane": "Moon gravity (1/6 g)",
   "ui.stage.earth-line": "Earth gravity (1 g)",

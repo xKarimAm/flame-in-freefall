@@ -502,6 +502,12 @@ describe("public picture", () => {
     expect(host.querySelector(".flame-guide.tall")).not.toBeNull();
     const card = host.querySelector(".incident-card")!;
     for (const field of [apollo.name, apollo.oxygen, apollo.changed]) expect(card.textContent).toContain(field);
+    // the dial marks name their source papers
+    const src = host.querySelector(".dial-source")!;
+    expect(src.textContent).toContain(en["ui.stage.dial-source"]);
+    const srcLinks = [...src.querySelectorAll("a")];
+    expect(srcLinks.length).toBe(2);
+    for (const a of srcLinks) expect(a.getAttribute("href")).toMatch(/^https:\/\//);
   });
 
   it("an incident with no oxygen number has no marker and a small calm flame", () => {
@@ -686,6 +692,34 @@ describe("three.js tilt", () => {
     expect(host.querySelector(".stage-tilt")!.hasAttribute("hidden")).toBe(true);
     expect((host.querySelector(".stage-svg") as SVGSVGElement).style.display).not.toBe("none");
     expect(en["ui.stage.earth-line"]).toBe("Earth gravity (1 g)");
+  });
+});
+
+describe("every plotted count links to the data file", () => {
+  const full: StageState = { view: "micro-g", show_families: allFamilies, coverage: true };
+
+  it("the coverage line links its numbers to the tests file", () => {
+    const { host, api } = setup(full);
+    const { plotted, total } = api.coverage();
+    const links = [...host.querySelectorAll(".stage-legend .coverage a")];
+    expect(links.map((a) => a.textContent)).toEqual([String(plotted), String(total)]);
+    for (const a of links) {
+      expect((a as HTMLAnchorElement).getAttribute("href")).toBe("data/tests.json");
+      expect(a.hasAttribute("download")).toBe(true);
+    }
+  });
+
+  it("the parade counts link to the data file", () => {
+    const { host } = setup(full);
+    const num = host.querySelector(".parade-num")!;
+    expect(num.tagName).toBe("A");
+    expect((num as HTMLAnchorElement).getAttribute("href")).toBe("data/tests.json");
+    const rows = [...host.querySelectorAll(".parade-families li")];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) {
+      const a = r.querySelector("a.parade-n")!;
+      expect(a.getAttribute("href")).toBe("data/tests.json");
+    }
   });
 });
 

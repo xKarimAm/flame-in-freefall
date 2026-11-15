@@ -94,6 +94,8 @@
   .stage-incidents.public-picture[data-count="2"] { grid-template-columns: auto 1fr 1fr; }
 }
 .public-picture .incident-card { font-size: 20px; }
+.dial-source { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--muted-dark); }
+.dial-source a { color: var(--ink-dark); }
 .o2-dial { display: block; width: 100%; max-width: 300px; height: auto; }
 .o2-dial text { fill: var(--muted-dark); font-size: 12px; }
 .o2-dial .dial-axis { font-size: 13px; }
