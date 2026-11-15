@@ -1,6 +1,6 @@
 // Pure "what to draw" decisions for the stage (no DOM). Generated with Claude, SI-assisted.
 import { OUTCOME_GROUP } from "../contract";
-import type { Atmosphere, DataApi, Family, Lens, NotPlacedRow, Outcome, PlacedTest, StageState } from "../contract";
+import type { Atmosphere, ChartFilters, DataApi, Family, Lens, NotPlacedRow, Outcome, PlacedTest, StageState } from "../contract";
 import { airName } from "../ui/dom";
 
 /** default = quiet grey (not highlighted). Highlighted tests: burned = orange, went-out = hollow blue,
@@ -67,6 +67,24 @@ export function pressuresForDomain(drawn: PlacedTest[], placed: PlacedTest[], re
     ...(sliders ?? []),
     ...extra,
   ];
+}
+
+/** Whether a drawn row (a dot or a listed tick) survives the store's whole filter set.
+ *  `haystack` is the row's searchable text (investigation, acronym, title, family, fuel),
+ *  already lowercase; the store search is stored lowercase too. Pure. */
+export function chartPasses(
+  p: { id: string; family: Family | null; fuel: string | null; outcome: Outcome },
+  f: { family: Family | null } & ChartFilters,
+  placed: Set<string>,
+  haystack: string,
+): boolean {
+  if (f.family && p.family !== f.family) return false;
+  if (f.fuel && p.fuel !== f.fuel) return false;
+  if (f.outcome && p.outcome !== f.outcome) return false;
+  if (f.plotted === "plotted" && !placed.has(p.id)) return false;
+  if (f.plotted === "unplaced" && placed.has(p.id)) return false;
+  if (f.search && !haystack.toLowerCase().includes(f.search)) return false;
+  return true;
 }
 
 /** Tests with oxygen recorded but no pressure, in the families the beat has revealed.

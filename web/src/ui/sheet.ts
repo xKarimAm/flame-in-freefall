@@ -1,6 +1,6 @@
 // Analyst sheet: all investigations, and the Moon-gravity margins from moon.json.
 // Generated with Claude, SI-assisted.
-import { FAMILIES, type Ctx, type Experiment, type Family, type Outcome, type Publication, type StageState, type TestRun } from "../contract";
+import { FAMILIES, type Ctx, type Experiment, type Family, type Outcome, type PlottedFilter, type Publication, type StageState, type TestRun } from "../contract";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import { cite, h, num, numOrMissing } from "./dom";
 
@@ -9,7 +9,6 @@ const tabFor = (s: StageState["analyst_sheet"]): Tab => (s === "lunar-margins" |
 
 type SortKey = "acronym" | "title" | "family" | "tests" | "o2" | "pressure" | "outcomes" | "papers";
 type TestSortKey = "investigation" | "fuel" | "o2" | "pressure" | "flow" | "outcome" | "source" | "placed";
-type PlottedFilter = "all" | "plotted" | "unplaced";
 
 export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   const { api, store, t } = ctx;
@@ -21,10 +20,6 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   let sortDir: 1 | -1 = 1;
   let testSortKey: TestSortKey = "investigation";
   let testSortDir: 1 | -1 = 1;
-  let query = "";
-  let fuelFilter: string | null = null;
-  let outcomeFilter: Outcome | null = null;
-  let plottedFilter: PlottedFilter = "all";
   let selectedInv: string | null = null;
   let searchEl: HTMLInputElement | null = null;
   let famSelEl: HTMLSelectElement | null = null;
@@ -169,24 +164,24 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   }
 
   function invPasses(e: Experiment, placed: Set<string>): boolean {
-    const fam = store.get().family;
-    if (fam && e.family !== fam) return false;
+    const s = store.get();
+    if (s.family && e.family !== s.family) return false;
     const rows = api.data.tests.filter((x) => x.investigation === e.id);
-    if (fuelFilter && !rows.some((r) => r.fuel === fuelFilter)) return false;
-    if (outcomeFilter && !rows.some((r) => r.outcome === outcomeFilter)) return false;
-    if (plottedFilter === "plotted" && !rows.some((r) => placed.has(r.id))) return false;
-    if (plottedFilter === "unplaced" && !rows.some((r) => !placed.has(r.id))) return false;
-    return invMatches(e, query);
+    if (s.filters.fuel && !rows.some((r) => r.fuel === s.filters.fuel)) return false;
+    if (s.filters.outcome && !rows.some((r) => r.outcome === s.filters.outcome)) return false;
+    if (s.filters.plotted === "plotted" && !rows.some((r) => placed.has(r.id))) return false;
+    if (s.filters.plotted === "unplaced" && !rows.some((r) => !placed.has(r.id))) return false;
+    return invMatches(e, s.filters.search);
   }
 
   function rowPasses(r: TestRun, placed: Set<string>): boolean {
-    const fam = store.get().family;
-    if (fam && api.experiment(r.investigation)?.family !== fam) return false;
-    if (fuelFilter && r.fuel !== fuelFilter) return false;
-    if (outcomeFilter && r.outcome !== outcomeFilter) return false;
-    if (plottedFilter === "plotted" && !placed.has(r.id)) return false;
-    if (plottedFilter === "unplaced" && placed.has(r.id)) return false;
-    return rowMatches(r, query);
+    const s = store.get();
+    if (s.family && api.experiment(r.investigation)?.family !== s.family) return false;
+    if (s.filters.fuel && r.fuel !== s.filters.fuel) return false;
+    if (s.filters.outcome && r.outcome !== s.filters.outcome) return false;
+    if (s.filters.plotted === "plotted" && !placed.has(r.id)) return false;
+    if (s.filters.plotted === "unplaced" && placed.has(r.id)) return false;
+    return rowMatches(r, s.filters.search);
   }
 
   function sortedExperiments(): Experiment[] {
@@ -226,11 +221,16 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     return h("div", { class: grow ? "sheet-filter grow" : "sheet-filter" }, h("label", { for: id }, t(labelKey)), control);
   }
 
+  /** The filters live in the store, so the chart draws the same rows the tables show. */
+  function setFilter(patch: Partial<{ search: string; fuel: string | null; outcome: Outcome | null; plotted: PlottedFilter }>): void {
+    store.set({ filters: { ...store.get().filters, ...patch } });
+  }
+
   /** One toolbar row: the search grows, the four selects sit inline, the result count ends the row. */
   function controls(): HTMLElement {
     const bar = h("div", { class: "sheet-toolbar" });
-    searchEl = h("input", { type: "search", id: "sheet-search", value: query });
-    searchEl.addEventListener("input", () => { query = searchEl!.value.trim().toLowerCase(); render(); });
+    searchEl = h("input", { type: "search", id: "sheet-search", value: store.get().filters.search });
+    searchEl.addEventListener("input", () => setFilter({ search: searchEl!.value.trim().toLowerCase() }));
     bar.append(filter("sheet-search", "ui.search.label", searchEl, true));
     const fuels = [...new Set(api.data.tests.map((r) => r.fuel).filter((f): f is string => !!f))].sort();
     const outcomes = [...new Set(api.data.tests.map((r) => r.outcome))].sort();
@@ -242,17 +242,17 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     bar.append(filter("sheet-family", "ui.sheet.family", famSelEl));
     fuelSelEl = select("sheet-fuel",
       [{ value: "", text: t("ui.sheet.filter.all") }, ...fuels.map((f) => ({ value: f, text: f }))],
-      fuelFilter, (v) => { fuelFilter = v; render(); });
+      store.get().filters.fuel, (v) => setFilter({ fuel: v }));
     bar.append(filter("sheet-fuel", "ui.sheet.col.fuel", fuelSelEl));
     outcomeSelEl = select("sheet-outcome",
       [{ value: "", text: t("ui.sheet.filter.all") }, ...outcomes.map((o) => ({ value: o, text: t(`ui.outcome.${o}`) }))],
-      outcomeFilter, (v) => { outcomeFilter = (v || null) as Outcome | null; render(); });
+      store.get().filters.outcome, (v) => setFilter({ outcome: (v || null) as Outcome | null }));
     bar.append(filter("sheet-outcome", "ui.nearest.outcome", outcomeSelEl));
     plottedSelEl = select("sheet-plotted",
       [{ value: "all", text: t("ui.sheet.filter.all") },
         { value: "plotted", text: t("ui.sheet.filter.plotted") },
         { value: "unplaced", text: t("ui.sheet.filter.unplaced") }],
-      plottedFilter, (v) => { plottedFilter = (v || "all") as PlottedFilter; render(); });
+      store.get().filters.plotted, (v) => setFilter({ plotted: (v || "all") as PlottedFilter }));
     bar.append(filter("sheet-plotted", "ui.sheet.filter.placement", plottedSelEl));
     countEl = h("span", { class: "sheet-count", "data-own": true });
     bar.append(countEl);
@@ -399,11 +399,12 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   }
 
   function syncControls(): void {
-    if (searchEl && document.activeElement !== searchEl) searchEl.value = query;
+    const f = store.get().filters;
+    if (searchEl && document.activeElement !== searchEl) searchEl.value = f.search;
     if (famSelEl) famSelEl.value = store.get().family ?? "";
-    if (fuelSelEl) fuelSelEl.value = fuelFilter ?? "";
-    if (outcomeSelEl) outcomeSelEl.value = outcomeFilter ?? "";
-    if (plottedSelEl) plottedSelEl.value = plottedFilter;
+    if (fuelSelEl) fuelSelEl.value = f.fuel ?? "";
+    if (outcomeSelEl) outcomeSelEl.value = f.outcome ?? "";
+    if (plottedSelEl) plottedSelEl.value = f.plotted;
   }
 
   /** The toolbar count mirrors the visible tab: filtered investigations, test rows or materials. */
@@ -417,7 +418,8 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   function render(): void {
     for (const [k, b] of tabBtns) b.setAttribute("aria-selected", String(k === tab));
     syncControls();
-    const next = [tab, sortKey, sortDir, testSortKey, testSortDir, store.get().family, fuelFilter, outcomeFilter, plottedFilter, query].join("|");
+    const f = store.get().filters;
+    const next = [tab, sortKey, sortDir, testSortKey, testSortDir, store.get().family, f.fuel, f.outcome, f.plotted, f.search].join("|");
     if (sig !== next) {
       sig = next;
       body.replaceChildren(tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins());

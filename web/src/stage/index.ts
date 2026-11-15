@@ -3,13 +3,13 @@
 // reserves space for them. Generated with Claude, SI-assisted.
 import "./stage.css";
 import { SLIDER_RANGE } from "../contract";
-import type { AppState, Ctx, Incident, NearestRow, PlacedTest } from "../contract";
+import type { AppState, Ctx, Incident, NearestRow, NotPlacedRow, PlacedTest } from "../contract";
 import { queryFromState } from "../store";
 import { dataLink } from "../ui/dom";
 import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartHeight, chartScales, niceRange, wrap } from "./layout";
 import type { Size } from "./layout";
 import type { Scales } from "./layout";
-import { dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
+import { chartPasses, dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
 import { DIAL_IDS, dialSVG, flameStandPad, flameSVG, incidentO2, markerBottomFraction } from "./picture";
 import { renderExplainers } from "./explain";
@@ -131,10 +131,15 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const lunar = stage.view === "tilt-lunar";
     const placed = api.placed();
     refs = empty ? { bands: [], paper: [] } : planReferences(stage, api);
-    // the family filter (panel or sheet) narrows the chart to that family's tests
-    const fam = state.family ?? null;
-    const wanted = empty ? [] : drawnTests(stage, placed).filter((w) => !fam || w.family === fam);
-    const strip = empty ? [] : noPressureRows(stage, api.notPlaced()).filter((r) => !fam || r.family === fam);
+    // the store's whole filter set (panel or sheet) narrows the chart to the same rows
+    const placedIds = new Set(placed.map((t) => t.id));
+    const f = { family: state.family ?? null, ...state.filters };
+    const hayOf = (p: PlacedTest | NotPlacedRow): string => {
+      const e = api.experiment(p.investigation);
+      return `${p.investigation} ${e?.acronym ?? ""} ${e?.title ?? ""} ${p.family ?? ""} ${p.fuel ?? ""}`;
+    };
+    const wanted = empty ? [] : drawnTests(stage, placed).filter((w) => chartPasses(w, f, placedIds, hayOf(w)));
+    const strip = empty ? [] : noPressureRows(stage, api.notPlaced()).filter((r) => chartPasses(r, f, placedIds, hayOf(r)));
     noPressure = strip.length;
     // A linked selection (dot click or sheet row) joins the beat highlight as the investigation.
     const hl = selectedInv ? { ...stage.highlight, investigation: selectedInv } : stage.highlight;
@@ -492,7 +497,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     drawAll();
   });
   store.subscribe((state, prev) => {
-    const full = state.stage !== prev.stage || state.locale !== prev.locale || state.lens !== prev.lens || state.family !== prev.family || (state.sliders === null) !== (prev.sliders === null);
+    const full = state.stage !== prev.stage || state.locale !== prev.locale || state.lens !== prev.lens || state.family !== prev.family || state.filters !== prev.filters || (state.sliders === null) !== (prev.sliders === null);
     if (state.stage !== prev.stage) extra = [];
     if (full) drawAll();
     else if (state.sliders !== prev.sliders || state.family !== prev.family) drawLive();

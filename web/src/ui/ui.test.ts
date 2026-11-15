@@ -526,6 +526,44 @@ describe("ui", () => {
     expect(unlinkedNumbers(sheet)).toEqual([]);
   });
 
+  it("the sheet filters live in the store, so the chart draws the same set (task 35)", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    expect(store.get().filters).toEqual({ search: "", fuel: null, outcome: null, plotted: "all" });
+    const rows = () => sheet.querySelectorAll("table.investigations tbody tr").length;
+    const box = sheet.querySelector<HTMLInputElement>("#sheet-search")!;
+    box.value = "droplet";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(store.get().filters.search).toBe("droplet");
+    expect(rows()).toBe(1);
+    box.value = "";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    const fuelSel = sheet.querySelector<HTMLSelectElement>("#sheet-fuel")!;
+    fuelSel.value = "Methanol";
+    fuelSel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(store.get().filters.fuel).toBe("Methanol");
+    expect(rows()).toBe(experiments.filter((e) => tests.some((t) => t.investigation === e.id && t.fuel === "Methanol")).length);
+    fuelSel.value = "";
+    fuelSel.dispatchEvent(new Event("change", { bubbles: true }));
+    const outSel = sheet.querySelector<HTMLSelectElement>("#sheet-outcome")!;
+    outSel.value = "burned";
+    outSel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(store.get().filters.outcome).toBe("burned");
+    expect(rows()).toBe(experiments.filter((e) => tests.some((t) => t.investigation === e.id && t.outcome === "burned")).length);
+    outSel.value = "";
+    outSel.dispatchEvent(new Event("change", { bubbles: true }));
+    const plotSel = sheet.querySelector<HTMLSelectElement>("#sheet-plotted")!;
+    plotSel.value = "unplaced";
+    plotSel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(store.get().filters.plotted).toBe("unplaced");
+    expect(rows()).toBe(1); // only PSI-98 has a row with no pressure recorded
+    plotSel.value = "all";
+    plotSel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(store.get().filters).toEqual({ search: "", fuel: null, outcome: null, plotted: "all" });
+    expect(rows()).toBe(experiments.length);
+  });
+
   it("the tests tab sorts every column and its rows link to their PSI rows", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });

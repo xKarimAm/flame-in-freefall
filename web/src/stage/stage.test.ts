@@ -7,13 +7,15 @@ import { describe, expect, it, vi } from "vitest";
 import type { AppState, AtmosphereId, DataApi, Experiment, Family, IncidentsData, Lens, MoonData, NearestQuery, NotPlacedRow, PlacedTest, StageState, Story, TestRun } from "../contract";
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
+import { mountSheet } from "../ui/sheet";
 import { SELECT_INVESTIGATION, mount } from "./index";
 import * as THREE from "three";
 import { TILT_H, TILT_MS, TILT_W, TILT_Y, TILT_Z, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltLabelAnchors, tiltLabelBoxes, tiltPlaneGeometry, tiltPose, tiltProgress } from "./tilt";
 import type { TiltColors, TiltFixedLabelId, TiltLabelId, TiltLabelSpec, TiltLabels } from "./tilt";
 import { CHART_RESERVE_PX, chartHeight, chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
-import { dotKind, noPressureRows, refShape } from "./plan";
+import { chartPasses, dotKind, noPressureRows, refShape } from "./plan";
+import type { ChartFilters } from "../contract";
 import type { RefPlan } from "./plan";
 import { DIAL_IDS, flameStandPad, incidentO2, markerBottomFraction } from "./picture";
 import { layoutRefs } from "./refs";
@@ -561,6 +563,80 @@ describe("public picture", () => {
     expect(css).toMatch(/@keyframes flame-sway/);
     expect(css).toMatch(/\.flame-guide \.flame-sway\s*\{[^}]*animation:\s*flame-sway/);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.stage-incidents \*/);
+  });
+});
+
+describe("chart filters (task 35)", () => {
+  const noFilters: { family: null } & ChartFilters = { family: null, search: "", fuel: null, outcome: null, plotted: "all" };
+  const dot = {
+    id: "PSI-69#2", investigation: "PSI-69", family: "droplets" as const,
+    fuel: "Methanol", outcome: "extinction" as const,
+  };
+  const placedIds = new Set(["PSI-69#2"]);
+
+  it("chartPasses keeps a row only when every set filter matches", () => {
+    const hay = "psi-69 methanol droplets";
+    expect(chartPasses(dot, noFilters, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, family: "droplets" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, family: "gas jets" }, placedIds, hay)).toBe(false);
+    expect(chartPasses(dot, { ...noFilters, fuel: "Methanol" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, fuel: "ethane" }, placedIds, hay)).toBe(false);
+    expect(chartPasses(dot, { ...noFilters, outcome: "extinction" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, outcome: "burned" }, placedIds, hay)).toBe(false);
+    expect(chartPasses(dot, { ...noFilters, search: "meth" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, search: "saffire" }, placedIds, hay)).toBe(false);
+    expect(chartPasses(dot, { ...noFilters, plotted: "plotted" }, placedIds, hay)).toBe(true);
+    expect(chartPasses(dot, { ...noFilters, plotted: "unplaced" }, placedIds, hay)).toBe(false);
+    expect(chartPasses({ ...dot, id: "PSI-98#1" }, { ...noFilters, plotted: "plotted" }, placedIds, hay)).toBe(false);
+    expect(chartPasses({ ...dot, id: "PSI-98#1" }, { ...noFilters, plotted: "unplaced" }, placedIds, hay)).toBe(true);
+  });
+
+  it("the chart draws only dots that pass the whole store filter set", () => {
+    const { host, store, api } = setup({ view: "micro-g", show_families: allFamilies });
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+    const dots = () => [...host.querySelectorAll('[data-layer="tests"] circle')].map((d) => d.getAttribute("data-id")!);
+    store.set({ filters: { ...noFilters, fuel: "Methanol" } });
+    expect(dots()).toEqual(["PSI-69#2"]);
+    store.set({ filters: { ...noFilters, outcome: "self-extinguished" } });
+    expect(dots()).toEqual(["PSI-159#1"]);
+    store.set({ filters: { ...noFilters, search: "ethane" } });
+    expect(dots()).toEqual(["PSI-159#1"]);
+    store.set({ filters: { ...noFilters, plotted: "unplaced" } });
+    expect(dots()).toEqual([]);
+    store.set({ filters: noFilters });
+    expect(dots().length).toBe(api.placed().length);
+  });
+
+  it("a sheet filter redraws the chart through the shared store (task 35)", () => {
+    const { host, store, api } = setup({ view: "micro-g", show_families: allFamilies });
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+    const sheetHost = document.createElement("section");
+    document.body.append(sheetHost);
+    mountSheet(sheetHost, { api, store, dicts, t: makeT(() => "en") });
+    store.set({ lens: "analyst" });
+    const sel = sheetHost.querySelector<HTMLSelectElement>("#sheet-fuel")!;
+    sel.value = "Methanol";
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(store.get().filters.fuel).toBe("Methanol");
+    expect([...host.querySelectorAll('[data-layer="tests"] circle')].map((d) => d.getAttribute("data-id")!)).toEqual([
+      "PSI-69#2",
+    ]);
+  });
+
+  it("the plotted filter switches the no-pressure strip off and on", () => {
+    const { host, store, api } = setup({ view: "micro-g", show_families: allFamilies });
+    const ticks = () => host.querySelectorAll('[data-layer="no-pressure"] line.ptick').length;
+    const all = api.notPlaced().filter((r) => r.reason === "no pressure recorded").length;
+    expect(all).toBeGreaterThan(0);
+    expect(ticks()).toBe(all);
+    store.set({ filters: { ...noFilters, plotted: "plotted" } });
+    expect(ticks()).toBe(0);
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+    store.set({ filters: { ...noFilters, plotted: "unplaced" } });
+    expect(ticks()).toBe(all);
+    expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(0);
+    store.set({ filters: noFilters });
+    expect(ticks()).toBe(all);
   });
 });
 
@@ -1143,6 +1219,21 @@ describe("family parade", () => {
     await new Promise((r) => setTimeout(r, 900));
     expect(one.host.querySelector(".parade-num")!.textContent).toBe(String(oneTarget));
     expect(all.host.querySelector(".parade-num")!.textContent).toBe(String(all.api.coverage().plotted));
+  });
+
+  it("the counter counts what the filters draw, not the unfiltered total (task 35)", () => {
+    const { host, store, api } = setup(act2(["droplets", "gas jets"]));
+    const num = () => host.querySelector(".parade-num")!;
+    const drawn = (fuel: string | null) =>
+      api.placed().filter((p) => (p.family === "droplets" || p.family === "gas jets") && (!fuel || p.fuel === fuel)).length;
+    expect(num().getAttribute("data-count")).toBe(String(drawn(null)));
+    store.set({ filters: { search: "", fuel: "Methanol", outcome: null, plotted: "all" } });
+    expect(num().getAttribute("data-count")).toBe(String(drawn("Methanol")));
+    expect(drawn("Methanol")).toBe(1);
+    store.set({ filters: { search: "", fuel: "no-such-fuel", outcome: null, plotted: "all" } });
+    expect(num().getAttribute("data-count")).toBe("0");
+    store.set({ filters: { search: "", fuel: null, outcome: null, plotted: "all" } });
+    expect(num().getAttribute("data-count")).toBe(String(drawn(null)));
   });
 
   it("families with no pressure recorded show their listed count, never dots", () => {

@@ -6,6 +6,7 @@
 // the real plotted total once every family has arrived. Flat colour from tokens only, never yellow.
 import type { Ctx, Family } from "../contract";
 import { FAMILIES } from "../contract";
+import { chartPasses } from "./plan";
 import { dataLink } from "../ui/dom";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -92,6 +93,15 @@ export function renderParade(el: HTMLElement, ctx: Ctx): void {
   el.hidden = false;
   const shown = store.get().stage.show_families ?? [];
   const placed = api.placed();
+  // the counter counts what the filters draw, not the unfiltered total
+  const s = store.get();
+  const f = { family: s.family ?? null, ...s.filters };
+  const placedIds = new Set(placed.map((p) => p.id));
+  const hayOf = (p: { investigation: string; family: Family | null; fuel: string | null }): string => {
+    const e = api.experiment(p.investigation);
+    return `${p.investigation} ${e?.acronym ?? ""} ${e?.title ?? ""} ${p.family ?? ""} ${p.fuel ?? ""}`;
+  };
+  const drawn = placed.filter((p) => (shown as Family[]).includes(p.family) && chartPasses(p, f, placedIds, hayOf(p)));
   const frag = document.createDocumentFragment();
   const head = document.createElement("p");
   head.className = "parade-count";
@@ -99,7 +109,7 @@ export function renderParade(el: HTMLElement, ctx: Ctx): void {
   const num = dataLink("0");
   num.className = "parade-num";
   head.append(num, ` ${t("ui.stage.parade.dots-label")}`);
-  const target = placed.filter((p) => (shown as Family[]).includes(p.family)).length;
+  const target = drawn.length;
   frag.append(head);
   const list = document.createElement("ul");
   list.className = "parade-families";
@@ -110,10 +120,12 @@ export function renderParade(el: HTMLElement, ctx: Ctx): void {
     name.className = "parade-name";
     name.textContent = t(`ui.family.${family}`);
     li.append(name);
-    const n = placed.filter((p) => p.family === family).length;
-    const count = n > 0
+    const n = drawn.filter((p) => p.family === family).length;
+    const listedRows = api.notPlaced(family).filter((r) => chartPasses(r, f, placedIds, hayOf(r)));
+    const showListed = f.plotted === "unplaced" || (f.plotted === "all" && n === 0);
+    const count = !showListed
       ? dataLink(t("ui.stage.parade.plotted", { n }))
-      : dataLink(t("ui.stage.parade.listed", { n: api.notPlaced(family).length }));
+      : dataLink(t("ui.stage.parade.listed", { n: listedRows.length }));
     count.className = "parade-n";
     li.append(count);
     list.append(li);
