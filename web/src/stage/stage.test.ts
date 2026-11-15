@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import type { AtmosphereId, DataApi, Experiment, Family, IncidentsData, MoonData, NearestQuery, NotPlacedRow, PlacedTest, Story, TestRun } from "../contract";
+import type { AtmosphereId, DataApi, Experiment, Family, IncidentsData, Lens, MoonData, NearestQuery, NotPlacedRow, PlacedTest, Story, TestRun } from "../contract";
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { mount } from "./index";
@@ -12,6 +12,7 @@ import { chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { dotKind, noPressureRows, refShape } from "./plan";
 import type { RefPlan } from "./plan";
+import { DIAL_IDS, incidentO2 } from "./picture";
 import { layoutRefs } from "./refs";
 
 const read = <T>(rel: string): T => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf8")) as T;
@@ -71,9 +72,9 @@ function fakeApi(extra: Extra = {}): DataApi & { nearestSpy: ReturnType<typeof v
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "stage.css"), "utf8");
 const SIZE = { w: 688, h: 700 }; // the SVG fills #stage's content box; this stands in for it
-function setup(stage = initialState.stage, sliders = initialState.sliders, extra: Extra = {}, size = SIZE) {
+function setup(stage = initialState.stage, sliders = initialState.sliders, extra: Extra = {}, size = SIZE, lens: Lens = "public") {
   const api = fakeApi(extra);
-  const store = createStore({ ...initialState, stage, sliders });
+  const store = createStore({ ...initialState, stage, sliders, lens });
   const host = document.createElement("div");
   document.body.append(host);
   mount(host, { api, store, dicts, t: makeT(() => "en") }, { size });
@@ -469,5 +470,82 @@ describe("motion", () => {
     expect(css).toMatch(/\[data-layer="tests"\] \.dot\s*\{[^}]*animation:\s*stage-in 0\.3s/);
     expect(css).toMatch(/@keyframes stage-in\s*\{[^}]*scale/);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.stage-root \*[^}]*transition:\s*none !important;[^}]*animation:\s*none !important/);
+  });
+});
+
+describe("public picture", () => {
+  const apollo = incidents.incidents[0]!;
+  const mir = incidents.incidents[1]!;
+  const pictureSetup = (ids: string[], lens: Lens = "public") =>
+    setup({ view: "incident", incident_ids: ids }, initialState.sliders, {}, SIZE, lens);
+
+  it("shows the dial, the flame and the incident card in the Public lens", () => {
+    const { host } = pictureSetup([apollo.id]);
+    const dial = host.querySelector(".o2-dial")!;
+    expect(dial.getAttribute("aria-label")).toBe(en["ui.stage.dial-title"]);
+    // every dial mark comes from moon.json by id, with its own numbers on screen
+    for (const id of DIAL_IDS) {
+      const a = moon.atmospheres.find((x) => x.id === id)!;
+      const mark = dial.querySelector(`[data-atmosphere="${id}"]`)!;
+      expect(dial.textContent).toContain(String(a.o2_pct_min));
+      if (a.o2_pct_max !== null && a.o2_pct_max > a.o2_pct_min) {
+        expect(mark.tagName).toBe("rect");
+        expect(dial.textContent).toContain(String(a.o2_pct_max));
+      } else expect(mark.tagName).toBe("circle");
+    }
+    // the Apollo marker sits on the 100 % suit tick and names the incident's own oxygen words
+    const marker = dial.querySelector('[data-incident="apollo-1"]')!;
+    expect(marker.getAttribute("y1")).toBe(dial.querySelector('[data-atmosphere="suit"]')!.getAttribute("cy"));
+    expect(marker.querySelector("title")!.textContent).toBe(`${apollo.name}: ${apollo.oxygen}`);
+    // tall flame beside the card, and the card keeps every field
+    expect(host.querySelector(".flame-guide.tall")).not.toBeNull();
+    const card = host.querySelector(".incident-card")!;
+    for (const field of [apollo.name, apollo.oxygen, apollo.changed]) expect(card.textContent).toContain(field);
+  });
+
+  it("an incident with no oxygen number has no marker and a small calm flame", () => {
+    const { host } = pictureSetup([mir.id]);
+    expect(host.querySelector(".dial-marker")).toBeNull();
+    expect(host.querySelector(".flame-guide.small")).not.toBeNull();
+    expect(host.querySelector(".flame-guide.tall")).toBeNull();
+  });
+
+  it("other lenses keep the incident cards without the picture", () => {
+    for (const lens of ["astronaut", "analyst"] as const) {
+      const { host } = pictureSetup([apollo.id, mir.id], lens);
+      expect(host.querySelector(".o2-dial")).toBeNull();
+      expect(host.querySelector(".flame-guide")).toBeNull();
+      expect(host.querySelector(".public-picture")).toBeNull();
+      expect(host.querySelectorAll(".incident-card").length).toBe(2);
+    }
+  });
+
+  it("switching lens swaps the picture in place", () => {
+    const { host, store } = pictureSetup([apollo.id]);
+    expect(host.querySelector(".o2-dial")).not.toBeNull();
+    store.set({ lens: "astronaut" });
+    expect(host.querySelector(".o2-dial")).toBeNull();
+    expect(host.querySelectorAll(".incident-card").length).toBe(1);
+    store.set({ lens: "public" });
+    expect(host.querySelector(".o2-dial")).not.toBeNull();
+  });
+
+  it("the picture is flat colour with no yellow, and the flame idles within the reduced-motion rules", () => {
+    const { host } = pictureSetup([apollo.id]);
+    const html = host.querySelector(".public-picture")!.innerHTML;
+    expect(html).not.toContain("--moon");
+    expect(html).not.toContain("#e7f434");
+    expect(css).toMatch(/@keyframes flame-sway/);
+    expect(css).toMatch(/\.flame-guide \.flame-sway\s*\{[^}]*animation:\s*flame-sway/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.stage-incidents \*/);
+  });
+});
+
+describe("incidentO2", () => {
+  it("reads the leading oxygen number of the incident's own words, else null", () => {
+    expect(incidentO2("100% oxygen at pressure")).toBe(100);
+    expect(incidentO2("26.5% nominal")).toBe(26.5);
+    expect(incidentO2("Chemical oxygen generator (lithium perchlorate candle)")).toBeNull();
+    expect(incidentO2("120% oxygen")).toBeNull();
   });
 });

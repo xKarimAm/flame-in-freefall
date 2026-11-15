@@ -9,6 +9,7 @@
   "ui.cover.lead": "NASA microgravity fire tests on one chart, with the ones that cannot be placed listed beside it, and where the evidence for a Moon base runs out.",
   "ui.cover.cue": "Scroll to turn the page",
   "ui.stage.title": "Evidence chart: NASA microgravity fire tests by air pressure and oxygen",
+  "ui.stage.dial-title": "Oxygen dial: 0 to 100 % oxygen, with NASA's flown and planned airs marked",
   "ui.stage.x-axis": "Air pressure (kPa)",
   "ui.stage.y-axis": "Oxygen in the air (%)",
   "ui.stage.coverage": "Plotted {plotted} of {total} tests",

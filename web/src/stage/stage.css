@@ -77,3 +77,23 @@
 @media (prefers-reduced-motion: reduce) {
   .stage-root *, .stage-incidents * { transition: none !important; animation: none !important; }
 }
+
+/* public picture (act 1): the oxygen dial and flame guide beside large plain incident cards */
+.stage-incidents.public-picture { align-items: start; }
+.picture-side { display: flex; gap: 24px; align-items: flex-end; justify-content: center; }
+@media (min-width: 1100px) {
+  .stage-incidents.public-picture[data-count="1"] { grid-template-columns: auto 1fr; }
+  .stage-incidents.public-picture[data-count="2"] { grid-template-columns: auto 1fr 1fr; }
+}
+.public-picture .incident-card { font-size: 20px; }
+.o2-dial { display: block; width: 100%; max-width: 300px; height: auto; }
+.o2-dial text { fill: var(--muted-dark); font-size: 12px; }
+.o2-dial .dial-axis { font-size: 13px; }
+.o2-dial .dial-frame, .o2-dial .dial-tick { stroke: var(--muted-dark); stroke-width: 1.5; }
+.o2-dial .dial-point { fill: var(--data-on-dark); }
+.o2-dial .dial-band { fill: var(--data-on-dark); fill-opacity: 0.12; stroke: var(--data-on-dark); stroke-width: 1.5; }
+.o2-dial .dial-mark { fill: var(--ink-dark); }
+.o2-dial .dial-marker { stroke: var(--ink-dark); stroke-width: 3; }
+.flame-guide { display: block; height: auto; }
+.flame-guide .flame-sway { transform-box: fill-box; transform-origin: 50% 90%; animation: flame-sway 1.6s steps(1) infinite alternate; }
+@keyframes flame-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }

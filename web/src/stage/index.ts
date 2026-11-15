@@ -10,6 +10,7 @@ import type { Size } from "./layout";
 import type { Scales } from "./layout";
 import { dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
+import { dialSVG, flameSVG, incidentO2 } from "./picture";
 import { DIAMOND, layoutRefs } from "./refs";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -312,38 +313,47 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   }
 
   // ---------- incident view: one large page per incident ----------
+  // In the Public lens the pages also get the oxygen dial and the flame guide beside the card.
+  function incidentCard(i: Incident): HTMLElement {
+    const card = html("article", "incident-card");
+    const line = (label: string, text: string): HTMLElement => {
+      const p = html("p");
+      p.append(html("strong", undefined, `${label}: `), text);
+      return p;
+    };
+    const link = html("a", undefined, i.source);
+    link.href = i.url;
+    link.rel = "noopener";
+    const src = html("p", "incident-source");
+    src.append(link);
+    card.append(
+      html("h3", undefined, i.name),
+      html("p", "incident-meta", `${i.date} · ${i.setting}`),
+      html("p", "incident-lead", i.what_happened),
+      line(t("ui.stage.incident.oxygen"), i.oxygen),
+      line(t("ui.stage.incident.changed"), i.changed),
+      src,
+    );
+    return card;
+  }
   function drawIncidents(ids: string[]): void {
     const all = api.data.incidents.incidents;
     const pages = ids.map((id) => all.find((i) => i.id === id)).filter((i): i is Incident => !!i);
-    incidents.replaceChildren(
-      ...pages.map((i) => {
-        const card = html("article", "incident-card");
-        const line = (label: string, text: string): HTMLElement => {
-          const p = html("p");
-          p.append(html("strong", undefined, `${label}: `), text);
-          return p;
-        };
-        const link = html("a", undefined, i.source);
-        link.href = i.url;
-        link.rel = "noopener";
-        const src = html("p", "incident-source");
-        src.append(link);
-        card.append(
-          html("h3", undefined, i.name),
-          html("p", "incident-meta", `${i.date} · ${i.setting}`),
-          html("p", "incident-lead", i.what_happened),
-          line(t("ui.stage.incident.oxygen"), i.oxygen),
-          line(t("ui.stage.incident.changed"), i.changed),
-          src,
-        );
-        return card;
-      }),
-    );
+    const cards = pages.map(incidentCard);
+    if (store.get().lens !== "public") {
+      incidents.classList.remove("public-picture");
+      incidents.replaceChildren(...cards);
+      return;
+    }
+    incidents.classList.add("public-picture");
+    const side = html("div", "picture-side");
+    side.append(dialSVG(ctx, pages), flameSVG(pages.some((i) => incidentO2(i.oxygen) !== null)));
+    incidents.replaceChildren(side, ...cards);
   }
 
   // ---------- wiring ----------
   store.subscribe((state, prev) => {
-    const full = state.stage !== prev.stage || state.locale !== prev.locale || (state.sliders === null) !== (prev.sliders === null);
+    const full = state.stage !== prev.stage || state.locale !== prev.locale || state.lens !== prev.lens || (state.sliders === null) !== (prev.sliders === null);
     if (state.stage !== prev.stage) extra = [];
     if (full) drawAll();
     else if (state.sliders !== prev.sliders || state.family !== prev.family) drawLive();
