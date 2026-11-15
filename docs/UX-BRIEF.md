@@ -51,3 +51,6 @@ Every AI-written string is validated in code before it is committed (quotes are 
 
 ## Art reference (Karim, 02:54)
 The Space Apps Boston poster: deep blue space, a warm orange planet limb, bold white type, one bright object in the middle. Use it as mood only: the dark blue ground, orange for fire, white display type at large sizes, one focal thing per screen. Do not copy the picture, do not use its logos, and keep the flat-colour rules (no gradients, no glows).
+
+## Lens names and audience (Karim, 08:46: "Yes, rename")
+The challenge names its audience: professors, graduate and undergraduate students, aerospace researchers and aerospace engineers, and asks for a dashboard that summarizes, ranks and interprets. The lenses are shown as **Student** (was Public), **Engineer** (was Astronaut) and **Researcher** (was Analyst). The internal ids stay `public`, `astronaut`, `analyst`. The Researcher workspace is the core product; the Student story is the way in; the Engineer view answers what a crew or a habitat designer needs.

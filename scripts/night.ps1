@@ -24,7 +24,6 @@ $head = "LANE: $Lane`nWORKSPACE: $wt`nBRANCH: $branch`nQUEUE FILE: $queue`n`n"
 $idle = 0
 for ($run = 1; $run -le 60; $run++) {
   if (Test-Path "$wt\STOP") { Note 'STOP file found'; break }
-  if ((Get-Date).Hour -ge 9 -and (Get-Date).Hour -lt 20) { Note 'past 09:00, stopping'; break }
   if (-not (Select-String -Path "$wt\$queue" -Pattern '^- \[ \]' -Quiet)) { Note 'queue empty'; break }
   $before = git -C $wt rev-parse HEAD
   $log = "$logs\night-$Lane-$(Get-Date -Format 'MMdd-HHmm').jsonl"
