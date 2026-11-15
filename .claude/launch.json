@@ -30,6 +30,22 @@
         "--strictPort"
       ],
       "port": 4174
+    },
+    {
+      "name": "firebreak-phone",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "E:/fif-wt/night-web/web",
+        "run",
+        "preview",
+        "--",
+        "--host",
+        "--port",
+        "4175",
+        "--strictPort"
+      ],
+      "port": 4175
     }
   ]
 }

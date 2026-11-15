@@ -30,3 +30,11 @@ d = sqrt( ((p - p_t) / 25)^2 + ((o - o_t) / 5)^2 )
 1. A query equal to PSI-69#2 gives `d = 0`.
 2. The Moon box query ranks PSI-159#1 (39.39 %, 94.44 kPa; O2 inside the band, so `d = (94.44 - 56.5) / 25 = 1.518`).
 3. PSI-98#1 (pressure null) is excluded and appears in "not placed".
+
+## Ranking investigations for a chosen air (added 2026-11-15; the challenge asks the dashboard to "summarize, rank and interpret")
+For a query air (the sliders, or the Moon box), each investigation gets:
+- `d_min`: the distance, as defined above, of its nearest placed test;
+- `near`: how many of its placed tests have distance 1.0 or less;
+- `placed` and `tests`: its placed-test count and its total test count.
+
+Order: `d_min` ascending, then `near` descending, then `placed` descending, then acronym. Investigations with no placed test are listed after the ranked ones under "Not rankable: no test with both oxygen and pressure recorded", in acronym order. The UI shows the three numbers and this rule in words next to the list, labelled "Closest tested conditions, not a prediction". Nothing is weighted by outcome: no investigation is called safer or more dangerous.
