@@ -12,8 +12,10 @@
 .tilt-label { position: absolute; margin: 0; font-size: 12px; color: var(--muted-dark); background: var(--space-deep); padding: 2px 6px; white-space: nowrap; }
 .tilt-label[hidden] { display: none; }
 /* the three plane labels are large: each picture names its own plane. JS sets the exact
-   box corner (see tiltLabelBoxes), so there are no offsets here: what is measured is shown */
+   box corner (see tiltLabelBoxes), so there are no offsets here: what is measured is shown.
+   The lunar label wraps at the plot edge on narrow pages instead of leaving the box. */
 .tilt-label.plane-micro, .tilt-label.plane-lunar, .tilt-label.plane-earth { font-size: 20px; font-weight: 700; color: var(--ink-dark); }
+.tilt-label.plane-lunar { max-width: 100%; white-space: normal; }
 .tilt-label.you { color: var(--ink-dark); }
 .stage-svg text { fill: var(--muted-dark); font-size: 12px; }
 .stage-svg .axis-title { font-size: 13px; }

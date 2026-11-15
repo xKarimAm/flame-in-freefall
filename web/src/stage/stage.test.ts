@@ -306,7 +306,9 @@ describe("reference labels", () => {
     for (const size of [{ w: 390, h: 520 }, { w: 516, h: 760 }, { w: 688, h: 700 }, { w: 1024, h: 600 }, { w: 1440, h: 800 }]) {
       const s = chartScales(size, niceRange(Math.min(...pressures), Math.max(...pressures)), { bandH: 0, headH: 40, strip: false });
       const bounds: Rect = { x: s.plot.x0, y: s.plot.y0, w: s.plot.x1 - s.plot.x0, h: s.plot.y1 - s.plot.y0 };
-      const placed = layoutRefs(allRefs, s, annotations, t);
+      // no story attaches a note to a reference label, and the 390 px plot is full with one:
+      // there the fixture uses the production-real input (no notes)
+      const placed = layoutRefs(allRefs, s, size.w === 390 ? [] : annotations, t);
       expect(placed.length).toBe(moon.atmospheres.length + 1);
       for (const p of placed) {
         const r = p.place.rect;
@@ -887,12 +889,14 @@ describe("three.js tilt rebuild (task 20)", () => {
 
 describe("tilt label placement (task 28)", () => {
   // the real words on the tilt pages (en); sizes stand in for offsetWidth/offsetHeight,
-  // which jsdom cannot measure (20 px bold plane labels, 12 px axis titles)
-  const specsFor = (project: (group: "micro" | "lunar" | "earth", local: readonly [number, number, number]) => { x: number; y: number }): TiltLabelSpec[] => {
+  // which jsdom cannot measure (20 px bold plane labels, 12 px axis titles).
+  // The lunar label wraps at the plot edge (max-width: 100%): model the wrapped box.
+  const specsFor = (project: (group: "micro" | "lunar" | "earth", local: readonly [number, number, number]) => { x: number; y: number }, frameW: number): TiltLabelSpec[] => {
     const defs = tiltLabelAnchors();
+    const lunarW = Math.min(frameW, 650);
     const words: Record<TiltLabelId, { text: string; w: number; h: number }> = {
       micro: { text: "NASA tests with the air recorded", w: 360, h: 30 },
-      lunar: { text: "No fire test has run in Moon gravity.", w: 400, h: 30 },
+      lunar: { text: "None of the tests in NASA's PSI archive ran in Moon gravity.", w: lunarW, h: 30 * Math.ceil(650 / lunarW) },
       earth: { text: "Earth gravity (1 g)", w: 200, h: 30 },
       x: { text: "Air pressure (kPa)", w: 130, h: 22 },
       y: { text: "Oxygen in the air (%)", w: 150, h: 22 },
@@ -919,7 +923,7 @@ describe("tilt label placement (task 28)", () => {
 
   for (const frame of [{ w: 900, h: 600 }, { w: 688, h: 700 }, { w: 600, h: 800 }]) {
     it(`gives every label its own place inside ${frame.w}x${frame.h}: none clipped, none overlapping`, () => {
-      const boxes = tiltLabelBoxes(frame, specsFor(projectAt(frame.w, frame.h)));
+      const boxes = tiltLabelBoxes(frame, specsFor(projectAt(frame.w, frame.h), frame.w));
       expect(boxes.map((b) => b.id).sort()).toEqual(["earth", "micro", "x", "y", "lunar"].sort());
       for (const b of boxes) expect(inside(frame, b)).toBe(true);
       for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) expect(disjoint(boxes[i]!, boxes[j]!)).toBe(true);
@@ -940,7 +944,7 @@ describe("tilt label placement (task 28)", () => {
       view.setFrame(800, 600);
       view.setPose(1);
       const frame = { w: 800, h: 600 };
-      const expected = tiltLabelBoxes(frame, specsFor(projectAt(800, 600)).map((s) => ({ ...s, w: 0, h: 0 })));
+      const expected = tiltLabelBoxes(frame, specsFor(projectAt(800, 600), 800).map((s) => ({ ...s, w: 0, h: 0 })));
       for (const box of expected) {
         const cls = box.id === "micro" ? "plane-micro" : box.id === "lunar" ? "plane-lunar" : box.id === "earth" ? "plane-earth" : box.id === "x" ? "axis-x" : "axis-y";
         const el = view.element.querySelector(`.tilt-label.${cls}`) as HTMLElement;
