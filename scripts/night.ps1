@@ -2,14 +2,15 @@
 # Start:  powershell -ExecutionPolicy Bypass -File E:\flame-in-freefall\scripts\night.ps1 -Lane web      (or -Lane backend)
 # Stop:   create the file STOP in the lane's worktree (E:\fif-wt\night-web\STOP); the loop ends after the current run.
 # The agent gets no GitHub token and does not push: this script pushes the lane branch after each run.
-param([ValidateSet('web','backend')][string]$Lane = 'web')
+param([ValidateSet('web','backend','release')][string]$Lane = 'web')
 $repo = 'E:\flame-in-freefall'; $wt = "E:\fif-wt\night-$Lane"; $branch = "night/$Lane"; $logs = 'E:\spaceapps-data\logs'
-$queue = @{ web = 'docs/NIGHT-QUEUE.md'; backend = 'docs/NIGHT-QUEUE-BACKEND.md' }[$Lane]
+if ($Lane -eq 'release') { $wt = 'E:\fif-wt\release'; $branch = 'release/web' }   # the combined branch behind PR #16
+$queue = @{ web = 'docs/NIGHT-QUEUE.md'; backend = 'docs/NIGHT-QUEUE-BACKEND.md'; release = 'docs/RELEASE-QUEUE.md' }[$Lane]
 $env:TEMP = 'E:\caches\tmp'; $env:TMP = 'E:\caches\tmp'
 # git ownership check: only these two paths, not '*'
 $env:GIT_CONFIG_COUNT = '2'
 $env:GIT_CONFIG_KEY_0 = 'safe.directory'; $env:GIT_CONFIG_VALUE_0 = 'E:/flame-in-freefall'
-$env:GIT_CONFIG_KEY_1 = 'safe.directory'; $env:GIT_CONFIG_VALUE_1 = "E:/fif-wt/night-$Lane"
+$env:GIT_CONFIG_KEY_1 = 'safe.directory'; $env:GIT_CONFIG_VALUE_1 = $wt.Replace('\', '/')
 New-Item -ItemType Directory -Force $logs | Out-Null
 function Note([string]$m) { "$(Get-Date -Format 'HH:mm:ss') [$Lane] $m" | Tee-Object -FilePath "$logs\night-$Lane.log" -Append }
 

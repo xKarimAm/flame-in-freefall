@@ -46,6 +46,22 @@
         "--strictPort"
       ],
       "port": 4175
+    },
+    {
+      "name": "firebreak-release",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "E:/fif-wt/release/web",
+        "run",
+        "preview",
+        "--",
+        "--host",
+        "--port",
+        "4176",
+        "--strictPort"
+      ],
+      "port": 4176
     }
   ]
 }
