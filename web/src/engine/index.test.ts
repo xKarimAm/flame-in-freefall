@@ -371,9 +371,10 @@ describe("engine mount", () => {
     expect(el.querySelector(".page-dots")!.getAttribute("aria-label")).toBe(dicts.en!["ui.engine.pages"]);
     expect(dots[0]!.getAttribute("aria-current")).toBe("true");
     expect(dots.slice(1).every((d) => !d.hasAttribute("aria-current"))).toBe(true);
-    expect(dots[2]!.getAttribute("aria-label")).toBe(
-      dicts.en!["ui.engine.page"]!.replace("{n}", "3").replace("{total}", String(steps.length)),
-    );
+    // K-dots: the label names the page and its chapter (also the hover/focus tooltip text)
+    const pageName = dicts.en!["ui.engine.page"]!.replace("{n}", "3").replace("{total}", String(steps.length));
+    expect(dots[2]!.getAttribute("aria-label")!.startsWith(`${pageName}: `)).toBe(true);
+    expect(dots[2]!.dataset.label).toBe(dots[2]!.getAttribute("aria-label"));
     fire(2, "down");
     expect(dots[2]!.getAttribute("aria-current")).toBe("true");
     expect(dots[0]!.hasAttribute("aria-current")).toBe(false);

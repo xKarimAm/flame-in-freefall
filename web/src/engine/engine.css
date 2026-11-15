@@ -176,6 +176,15 @@ html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) +
   width: 10px; height: 10px; min-height: 0; flex: none; padding: 0; font-size: 0;
   border: 1px solid var(--muted-dark); border-radius: 50%; background: transparent; cursor: pointer;
 } /* min-height 0 opts out of the global 40 px button minimum: dots stay 10 px circles (R2d) */
+.page-dot { position: relative; }
+/* label to the right of the dot on hover and keyboard focus, sliding in over 150 ms */
+.page-dot::after {
+  content: attr(data-label); position: absolute; left: calc(100% + 10px); top: 50%; transform: translate(-6px, -50%);
+  padding: 4px 8px; border-radius: 4px; background: var(--space-black); color: var(--ink-dark); border: 1px solid var(--muted-dark); white-space: nowrap;
+  font-size: var(--text-meta); line-height: 1.3; pointer-events: none; opacity: 0; transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+.page-dot:hover::after, .page-dot:focus-visible::after { opacity: 1; transform: translate(0, -50%); }
+@media (prefers-reduced-motion: reduce) { .page-dot::after { transition: none; } }
 .page-dot[aria-current="true"] { background: var(--ink-dark); border-color: var(--ink-dark); }
 @media (max-width: 1099px) {
   /* the card already says "Page n of 18": dots stay only on wide screens */

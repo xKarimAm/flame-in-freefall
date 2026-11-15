@@ -172,8 +172,10 @@ body[data-cover="true"] .stage-incidents .incident-card { display: none; }
 .o2-dial .dial-mark { fill: var(--ink-dark); }
 .o2-dial .dial-marker { stroke: var(--ink-dark); stroke-width: 3; }
 /* chapter 1's oxygen handle: the visitor's own mark, draggable along the axis */
-.o2-dial .dial-you { stroke: var(--data-on-dark); stroke-width: 3; cursor: ns-resize; }
-.o2-dial .dial-hit { fill: transparent; cursor: ns-resize; }
+.o2-dial .dial-you { stroke: var(--data-on-dark); stroke-width: 3; cursor: grab; }
+.o2-dial .dial-hit { fill: transparent; cursor: grab; }
+.o2-dial .dial-hit:active { cursor: grabbing; }
+.picture-side .dial-hint { margin: 4px 0 0; font-size: var(--text-meta); color: var(--muted-dark); }
 /* chapter 2's family tap: one button per family under the legend */
 .family-pick { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
 .family-pick[hidden] { display: none; }
