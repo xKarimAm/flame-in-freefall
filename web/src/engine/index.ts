@@ -39,7 +39,9 @@ function scrollCenter(el: Element | null): void {
 }
 
 /** A chapter page's NASA photograph (R13): the figure for the chapter number, with the
- *  record's own caption, credit link and edit note. No picture fact is typed here. */
+ *  record's own caption, credit link and edit note. No picture fact is typed here.
+ *  R14: each part of the figcaption is its own block line (caption, "Image: credit",
+ *  edit note) so the caption never runs into the credit. */
 export function chapterFigure(pic: ChapterPicture, imageWord: string): HTMLElement {
   const figure = node("figure", "chapter-picture");
   const img = node("img");
@@ -48,14 +50,15 @@ export function chapterFigure(pic: ChapterPicture, imageWord: string): HTMLEleme
   img.setAttribute("loading", "lazy");
   const cap = node("figcaption");
   cap.append(node("span", "chapter-caption", pic.caption));
-  cap.append(document.createTextNode(`${imageWord}: `));
+  const credit = node("span", "chapter-credit");
+  credit.append(document.createTextNode(`${imageWord}: `));
   const a = node("a", undefined, pic.credit);
   a.href = safeHref(pic.url);
   a.target = "_blank";
   a.rel = "noopener";
-  cap.append(a);
+  credit.append(a);
+  cap.append(credit);
   if (pic.edit) {
-    cap.append(document.createTextNode(" "));
     cap.append(node("span", "chapter-edit", pic.edit));
   }
   figure.append(img, cap);
@@ -88,9 +91,13 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
       section.dataset.story = story.id;
       section.dataset.act = String(story.act);
       const header = node("header", "chapter");
+      // R14: the title and its question stay together in one group beside the figure,
+      // the question 16 px under the title, the group vertically centred on the page.
+      const copy = node("div", "chapter-text");
       const h2 = node("h2", "story-title");
       const question = node("p", "chapter-question"); // attached in render() only when the dictionary has the key
-      header.append(h2);
+      copy.append(h2);
+      header.append(copy);
       const pic = pictures.find((p) => p.chapter === story.act);
       if (pic) header.append(chapterFigure(pic, ctx.t("ui.engine.pictureImage")));
       section.append(header);

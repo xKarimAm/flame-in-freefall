@@ -282,13 +282,18 @@ describe("engine mount", () => {
       }
     });
 
-    it("chapter 4 renders no figure, and the figure sits after the question", () => {
+    it("chapter 4 renders no figure, and the figure sits after the title group", () => {
       const { el } = setup(curatedPictures);
       expect(headerFor(el, 4).querySelector("figure.chapter-picture")).toBeNull();
       const header = headerFor(el, 1);
       const kids = [...header.children].map((c) => c.className);
-      expect(kids[0]).toBe("story-title");
+      expect(kids[0]).toBe("chapter-text");
       expect(kids[kids.length - 1]).toBe("chapter-picture");
+      // R14: the title and its question are one group: the wrapper holds both
+      const copy = header.querySelector(".chapter-text")!;
+      expect(copy.querySelector("h2.story-title")).not.toBeNull();
+      expect(copy.querySelector(".chapter-question")).not.toBeNull();
+      expect(copy.querySelector("h2.story-title")!.nextElementSibling!.classList.contains("chapter-question")).toBe(true);
     });
 
     it("the edit note renders word for word when the record carries one", () => {
@@ -316,6 +321,45 @@ describe("engine mount", () => {
       expect(css).toMatch(/\.chapter-picture\s*\{[^}]*margin:\s*0/);
       expect(css).toMatch(/\.chapter-picture img\s*\{[^}]*max-height:\s*40vh/);
       expect(css).toMatch(/@media\s*\(min-width:\s*1100px\)[\s\S]*?\.chapter-picture img\s*\{[^}]*max-height:\s*60vh/s);
+    });
+
+    it("the figcaption holds caption, credit and edit on their own block lines (R14)", () => {
+      const { el } = setup(curatedPictures);
+      const pic = curatedPictures.find((p) => p.edit)!;
+      const header = headerFor(el, pic.chapter);
+      const cap = header.querySelector("figcaption")!;
+      // three separate elements, so no two parts share one text run
+      const parts = [...cap.children];
+      expect(parts.map((p) => p.className)).toEqual(["chapter-caption", "chapter-credit", "chapter-edit"]);
+      expect(parts[0].textContent).toBe(pic.caption);
+      expect(parts[1].textContent).toBe(`${dicts.en!["ui.engine.pictureImage"]}: ${pic.credit}`);
+      expect(parts[1].querySelector("a")!.getAttribute("href")).toBe(pic.url);
+      expect(parts[1].querySelector("a")!.textContent).toBe(pic.credit);
+      expect(parts[2].textContent).toBe(pic.edit!);
+      // the separator is structural (own lines) plus CSS space: block lines 4 px apart
+      expect(css).toMatch(/\.chapter-picture figcaption\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column[^}]*gap:\s*4px/s);
+      expect(css).toMatch(/\.chapter-caption[^{]*\{[^}]*display:\s*block/);
+      // a picture without an edit note renders two lines, never an empty third
+      const plain = curatedPictures.find((p) => !p.edit)!;
+      const plainParts = [...headerFor(el, plain.chapter).querySelector("figcaption")!.children];
+      expect(plainParts.map((p) => p.className)).toEqual(["chapter-caption", "chapter-credit"]);
+    });
+
+    it("the title and question stay one group beside the figure (R14)", () => {
+      const { el } = setup(curatedPictures);
+      const header = headerFor(el, 1);
+      const kids = [...header.children].map((c) => c.className);
+      expect(kids).toEqual(["chapter-text", "chapter-picture"]);
+      const copy = header.querySelector(".chapter-text")!;
+      expect(copy.querySelector("h2.story-title")).not.toBeNull();
+      expect(copy.querySelector(".chapter-question")).not.toBeNull();
+      // the question sits 16 px under the title, not pushed pages apart
+      expect(css).toMatch(/\.chapter-question\s*\{[^}]*margin:\s*16px 0 0/);
+      expect(css).not.toMatch(/\.chapter-question\s*\{[^}]*margin:\s*32px 0 0/);
+      // desktop: the group is one grid item beside the figure, centred as a whole
+      expect(css).toMatch(/@media\s*\(min-width:\s*1100px\)[\s\S]*?\.chapter-text\s*\{\s*grid-column:\s*1/s);
+      expect(css).toMatch(/@media\s*\(min-width:\s*1100px\)[\s\S]*?\.chapter-picture\s*\{[^}]*grid-column:\s*2/s);
+      expect(css).not.toMatch(/\.chapter-picture\s*\{[^}]*grid-row:\s*1 \/ span 2/);
     });
   });
 
