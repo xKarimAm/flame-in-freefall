@@ -582,6 +582,16 @@ describe("engine mount", () => {
     expect(css).not.toMatch(/\.chapter-question\s*\{[^}]*margin-left/);
   });
 
+  it("R19: the cover scales with the viewport and centres the dial and flame on wide screens", () => {
+    // the title grows with the viewport instead of staying at 64 px
+    expect(css).toMatch(/\.cover-title\s*\{[^}]*font-size:\s*clamp\([^)]*vw/);
+    const stageCss = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "stage", "stage.css"), "utf8");
+    // the dial (and the flame drawn inside it) grows with the viewport while the cover is on
+    expect(stageCss).toMatch(/body\[data-cover="true"\][\s\S]*?\.o2-dial\s*\{[^}]*height:\s*clamp\([^)]*vh/);
+    // the scale-and-flame group is centred in the stage box (the right 60 %) on the cover
+    expect(stageCss).toMatch(/body\[data-cover="true"\][\s\S]*?\.stage-incidents[^{]*\{[^}]*justify-items:\s*center/);
+  });
+
   it("pages snap gently and dots sit outside the cards", () => {
     expect(css).toMatch(/scroll-snap-type:\s*y proximity/);
     expect(css).toMatch(/\.cover, \.chapter, #story \.step, \.ending\s*\{[^}]*scroll-snap-align:\s*start/);

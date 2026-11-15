@@ -135,6 +135,17 @@
 .incident-card { overflow-wrap: anywhere; } /* long source URLs must not widen the card's column */
 /* the cover shows only the dial and the flame: incident cards hide while it fills the screen (R2b) */
 body[data-cover="true"] .stage-incidents .incident-card { display: none; }
+/* R19: the cover on a wide screen. The dial (and the flame drawn inside it) grows with the
+   viewport instead of stopping at 34 rem, and the scale-and-flame group is centred in the
+   stage box (the right 60 % of the screen) while the cover is on, so the cover reads as one
+   composed picture at 1280x720, 1536x864 and 1920x1080. Below 1100 px the width-driven
+   dial rule below wins (this block stands before it). */
+@media (min-width: 1100px) {
+  body[data-cover="true"] .stage-incidents.public-picture { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; justify-items: center; }
+  body[data-cover="true"] .stage-incidents.public-picture > .picture-side { grid-column: 1; grid-row: 1; }
+  body[data-cover="true"] .stage-incidents.public-picture > .dial-source { grid-column: 1; grid-row: 2; }
+  body[data-cover="true"] .public-picture .o2-dial { height: clamp(20rem, 75vh, 54rem); max-height: none; }
+}
 /* the dial instrument: as tall as the stage box allows (capped near its drawn size so the
    12-unit scale reads 12 px and the labels 17 px), flame on the mark inside the art */
 .public-picture .o2-dial { height: 100%; max-height: 34rem; width: auto; max-width: none; }

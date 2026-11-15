@@ -192,14 +192,21 @@ table.test-rows { margin-top: 12px; font-size: var(--text-body); }
 }
 /* one compact select: the language picker no longer wraps into a second header row */
 .locale-select { font: inherit; font-size: var(--text-meta); min-height: 32px; background: var(--ink); color: var(--ink-dark); border: 1px solid var(--rule); border-radius: var(--radius); }
-/* at 1280 px and wider the header stays one 56 px row: the rail (min-width 0, scrolls) absorbs the squeeze.
-   The bar itself is 53 px (37 px controls + 16 px padding) so the whole header measures 56 px
-   with the 3 px brand rule; narrower screens keep the 40 px controls and the wrapping bar. */
+/* R18: at 1280 px and wider the four chapter names show in full. The control row keeps
+   one line with tighter gaps while the rail takes its own full-width row below it, so no
+   chapter is ever squeezed into an ellipsis and the page never scrolls sideways. The locale
+   picker keeps its full language names (they fit once the rail has its own row). The header
+   measures its real height into --chrome-h, so the stage still sits below it. Narrower
+   screens keep the 40 px controls and the wrapping bar. */
 @media (min-width: 1280px) {
-  .chrome-bar { flex-wrap: nowrap; min-height: 53px; }
+  .chrome-bar { flex-wrap: wrap; gap: 8px; min-height: 53px; }
   .chrome-bar > :not(.rail) { flex-shrink: 0; }
   .chrome-bar .btn, .chrome-bar .chip { min-height: 37px; }
-  .lens-switch { flex-wrap: nowrap; }
+  .rail { order: 10; flex-basis: 100%; }
+  .rail .chip { flex-shrink: 0; }
+  .chip { padding: 0 6px; gap: 6px; }
+  .chip-title { overflow: visible; text-overflow: clip; }
+  .lens-switch { flex-wrap: nowrap; gap: 4px; }
 }
 /* header buttons have no whitespace between them, so the groups must wrap as flex */
 .lens-switch { display: flex; flex-wrap: wrap; gap: 8px; }

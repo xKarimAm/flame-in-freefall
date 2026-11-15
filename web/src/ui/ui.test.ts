@@ -603,9 +603,20 @@ describe("ui", () => {
     expect(css).toMatch(/\.lens-switch\s*\{[^}]*flex-wrap:\s*wrap/);
     expect(css).not.toMatch(/\.locale-switch/);
     expect(css).toMatch(/\.locale-select\s*\{[^}]*min-height:\s*32px/);
-    expect(css).toMatch(/min-width:\s*1280px\)\s*\{\s*\.chrome-bar\s*\{\s*flex-wrap:\s*nowrap/);
     expect(css).toMatch(/min-width:\s*1280px\)\s*\{.*?\.lens-switch\s*\{\s*flex-wrap:\s*nowrap/s);
-    expect(css).toMatch(/min-width:\s*1280px\)\s*\{.*?\.chrome-bar\s*\{\s*flex-wrap:\s*nowrap;\s*min-height:\s*53px/s);
+    expect(css).toMatch(/min-width:\s*1280px\)\s*\{.*?\.chrome-bar\s*\{\s*flex-wrap:\s*wrap/s);
+  });
+
+  it("R18: from 1280 px up the four chapter names show in full with no page scroll", () => {
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "ui.css"), "utf8");
+    // the bar wraps and the rail takes its own full-width row, so chapters are never squeezed
+    expect(css).toMatch(/min-width:\s*1280px\)[\s\S]*?\.rail\s*\{[^}]*flex-basis:\s*100%/);
+    // chapter titles are never truncated up here: no ellipsis, chips keep their own width
+    expect(css).toMatch(/min-width:\s*1280px\)[\s\S]*?\.chip-title\s*\{[^}]*overflow:\s*visible/);
+    expect(css).not.toMatch(/min-width:\s*1280px\)[\s\S]*?\.chip-title\s*\{[^}]*text-overflow:\s*ellipsis/);
+    expect(css).toMatch(/min-width:\s*1280px\)[\s\S]*?\.rail\s+\.chip\s*\{[^}]*flex-shrink:\s*0/);
+    // the control row spends less space first: tighter gaps than the base 8px 12px bar gap
+    expect(css).toMatch(/min-width:\s*1280px\)[\s\S]*?\.chrome-bar\s*\{[^}]*gap:\s*8px/);
   });
 
   it("under 768 px the header is one row: mark, chapter numbers and a Menu holding the rest (task 46)", () => {
@@ -745,8 +756,9 @@ describe("ui", () => {
   it("every font size is a type token, nothing else (task 43)", () => {
     const files = ["../styles/base.css", "../styles/tokens.css", "../engine/engine.css", "../stage/stage.css", "./ui.css"];
     // 40 px is the task-43 phone exception for the cover title only,
-    // 32 px the R7 phone exception for chapter titles
-    const allowed = /^var\(--text-(meta|body|card|chapter|cover)\)$|^(inherit|initial|unset|0|smaller|larger|40px|32px)$|em$|%$/;
+    // 32 px the R7 phone exception for chapter titles,
+    // clamp(40px, 6vw, 96px) the R19 responsive cover title (floor is the 40 px exception)
+    const allowed = /^var\(--text-(meta|body|card|chapter|cover)\)$|^(inherit|initial|unset|0|smaller|larger|40px|32px)$|em$|%$|^clamp\(40px, 6vw, 96px\)$/;
     const bad: string[] = [];
     for (const f of files) {
       const cssText = readFileSync(join(dirname(fileURLToPath(import.meta.url)), f), "utf8");

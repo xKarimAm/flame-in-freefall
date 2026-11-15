@@ -109,6 +109,25 @@ export function overlaps(a: Rect, b: Rect, pad = 2): boolean {
   return a.x < b.x + b.w + pad && b.x < a.x + a.w + pad && a.y < b.y + b.h + pad && b.y < a.y + a.h + pad;
 }
 
+/** The "Your air" crosshair label from the live draw, as a placed box: left of the
+ *  crosshair when there is room, right of it otherwise (the rule drawLive draws by).
+ *  Pure, so the reference layout can reserve the same box before placing its labels. */
+export function yourAirPlace(
+  plotX0: number,
+  px: number,
+  py: number,
+  label: string,
+): { rect: Rect; textX: number; anchor: Anchor } {
+  const w = label.length * CHAR_PX;
+  const h = LINE_PX;
+  const arm = 10;
+  const left = px - plotX0 >= w + arm + 8;
+  const top = py - arm - 12; // the baseline sits 12px under the top
+  return left
+    ? { rect: { x: px - arm - 4 - w, y: top, w, h }, textX: px - arm - 4, anchor: "end" }
+    : { rect: { x: px + arm + 4, y: top, w, h }, textX: px + arm + 4, anchor: "start" };
+}
+
 const inside = (r: Rect, b: Rect): boolean => r.x >= b.x && r.y >= b.y && r.x + r.w <= b.x + b.w && r.y + r.h <= b.y + b.h;
 
 export function textSize(lines: string[]): { w: number; h: number } {

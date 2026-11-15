@@ -12,7 +12,7 @@ import { SELECT_INVESTIGATION, mount } from "./index";
 import * as THREE from "three";
 import { TILT_H, TILT_MS, TILT_W, TILT_Y, TILT_Z, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelBelow, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltLabelAnchors, tiltLabelBoxes, tiltPlaneGeometry, tiltPose, tiltProgress, tokenDefaults } from "./tilt";
 import type { TiltColors, TiltFixedLabelId, TiltLabelId, TiltLabelSpec, TiltLabels } from "./tilt";
-import { CHART_RESERVE_PX, chartHeight, chartScales, niceRange, overlaps, wrap } from "./layout";
+import { CHAR_PX, CHART_RESERVE_PX, LINE_PX, chartHeight, chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { chartPasses, dotKind, noPressureRows, refShape } from "./plan";
 import type { ChartFilters } from "../contract";
@@ -363,6 +363,38 @@ describe("reference labels", () => {
       expect(r.x + r.w).toBeLessThanOrEqual(bounds.x + bounds.w);
     }
     expect(overlaps(placed[0]!.place.rect, placed[1]!.place.rect, 0)).toBe(false);
+  });
+
+  it("R17: the Moon-air page labels never intersect, with the sliders live", () => {
+    // page 17 (interactive): all four references plus the sliders, so the flat chart
+    // carries the five labels the supervisor saw collide at 1280x720 and 1536x864
+    const story = read<Story>("../../../stories/moon-air.json");
+    const beat = story.scenes.flatMap((s) => s.beats).find((b) => b.id === "interactive")!;
+    expect(beat.stage.sliders).toBeTruthy();
+    const boxOf = (el: Element): Rect => {
+      const anchor = el.getAttribute("text-anchor") ?? "start";
+      const spans = [...el.querySelectorAll("tspan")].map((n) => n.textContent ?? "");
+      const lines = spans.length ? spans : [el.textContent ?? ""];
+      const w = Math.max(0, ...lines.map((l) => l.length)) * CHAR_PX;
+      const h = lines.length * LINE_PX;
+      const x = +(el.getAttribute("x") ?? 0);
+      const top = +(el.getAttribute("y") ?? 0) - 12; // the first baseline sits 12px under the top
+      return { x: anchor === "end" ? x - w : anchor === "middle" ? x - w / 2 : x, y: top, w, h };
+    };
+    // stage content boxes standing in for 1280x720, 1440x900 and 1536x864 windows
+    for (const size of [{ w: 768, h: 560 }, { w: 864, h: 620 }, { w: 922, h: 660 }]) {
+      const { layer } = setup(beat.stage, beat.stage.sliders ?? null, {}, size);
+      const boxes = [...layer("refs").querySelectorAll("[data-label-for]")].map(boxOf);
+      expect(boxes.length, `ref labels @${size.w}x${size.h}`).toBe(4); // iss-air, heo-dm-1006, exp-10-2, the paper tests
+      const you = layer("you").querySelector(".you-label");
+      expect(you, `your-air label @${size.w}x${size.h}`).not.toBeNull();
+      boxes.push(boxOf(you!));
+      // "Your air" draws in the you layer after the refs layer, so it stays on top
+      expect(you!.compareDocumentPosition(layer("refs")) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+      for (const [i, a] of boxes.entries())
+        for (const [j, b] of boxes.entries())
+          if (j > i) expect(overlaps(a, b, 0), `label ${i} on label ${j} @${size.w}x${size.h}`).toBe(false);
+    }
   });
 });
 

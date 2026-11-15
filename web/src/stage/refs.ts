@@ -1,7 +1,7 @@
 // Where the reference atmospheres, the paper tests and their word labels go (no DOM).
 // Generated with Claude, SI-assisted.
 import type { StageState } from "../contract";
-import { placeLabel, textSize, wrap } from "./layout";
+import { overlaps, placeLabel, textSize, wrap } from "./layout";
 import type { LabelPlace, Rect, Scales } from "./layout";
 import type { RefPlan, RefShape } from "./plan";
 
@@ -19,13 +19,18 @@ export interface PlacedRef {
   place: LabelPlace;
 }
 
-/** Plain-words labels, placed one after another (Moon box first) so none overlaps another label,
- *  any reference bar, or the plot edge (see placeLabel). Order of the result = drawing order. */
+/** Plain-words labels, each in its own slot (Moon box first) so none overlaps another
+ *  label. The Moon box keeps first pick through placeLabel; every other label stacks in
+ *  its own slot along the right plot edge with a thin leader line back to its bar (R17:
+ *  the Moon-air page crowded them onto each other and the dots). `avoid` holds boxes
+ *  the stack must also keep clear (the live "Your air" label). Order of the result =
+ *  drawing order. */
 export function layoutRefs(
   refs: RefPlan,
   s: Scales,
   annotations: NonNullable<StageState["annotation"]>,
   t: (key: string) => string,
+  avoid: Rect[] = [],
 ): PlacedRef[] {
   const bounds: Rect = { x: s.plot.x0, y: s.plot.y0, w: s.plot.x1 - s.plot.x0, h: s.plot.y1 - s.plot.y0 };
   const note = (at: string | null): string[] => (at ? annotations.filter((a) => a.at === at).flatMap((a) => wrap(t(a.text_key), WRAP_CHARS)) : []);
@@ -52,11 +57,39 @@ export function layoutRefs(
   // the Moon box is the picture's subject: it chooses its spot first
   items.sort((a, b) => Number(b.shape === "moon-box") - Number(a.shape === "moon-box"));
 
-  const taken: Rect[] = items.map((i) => i.bar);
-  return items.map((i) => {
-    const size = textSize(i.lines);
-    const place = placeLabel(size, i.bar, bounds, taken);
+  const taken: Rect[] = [...avoid, ...items.map((i) => i.bar)];
+  const out: PlacedRef[] = [];
+  const [first, ...rest] = items;
+  if (first) {
+    const size = textSize(first.lines);
+    const place = placeLabel(size, first.bar, bounds, taken);
     taken.push(place.rect);
-    return { ...i, place };
-  });
+    out.push({ ...first, place });
+  }
+  // the stack: one slot per label down the right plot edge, sliding past whatever is
+  // taken; a label the stack cannot hold falls back to the nearest free spot
+  const GAP = 8;
+  let cursor = bounds.y + 4;
+  for (const item of rest) {
+    const size = textSize(item.lines);
+    let rect: Rect = { x: bounds.x + bounds.w - size.w - 4, y: cursor, w: size.w, h: size.h };
+    let guard = 0;
+    while (taken.some((o) => overlaps(rect, o)) && guard++ < 1000) rect = { ...rect, y: rect.y + 4 };
+    let place: LabelPlace;
+    if (rect.y + rect.h <= bounds.y + bounds.h && !taken.some((o) => overlaps(rect, o))) {
+      const cx = item.bar.x + item.bar.w / 2;
+      const cy = item.bar.y + item.bar.h / 2;
+      const lx = Math.min(Math.max(cx, rect.x), rect.x + rect.w);
+      const ly = Math.min(Math.max(cy, rect.y), rect.y + rect.h);
+      place = { rect, anchor: "start", textX: rect.x, leader: { x1: cx, y1: cy, x2: lx, y2: ly } };
+    } else {
+      // the stack column is full: nearest free spot anywhere in the plot (placeLabel's
+      // own fallback clamps only when nothing is free)
+      place = placeLabel(size, item.bar, bounds, taken);
+    }
+    taken.push(place.rect);
+    cursor = place.rect.y + place.rect.h + GAP;
+    out.push({ ...item, place });
+  }
+  return out;
 }

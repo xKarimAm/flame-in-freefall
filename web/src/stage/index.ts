@@ -6,8 +6,8 @@ import { SLIDER_RANGE } from "../contract";
 import type { AppState, AtmosphereId, Ctx, Family, Incident, NearestRow, NotPlacedRow, PlacedTest } from "../contract";
 import { queryFromState } from "../store";
 import { airName, cite, dataLink, prefersReducedMotion, safeHref } from "../ui/dom";
-import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartHeight, chartScales, niceRange, wrap } from "./layout";
-import type { Size } from "./layout";
+import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartHeight, chartScales, niceRange, wrap, yourAirPlace } from "./layout";
+import type { Rect, Size } from "./layout";
 import type { Scales } from "./layout";
 import { chartPasses, dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
@@ -344,6 +344,12 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       c.setAttribute("class", kind === "default" ? "dot" : `dot ${kind}`);
     }
 
+    // the live "Your air" label box, reserved before the reference labels are placed (R17)
+    const stateNow = store.get();
+    const youAvoid: Rect[] = stateNow.sliders
+      ? [yourAirPlace(scales.plot.x0, scales.x(stateNow.sliders.pressure_kpa), scales.y(stateNow.sliders.o2_pct), t("ui.stage.your-air")).rect]
+      : [];
+
     // tests with oxygen but no pressure: tick marks in the strip beside the oxygen axis, never given an x
     if (strip.length) {
       const sx = MARGIN.left;
@@ -360,7 +366,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       }
     }
 
-    drawRefs(stage.annotation ?? []);
+    drawRefs(stage.annotation ?? [], youAvoid);
     drawLive();
   }
 
@@ -373,13 +379,13 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const n = wanted.filter((w) => dotKind(w, h) !== "default").length;
     return t("ui.stage.caption", { name, n });
   }
-  function drawRefs(annotations: NonNullable<AppState["stage"]["annotation"]>): void {
+  function drawRefs(annotations: NonNullable<AppState["stage"]["annotation"]>, avoid: Rect[] = []): void {
     const s = scales!;
     if (!refsDrawn) {
       refsDrawn = true;
       gRefs.classList.add("refs-first");
     }
-    for (const r of layoutRefs(refs, s, annotations, t)) {
+    for (const r of layoutRefs(refs, s, annotations, t, avoid)) {
       if (r.shape === "paper") {
         refs.paper.forEach((p) => {
           const px = s.x(p.pressure_kpa);
@@ -437,8 +443,8 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       );
       // left of the crosshair when there is room: reference labels try the right-hand side first
       const label = t("ui.stage.your-air");
-      const left = px - scales.plot.x0 >= label.length * CHAR_PX + arm + 8;
-      gYou.append(svg("text", { class: "you-label", x: left ? px - arm - 4 : px + arm + 4, y: py - arm, "text-anchor": left ? "end" : "start" }, label));
+      const you = yourAirPlace(scales.plot.x0, px, py, label);
+      gYou.append(svg("text", { class: "you-label", x: you.textX, y: py - arm, "text-anchor": you.anchor }, label));
     }
     legend.replaceChildren(...legendHTML(rows));
   }
