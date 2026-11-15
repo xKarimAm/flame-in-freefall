@@ -189,8 +189,14 @@ export function mountTour(ctx: Ctx, opts: TourOptions = {}): Tour {
 
   // The cover is drawn by the story engine, which mounts right after the UI:
   // once it exists, the button sits under the cover's own button.
+  let tries = 0;
+  const place = (): void => {
+    const anchor = document.querySelector(".cover-explore");
+    if (anchor) anchor.insertAdjacentElement("afterend", openButton);
+    else if (++tries < 40) setTimeout(place, 100); // the cover may be drawn a little later
+  };
   setTimeout(() => {
-    document.querySelector(".cover-explore")?.insertAdjacentElement("afterend", openButton);
+    place();
     if (opts.auto === false) return;
     let seen = false;
     try { seen = localStorage.getItem(SEEN_KEY) === "1"; } catch { /* no storage: show it */ }
