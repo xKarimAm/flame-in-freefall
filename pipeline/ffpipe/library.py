@@ -184,7 +184,22 @@ def _post(prompt):
                                  {"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=300) as response:
         text = json.load(response)["choices"][0]["message"]["content"] or ""
-    return json.loads(text[text.index("{"):text.rindex("}") + 1])
+    return _parse_reply(text)
+
+
+# The model is asked for at most 8000 tokens (~32k characters); anything far
+# beyond that is not a draft answer and is rejected before parsing.
+MAX_REPLY_CHARS = 200_000
+
+
+def _parse_reply(text):
+    """Strict JSON parse of a chat reply: the first {...} block, length-bounded."""
+    if len(text) > MAX_REPLY_CHARS:
+        raise ValueError(f"API reply too long: {len(text)} characters")
+    try:
+        return json.loads(text[text.index("{"):text.rindex("}") + 1])
+    except (ValueError, IndexError) as exc:
+        raise ValueError(f"API reply is not a JSON object: {exc}") from exc
 
 
 def draft_all(psi_texts):
