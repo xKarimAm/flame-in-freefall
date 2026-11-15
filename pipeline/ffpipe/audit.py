@@ -22,17 +22,34 @@ def story_strings():
     return {k: v for k, v in en.items() if k.startswith("story.") and isinstance(v, str)}
 
 
+def _numeric_leaves(node):
+    """Every int/float leaf of a JSON value, as str. Ids, DOIs, URLs and
+    timestamps are strings, so their digits never leak in as allowed facts."""
+    if isinstance(node, bool):
+        return
+    if isinstance(node, (int, float)):
+        yield str(node)
+    elif isinstance(node, dict):
+        for value in node.values():
+            yield from _numeric_leaves(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from _numeric_leaves(value)
+
+
 def allowed_numbers():
     """Every number token the story strings may use, from the named sources."""
     texts = [
         (ROOT / "docs" / "STORY.md").read_text(encoding="utf-8"),
         (ROOT / "data" / "curated" / "moon.json").read_text(encoding="utf-8"),
         (ROOT / "data" / "curated" / "incidents.json").read_text(encoding="utf-8"),
-        json.dumps(_read_json(ROOT / "data" / "build" / "experiments.json")),
     ]
     allowed = set()
     for text in texts:
         allowed.update(NUMBER.findall(text))
+    allowed.update(
+        _numeric_leaves(_read_json(ROOT / "data" / "build" / "experiments.json"))
+    )
     tests = _read_json(ROOT / "data" / "build" / "tests.json")
     counts = [len(tests)]
     by_inv, by_family = {}, {}
