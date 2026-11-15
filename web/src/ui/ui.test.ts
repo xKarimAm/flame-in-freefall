@@ -120,10 +120,115 @@ describe("ui", () => {
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
     for (const root of [roots().panel, sheet]) expect(unlinkedNumbers(root)).toEqual([]);
-    buttons(sheet)[1].click(); // margins tab
+    buttons(sheet).find((b) => b.getAttribute("role") === "tab" && b.textContent === "Moon-gravity margins")!.click(); // margins tab
     expect(sheet.querySelector(".margin-table")).not.toBeNull();
     expect(unlinkedNumbers(sheet)).toEqual([]);
     expect(roots().panel.querySelectorAll("a.num").length).toBeGreaterThan(0);
+  });
+
+  describe("dashboard overview tab (backend lane D3)", () => {
+    const overviewTab = () =>
+      [...roots().sheet.querySelectorAll('[role="tab"]')].find((b) => b.getAttribute("data-tab") === "overview")!;
+
+    it("mounts as the first tab with figures, ranking and multiples", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      expect([...sheet.querySelectorAll('[role="tab"]')][0]!.textContent).toBe("Dashboard");
+      (overviewTab() as HTMLButtonElement).click();
+      expect(sheet.querySelectorAll(".dash-figures .dash-figure")).toHaveLength(5);
+      expect(sheet.querySelector(".dash-ranked ol")!.children.length).toBeGreaterThan(0);
+      expect(sheet.querySelector(".dash-multiples svg")).not.toBeNull();
+      expect(sheet.querySelector(".dash-multiples .dash-missing")).not.toBeNull();
+    });
+
+    it("selecting a ranked row notifies the stage", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      (overviewTab() as HTMLButtonElement).click();
+      const seen: string[] = [];
+      window.addEventListener(SELECT_INVESTIGATION, (e) => seen.push((e as CustomEvent).detail.investigation));
+      (roots().sheet.querySelector(".dash-ranked ol li button") as HTMLButtonElement).click();
+      expect(seen).toHaveLength(1);
+    });
+
+    it("the compare tab pairs two investigations with a two-tone chart and fuel groups", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      const tabs = [...sheet.querySelectorAll('[role="tab"]')];
+      expect(tabs[1]!.textContent).toBe("Compare");
+      (tabs[1] as HTMLButtonElement).click();
+      expect(sheet.querySelectorAll(".dash-compare-col")).toHaveLength(2);
+      expect(sheet.querySelectorAll("select.dash-compare-pick")).toHaveLength(2);
+      expect(sheet.querySelector(".dash-compare-chart svg")).not.toBeNull();
+      expect(sheet.querySelector(".dash-inside .dash-fuel-group")).not.toBeNull();
+    });
+
+    it("the method tab mounts with its title", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      const tabs = [...sheet.querySelectorAll('[role="tab"]')];
+      expect(tabs[2]!.textContent).toBe("Method");
+      (tabs[2] as HTMLButtonElement).click();
+      expect(sheet.querySelector(".dash-method-title")!.textContent).toBe("How the data was made");
+    });
+
+    it("the map tab mounts the tree and the detail panel", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      const tabs = [...sheet.querySelectorAll('[role="tab"]')];
+      expect(tabs[3]!.textContent).toBe("Evidence map");
+      (tabs[3] as HTMLButtonElement).click();
+      expect(sheet.querySelectorAll(".dash-map-row").length).toBeGreaterThan(0);
+      expect(sheet.querySelector(".dash-detail")).not.toBeNull();
+      expect(sheet.querySelector(".dash-open-story")).not.toBeNull();
+    });
+
+    it("analyst tables right-align numeric cells and headers with tabular figures", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      const colIndex = (table: Element, label: string): number =>
+        [...table.querySelectorAll("thead th")].findIndex((th) => th.textContent === label);
+      const checkCol = (table: Element, label: string): void => {
+        const i = colIndex(table, label);
+        expect(i, `${label} header`).toBeGreaterThanOrEqual(0);
+        expect(table.querySelector(`thead th:nth-child(${i + 1})`)!.className).toContain("num");
+        for (const tr of table.querySelectorAll("tbody tr")) {
+          if (tr.classList.contains("detail")) continue;
+          expect(tr.children[i]!.className, `${label} cell`).toContain("num");
+        }
+      };
+      // investigations table: counts and ranges, not names or yes/no words
+      const inv = sheet.querySelector("table.investigations")!;
+      for (const label of ["Tests", "Oxygen range", "Pressure range", "Papers"]) checkCol(inv, label);
+      expect(colIndex(inv, "Investigation")).toBeGreaterThanOrEqual(0);
+      expect(inv.querySelector("thead th:first-child")!.className).not.toContain("num");
+      // detail rows: oxygen, pressure, flow
+      (sheet.querySelector("button.row-open") as HTMLButtonElement).click();
+      const detail = sheet.querySelector("table.test-rows")!;
+      for (const label of ["Oxygen", "Pressure", "Flow"]) checkCol(detail, label);
+      // test rows tab
+      sheet.querySelector<HTMLButtonElement>("button.tab[data-tab=tests]")!.click();
+      const rows = sheet.querySelector("table.tests-table")!;
+      for (const label of ["Oxygen", "Pressure", "Flow"]) checkCol(rows, label);
+      // margins tab: the delta column
+      sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="margins"]')!.click();
+      const margins = sheet.querySelector("table.margin-table")!;
+      const deltaHeads = [...margins.querySelectorAll("thead th")].map((th) => th.textContent!);
+      const delta = deltaHeads.indexOf("Oxygen margin (percentage points)");
+      expect(delta, deltaHeads.join(" | ")).toBeGreaterThanOrEqual(0);
+      expect(margins.querySelector(`thead th:nth-child(${delta + 1})`)!.className).toContain("num");
+      for (const tr of margins.querySelectorAll("tbody tr")) {
+        expect(tr.children[delta]!.className).toContain("num");
+      }
+      // the CSS right-aligns numeric cells and headers with tabular figures
+      expect(css).toMatch(/#sheet\s+(td|th)\.num[^{]*\{[^}]*text-align:\s*right/);
+      expect(css).toMatch(/font-variant-numeric:\s*tabular-nums/);
+    });
   });
 
   describe("plain air names (task 22)", () => {
@@ -794,7 +899,7 @@ describe("ui", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });
     const sheet = roots().sheet;
-    sheet.querySelectorAll<HTMLButtonElement>("button.tab")[2]!.click();
+    sheet.querySelector<HTMLButtonElement>("button.tab[data-tab=tests]")!.click();
     const rows = () => [...sheet.querySelectorAll("table.tests-table tbody tr")];
     expect(rows().length).toBe(tests.length);
     expect(sheet.querySelector("table.tests-table caption")!.textContent).toContain(`${tests.length} matching test rows`);
@@ -822,7 +927,7 @@ describe("ui", () => {
       const { store } = setup();
       store.set({ lens: "analyst" });
       const sheet = roots().sheet;
-      sheet.querySelectorAll<HTMLButtonElement>("button.tab")[2]!.click();
+      sheet.querySelector<HTMLButtonElement>("button.tab[data-tab=tests]")!.click();
       const rows = () => [...sheet.querySelectorAll("table.tests-table tbody tr")];
       const caption = () => sheet.querySelector("table.tests-table caption")!.textContent!;
       expect(caption()).toBe(`${tests.length} matching test rows`);
@@ -901,7 +1006,7 @@ describe("ui", () => {
     expect(selected()).toBe("All investigations");
     store.set({ beat: { story: "s", scene: "a", beat: "b", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "lunar-margins" } });
     expect(selected()).toBe("Moon-gravity margins");
-    buttons(roots().sheet)[0].click();
+    buttons(roots().sheet).find((b) => b.getAttribute("data-tab") === "investigations")!.click();
     expect(selected()).toBe("All investigations");
     store.set({ beat: { story: "s", scene: "a", beat: "c", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "table" } });
     expect(selected()).toBe("All investigations");
@@ -913,16 +1018,30 @@ describe("ui", () => {
     const sheet = roots().sheet;
     const tabs = () => [...sheet.querySelectorAll<HTMLButtonElement>("button.tab")];
     const selected = () => tabs().findIndex((b) => b.getAttribute("aria-selected") === "true");
-    tabs()[0]!.focus();
-    expect(selected()).toBe(0);
-    tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    // investigations is selected by default; the four dashboard tabs sit first
+    expect(tabs()[4]!.textContent).toBe("All investigations");
+    tabs()[4]!.focus();
+    expect(selected()).toBe(4);
+    tabs()[4]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(selected()).toBe(5);
+    expect(document.activeElement).toBe(tabs()[5]);
+    tabs()[5]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(selected()).toBe(4);
+    expect(document.activeElement).toBe(tabs()[4]);
+    tabs()[4]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(selected()).toBe(3);
+    expect(document.activeElement).toBe(tabs()[3]);
+    tabs()[3]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(selected()).toBe(2);
+    expect(document.activeElement).toBe(tabs()[2]);
+    tabs()[2]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
     expect(selected()).toBe(1);
     expect(document.activeElement).toBe(tabs()[1]);
     tabs()[1]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
     expect(selected()).toBe(0);
     expect(document.activeElement).toBe(tabs()[0]);
     tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
-    expect(selected()).toBe(2); // wraps around
+    expect(selected()).toBe(6); // wraps around to the last of the seven tabs
   });
 
   it("the brand is the Firebreak mark, the name and a blue ug; it scrolls to the top", () => {

@@ -15,8 +15,18 @@ const useBuild = ["experiments.json", "tests.json"].every((name) => existsSync(j
 const from = useBuild ? buildDir : goldenDir;
 
 for (const name of ["experiments.json", "tests.json"]) copyFileSync(join(from, name), join(dest, name));
-for (const name of ["psi-text.json", "summaries.json", "moments.json", "library.json", "search.json", "coverage.json"]) {
+for (const name of ["psi-text.json", "summaries.json", "moments.json", "library.json", "search.json", "coverage.json", "provenance.json", "dictionary.json"]) {
   if (existsSync(join(buildDir, name))) copyFileSync(join(buildDir, name), join(dest, name));
+}
+// Translation records: which model translated which keys, and when (read by the method page).
+for (const name of ["es.meta.json", "hi.meta.json"]) {
+  const from = join(root, "web", "src", "i18n", name);
+  if (existsSync(from)) copyFileSync(from, join(dest, name));
+}
+// Contracts, served for download next to the data they validate (never edited here).
+for (const name of ["curated.schema.json", "experiments.schema.json", "library.schema.json", "moments.schema.json", "psi-text.schema.json", "story.schema.json", "tests.schema.json"]) {
+  const from = join(root, "contracts", name);
+  if (existsSync(from)) copyFileSync(from, join(dest, name));
 }
 for (const name of ["moon.json", "incidents.json"]) copyFileSync(join(root, "data", "curated", name), join(dest, name));
 

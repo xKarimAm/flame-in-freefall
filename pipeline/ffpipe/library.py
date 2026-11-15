@@ -150,6 +150,138 @@ def validate_draft(spec, draft, psi_texts):
     return errors
 
 
+def validate_engineer(spec, eng, psi_texts):
+    """Error strings for an engineer draft; [] means it can be committed.
+
+    Accepts {"engineer_absent": True} (PSI text says nothing about safety or
+    applications: the story gets no engineer object, never inferred).
+    Otherwise requires engineer_text (no digits, under 320 characters, no
+    exclamation mark), engineer_quote (whitespace-normalised substring of
+    that investigation's PSI text) and engineer_investigation (one of the
+    story's investigations). Prompt-level rules (B14/B16, checked by the
+    prompt text in engineer_prompt plus a human reviewer, not by code):
+    state no finding the source text does not state; planned work in the
+    future tense; no superlatives the source text does not make.
+    """
+    errors = []
+    if not isinstance(eng, dict):
+        return ["engineer draft is not an object"]
+    if eng.get("absent") is True or eng.get("engineer_absent") is True:
+        return []
+    if "engineer_text" not in eng and "engineer_quote" not in eng and "engineer_investigation" not in eng:
+        return []
+    text = eng.get("engineer_text")
+    quote = eng.get("engineer_quote")
+    inv = eng.get("engineer_investigation")
+    if inv not in spec["investigations"]:
+        errors.append(f"engineer_investigation {inv!r} is not one of {spec['investigations']}")
+        return errors
+    t = psi_texts[inv] if isinstance(psi_texts.get(inv), dict) else None
+    if t is None:
+        errors.append(f"no PSI text for {inv!r}")
+        return errors
+    psi = _norm(" ".join((t.get(k) or "") for k in ("objective", "approach", "description")))
+    if not quote or not isinstance(quote, str) or not quote.strip():
+        errors.append("engineer_quote is missing")
+    elif _norm(quote) not in psi:
+        errors.append("engineer_quote is not a word-for-word substring of that investigation's PSI text")
+    if not isinstance(text, str) or not text.strip():
+        errors.append("engineer_text is missing")
+    elif DIGIT.search(text):
+        errors.append(f"engineer_text holds a digit: {text!r}")
+    elif len(text) >= 320:
+        errors.append(f"engineer_text is {len(text)} characters (under 320 required)")
+    elif "!" in text:
+        errors.append("engineer_text holds an exclamation mark")
+    return errors
+
+
+def engineer_prompt(spec, psi_texts, objection=None):
+    """Prompt for the engineer lens: ONLY this story's PSI text.
+
+    Asks for JSON with exactly engineer_text / engineer_quote /
+    engineer_investigation, or {"absent": true} when the source text says
+    nothing about research impact, applications, objectives for fire safety
+    or spacecraft design. Standing rules (B14/B16): state no finding the
+    source does not state; planned work in the future tense; no
+    superlatives the source does not make; no digits in engineer_text.
+    """
+    parts = []
+    for inv in spec["investigations"]:
+        t = psi_texts[inv]
+        block = f"[investigation {inv}]\nObjective: {t.get('objective') or ''}\nApproach: {t.get('approach') or ''}"
+        if t.get("description"):
+            block += f"\nDescription: {t['description']}"
+        parts.append(block)
+    invs = ", ".join(spec["investigations"])
+    prompt = (
+        "You are writing one astronaut/engineer lens line for Firebreak, a public web page about NASA fire experiments in space.\n"
+        f"Story title: {spec['title']}\n"
+        f"This is the ONLY source text you may use (the PSI record for {invs}):\n\n"
+        + "\n\n".join(parts)
+        + "\n\nReturn ONLY a JSON object, no other text.\n"
+        '- When the source text states something about research impact, applications, objectives for crew fire safety, '
+        "fire detection or suppression, material flammability screening, or spacecraft design, return exactly these keys: "
+        '"engineer_text", "engineer_quote", "engineer_investigation".\n'
+        '- "engineer_text": one or two plain sentences for a curious adult on what this investigation means for crew fire safety '
+        "or spacecraft design, using ONLY what the source text states about impact, applications or objective. No new science.\n"
+        f'- "engineer_quote": copy ONE sentence or fragment word for word from the source above (exact words, no changes) that states the impact, application or objective the text rests on.\n'
+        f'- "engineer_investigation": the PSI id the quote comes from (exactly one of: {invs}).\n'
+        '- When the source text says NOTHING about safety, applications, impact, or use (only what was measured or compared), '
+        'return exactly {"absent": true} and nothing else. Never infer an application.\n'
+        "Rules for engineer_text: no digit characters 0-9 anywhere, under 320 characters, no exclamation marks.\n"
+        "State no finding the source text does not state: describe what the experiment set out to test or measure, not what it found, "
+        "unless the source text states the result.\n"
+        'When the source text describes proposed or planned work ("proposed", "will be", "we plan"), '
+        "write engineer_text in the future or planned tense; never narrate planned work as already done.\n"
+        "No superlatives in engineer_text unless the source text makes that exact claim.\n"
+        "Return ONLY the JSON object, no other text."
+    )
+    if objection:
+        prompt += (
+            "\nThe previous engineer draft was rejected for this exact reason "
+            "— fix exactly this while keeping every other rule above:\n"
+            + objection
+            + "\nReturn ONLY the JSON object, no other text."
+        )
+    return prompt
+
+
+def draft_engineer(story_id, psi_texts, post=None, objection=None):
+    """Draft one story's engineer lens through the model (fake client in tests).
+
+    Returns a committed draft fragment: {"engineer_text", "engineer_quote",
+    "engineer_investigation"} or {"engineer_absent": True}. Same three
+    attempts and validators as draft_all. Raises KeyError for an unknown
+    story id, RuntimeError when every attempt fails validation.
+    """
+    matches = [s for s in SPEC if s["id"] == story_id]
+    if not matches:
+        raise KeyError(f"no story {story_id!r} in SPEC")
+    spec = matches[0]
+    prompt = engineer_prompt(spec, psi_texts, objection=objection)
+    post = post or _post
+    errors, draft = ["not attempted"], None
+    for _ in range(3):
+        try:
+            draft = post(prompt)
+        except Exception as exc:  # transient network or empty reply: retry
+            errors = [f"request failed: {type(exc).__name__}"]
+            continue
+        errors = validate_engineer(spec, draft if isinstance(draft, dict) else {}, psi_texts)
+        if not errors:
+            break
+    if errors:
+        raise RuntimeError(f"engineer draft for {story_id!r} failed validation after 3 attempts: {errors}")
+    if draft.get("absent") is True or draft.get("engineer_absent") is True:
+        return {"engineer_absent": True}
+    return {
+        "engineer_text": draft["engineer_text"].strip(),
+        "engineer_quote": _norm(draft["engineer_quote"]),
+        "engineer_investigation": draft["engineer_investigation"],
+    }
+
+
 def draft_prompt(spec, psi_texts, objection=None):
     """The prompt holds ONLY this story's PSI text, its title and its voice.
 
@@ -298,6 +430,20 @@ def redraft_story(story_id, objection, psi_texts, post=None):
     return _finish(draft)
 
 
+def draft_engineer_all(psi_texts, post=None):
+    """One engineer request per story, each answer validated, two retries.
+
+    Returns {story_id: fragment} where each fragment is an engineer draft
+    or {"engineer_absent": True}. Raises RuntimeError on a story that fails
+    validation after 3 attempts.
+    """
+    post = post or _post
+    out = {}
+    for spec in SPEC:
+        out[spec["id"]] = draft_engineer(spec["id"], psi_texts, post=post)
+    return out
+
+
 def load_drafts(path=DRAFTS_PATH):
     """Committed drafts; missing file means --draft has not been run yet."""
     path = Path(path)
@@ -319,7 +465,7 @@ def build_library(drafts, tests, moments, psi_texts):
         errors = validate_draft(spec, draft, psi_texts)
         if errors:
             raise ValueError(f"draft for {spec['id']} is invalid: {errors}")
-        library.append({
+        entry = {
             "id": spec["id"],
             "investigations": list(spec["investigations"]),
             "title": spec["title"],
@@ -332,7 +478,17 @@ def build_library(drafts, tests, moments, psi_texts):
             "bridge": draft["bridge"].strip(),
             "moments": moments_for(spec["investigations"], moments),
             "ai": {"model": draft["ai"]["model"], "made_at": draft["ai"]["made_at"]},
-        })
+        }
+        eng_errors = validate_engineer(spec, draft, psi_texts)
+        if draft.get("engineer_text"):
+            if eng_errors:
+                raise ValueError(f"engineer draft for {spec['id']} is invalid: {eng_errors}")
+            entry["engineer"] = {
+                "text": draft["engineer_text"].strip(),
+                "quote": _norm(draft["engineer_quote"]),
+                "investigation": draft["engineer_investigation"],
+            }
+        library.append(entry)
     return library
 
 
@@ -365,6 +521,36 @@ def main(argv):
             print(f"redrafted {story_id}")
         _write_json(DRAFTS_PATH, drafts)
         print(f"wrote {DRAFTS_PATH} ({len(objections)} stories redrafted)")
+        return
+    if "--engineer" in argv:
+        # B16: uv run python -m ffpipe.library --engineer
+        # One Meta API request per story for the engineer lens; each answer
+        # validated, two retries. Stories whose PSI text says nothing about
+        # safety or applications get {"engineer_absent": True} and no
+        # engineer object in library.json. Merges into library_drafts.json.
+        psi_texts = {t["id"]: t for t in json.loads((BUILD_DIR / "psi-text.json").read_text(encoding="utf-8"))}
+        drafts = load_drafts()
+        fragments = draft_engineer_all(psi_texts)
+        for story_id, frag in fragments.items():
+            drafts[story_id].update(frag)
+        _write_json(DRAFTS_PATH, drafts)
+        kept = sum(1 for f in fragments.values() if f.get("engineer_text"))
+        print(f"wrote {DRAFTS_PATH} ({kept} with engineer, {len(fragments) - kept} absent)")
+        return
+    if "--engineer-redraft" in argv:
+        # B22: uv run python -m ffpipe.library --engineer-redraft pipeline/redraft_objections_b22.json
+        # The JSON file maps story id -> reviewer objection; each story's
+        # engineer lens is re-drafted through the API with the exact
+        # objection in the prompt. Merges into library_drafts.json.
+        path = Path(argv[argv.index("--engineer-redraft") + 1])
+        objections = json.loads(path.read_text(encoding="utf-8"))
+        psi_texts = {t["id"]: t for t in json.loads((BUILD_DIR / "psi-text.json").read_text(encoding="utf-8"))}
+        drafts = load_drafts()
+        for story_id, objection in objections.items():
+            drafts[story_id].update(draft_engineer(story_id, psi_texts, objection=objection))
+            print(f"redrafted engineer for {story_id}")
+        _write_json(DRAFTS_PATH, drafts)
+        print(f"wrote {DRAFTS_PATH} ({len(objections)} engineer stories redrafted)")
         return
     from .build import SNAPSHOT, load_summaries
 

@@ -5,7 +5,7 @@ Karim's direction (02:22, his words): for the public "it needs to be simple... a
 Hard limits (unchanged): never invent data; public text uses only facts in `docs/STORY.md` and the curated files; tokens from `web/src/styles/tokens.css`; flat colour, no gradients, glows or emoji; yellow only on the Moon box and the primary button; reduced motion gives a still picture with the same content. Do not edit `docs/design/`, `docs/STORY.md`, `docs/wireframes/`.
 
 ## What a visitor must leave with (the one sentence)
-"Firebreak puts NASA's space-fire tests in one picture, and shows the one test nobody has run yet: fire in Moon gravity." (Not "every test": 897 of the 1,883 have no oxygen or pressure recorded and are listed, not plotted.)
+"Firebreak puts NASA's space-fire tests in one picture, and shows where that evidence stops: none of these tests ran in Moon gravity." (Not "every test": 897 of the 1,883 are listed, not plotted. Not "nobody has lit a fire in Moon gravity": `moon.json` reports materials measured in lunar gravity; the true claim is that no test in the PSI archive ran there, and that the first experiment in real Moon gravity, FM2, is planned.)
 Every lens ends on this. If a screen does not serve it, cut it.
 
 ## The story spine (Pixar's: once, every day, one day, because of that, until finally)
@@ -51,3 +51,8 @@ Every AI-written string is validated in code before it is committed (quotes are 
 
 ## Art reference (Karim, 02:54)
 The Space Apps Boston poster: deep blue space, a warm orange planet limb, bold white type, one bright object in the middle. Use it as mood only: the dark blue ground, orange for fire, white display type at large sizes, one focal thing per screen. Do not copy the picture, do not use its logos, and keep the flat-colour rules (no gradients, no glows).
+
+## Lens names, audience and the award we aim at (Karim, 08:47: "Let's do students, astronauts, and analysts... I want to go for the best use of data")
+The challenge names its audience: professors, graduate and undergraduate students, aerospace researchers and aerospace engineers, and asks for a dashboard that summarizes, ranks and interprets. The lenses are shown as **Student** (was Public), **Astronaut** and **Analyst**. Internal ids stay `public`, `astronaut`, `analyst`.
+Aim: Best Use of Data, "the project that best makes space data accessible or leverages it for a unique application" (spaceappschallenge.org/2025/awards, read 2026-11-15). So the Analyst dashboard is the product: one comparable table of every test, ranking for a chosen air, comparison between and inside investigations, and a "How the data was made" page that shows provenance, coverage and the automated checks. The Student story is the way in and stays short. The Astronaut view is the briefing.
+Design references looked at: the node-link policy dashboard Karim sent and Dribbble's dashboard listings: a row of large numbers on top, one main chart, a ranked list beside it, a detail panel on selection. Structure only; flat colour, no glass, no glow.
