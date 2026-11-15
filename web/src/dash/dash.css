@@ -301,3 +301,108 @@
   padding: 0.25rem 0;
   border-bottom: 1px solid var(--rule);
 }
+/* evidence map (backend lane D6): air header, SVG tree, detail panel */
+.dash-map-title {
+  font-size: var(--text-body);
+  margin: 0;
+}
+.dash-map-air {
+  font-size: var(--text-body);
+  margin: 0 0 var(--gap) 0;
+}
+.dash-map-grid {
+  display: grid;
+  grid-template-columns: minmax(20rem, 7fr) minmax(16rem, 5fr);
+  gap: calc(var(--gap) * 2);
+  align-items: start;
+}
+.dash-tree {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.dash-map-airbox {
+  fill: none;
+  stroke: var(--rule);
+}
+.dash-map-family {
+  font-size: var(--text-meta);
+  fill: var(--muted);
+}
+.dash-link {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.dash-map-row {
+  cursor: pointer;
+}
+.dash-map-row .dash-row-label {
+  font-size: var(--text-meta);
+  fill: var(--ink);
+}
+.dash-map-row[data-active="true"] .dash-row-label {
+  font-weight: 700;
+}
+.dash-bar-track {
+  fill: var(--sheet-ground);
+}
+.dash-bar-fill {
+  fill: var(--data-on-light);
+}
+.dash-bar-grey {
+  fill: var(--rule);
+}
+.dash-detail {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--gap);
+  font-size: var(--text-body);
+}
+.dash-detail-acronym {
+  font-size: var(--text-body);
+  font-weight: 700;
+  margin: 0;
+}
+.dash-detail-family {
+  font-size: var(--text-meta);
+  color: var(--muted);
+  margin: 0.25rem 0 0 0;
+}
+.dash-detail-title {
+  font-size: var(--text-meta);
+  color: var(--muted);
+  margin: 0.25rem 0 var(--gap) 0;
+}
+.dash-detail-tests {
+  font-size: var(--text-chapter);
+  font-weight: 700;
+  margin: 0 0 var(--gap) 0;
+}
+.dash-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+.dash-tile {
+  border-top: 1px solid var(--rule);
+  padding-top: 0.25rem;
+}
+.dash-tile-label {
+  font-size: var(--text-meta);
+  color: var(--muted);
+  margin: 0 0 0.25rem 0;
+}
+.dash-tile-body {
+  font-size: var(--text-body);
+  margin: 0;
+}
+.dash-outcome-line {
+  margin: 0.25rem 0;
+}
+.dash-detail-summary {
+  font-size: var(--text-body);
+  margin-bottom: var(--gap);
+}
+.dash-open-story {
+  margin-top: var(--gap);
+}

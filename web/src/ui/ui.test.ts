@@ -174,6 +174,18 @@ describe("ui", () => {
       (tabs[2] as HTMLButtonElement).click();
       expect(sheet.querySelector(".dash-method-title")!.textContent).toBe("How the data was made");
     });
+
+    it("the map tab mounts the tree and the detail panel", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      const tabs = [...sheet.querySelectorAll('[role="tab"]')];
+      expect(tabs[3]!.textContent).toBe("Evidence map");
+      (tabs[3] as HTMLButtonElement).click();
+      expect(sheet.querySelectorAll(".dash-map-row").length).toBeGreaterThan(0);
+      expect(sheet.querySelector(".dash-detail")).not.toBeNull();
+      expect(sheet.querySelector(".dash-open-story")).not.toBeNull();
+    });
   });
 
   describe("plain air names (task 22)", () => {
@@ -885,11 +897,14 @@ describe("ui", () => {
     const sheet = roots().sheet;
     const tabs = () => [...sheet.querySelectorAll<HTMLButtonElement>("button.tab")];
     const selected = () => tabs().findIndex((b) => b.getAttribute("aria-selected") === "true");
-    // investigations is selected by default; the three dashboard tabs sit first
-    expect(tabs()[3]!.textContent).toBe("All investigations");
-    tabs()[3]!.focus();
-    expect(selected()).toBe(3);
-    tabs()[3]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    // investigations is selected by default; the four dashboard tabs sit first
+    expect(tabs()[4]!.textContent).toBe("All investigations");
+    tabs()[4]!.focus();
+    expect(selected()).toBe(4);
+    tabs()[4]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(selected()).toBe(5);
+    expect(document.activeElement).toBe(tabs()[5]);
+    tabs()[5]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
     expect(selected()).toBe(4);
     expect(document.activeElement).toBe(tabs()[4]);
     tabs()[4]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
@@ -905,7 +920,7 @@ describe("ui", () => {
     expect(selected()).toBe(0);
     expect(document.activeElement).toBe(tabs()[0]);
     tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
-    expect(selected()).toBe(5); // wraps around to the last of the six tabs
+    expect(selected()).toBe(6); // wraps around to the last of the seven tabs
   });
 
   it("the brand is the Firebreak mark, the name and a blue ug; it scrolls to the top", () => {

@@ -2,12 +2,13 @@
 // Generated with Claude, SI-assisted.
 import { FAMILIES, type Ctx, type Experiment, type Family, type Outcome, type PlottedFilter, type Publication, type StageState, type TestRun } from "../contract";
 import { renderCompare } from "../dash/compare";
+import { renderMap } from "../dash/map";
 import { renderMethod } from "../dash/method";
 import { renderOverview } from "../dash/overview";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import { cite, h, num, numOrMissing, safeHref } from "./dom";
 
-type Tab = "overview" | "compare" | "method" | "investigations" | "margins" | "tests";
+type Tab = "overview" | "compare" | "method" | "map" | "investigations" | "margins" | "tests";
 const tabFor = (s: StageState["analyst_sheet"]): Tab => (s === "lunar-margins" || s === "failing-materials" ? "margins" : "investigations");
 
 type SortKey = "acronym" | "title" | "family" | "tests" | "o2" | "pressure" | "outcomes" | "papers";
@@ -427,7 +428,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   /** The toolbar count mirrors the visible tab: coverage, filtered investigations, test rows or materials. */
   function updateCount(): void {
     if (!countEl) return;
-    if (tab === "overview" || tab === "compare" || tab === "method") {
+    if (tab === "overview" || tab === "compare" || tab === "method" || tab === "map") {
       const { plotted, total } = api.coverage();
       countEl.textContent = t("ui.stage.coverage", { plotted, total });
       return;
@@ -444,7 +445,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     const next = [tab, sortKey, sortDir, testSortKey, testSortDir, store.get().family, f.fuel, f.outcome, f.plotted, f.search].join("|");
     if (sig !== next) {
       sig = next;
-      body.replaceChildren(tab === "overview" ? renderOverview(ctx) : tab === "compare" ? renderCompare(ctx) : tab === "method" ? renderMethod(ctx).element : tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins());
+      body.replaceChildren(tab === "overview" ? renderOverview(ctx) : tab === "compare" ? renderCompare(ctx) : tab === "method" ? renderMethod(ctx).element : tab === "map" ? renderMap(ctx) : tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins());
       if (tab === "investigations" && selectedInv) selectRow(selectedInv, false);
     }
     updateCount();
@@ -452,9 +453,9 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
 
   function build(): void {
     // the dashboard tabs are first; the backend lane owns their content (web/src/dash/)
-    const order: Tab[] = ["overview", "compare", "method", "investigations", "margins", "tests"];
+    const order: Tab[] = ["overview", "compare", "method", "map", "investigations", "margins", "tests"];
     tabBtns = order.map((k) => {
-      const label = k === "overview" ? "ui.dash.tab.overview" : k === "compare" ? "ui.dash.tab.compare" : k === "method" ? "ui.dash.tab.method" : `ui.sheet.tab.${k}`;
+      const label = k === "overview" ? "ui.dash.tab.overview" : k === "compare" ? "ui.dash.tab.compare" : k === "method" ? "ui.dash.tab.method" : k === "map" ? "ui.dash.tab.map" : `ui.sheet.tab.${k}`;
       const b = h("button", { type: "button", role: "tab", class: "btn tab", "data-tab": k }, t(label));
       b.addEventListener("click", () => { tab = k; render(); });
       // ARIA tabs pattern: Left/Right move between tabs and activate the new one
