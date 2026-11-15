@@ -164,6 +164,16 @@ describe("ui", () => {
       expect(sheet.querySelector(".dash-compare-chart svg")).not.toBeNull();
       expect(sheet.querySelector(".dash-inside .dash-fuel-group")).not.toBeNull();
     });
+
+    it("the method tab mounts with its title", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      const tabs = [...sheet.querySelectorAll('[role="tab"]')];
+      expect(tabs[2]!.textContent).toBe("Method");
+      (tabs[2] as HTMLButtonElement).click();
+      expect(sheet.querySelector(".dash-method-title")!.textContent).toBe("How the data was made");
+    });
   });
 
   describe("plain air names (task 22)", () => {
@@ -875,11 +885,14 @@ describe("ui", () => {
     const sheet = roots().sheet;
     const tabs = () => [...sheet.querySelectorAll<HTMLButtonElement>("button.tab")];
     const selected = () => tabs().findIndex((b) => b.getAttribute("aria-selected") === "true");
-    // investigations is selected by default; the two dashboard tabs sit first
-    expect(tabs()[2]!.textContent).toBe("All investigations");
-    tabs()[2]!.focus();
-    expect(selected()).toBe(2);
-    tabs()[2]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    // investigations is selected by default; the three dashboard tabs sit first
+    expect(tabs()[3]!.textContent).toBe("All investigations");
+    tabs()[3]!.focus();
+    expect(selected()).toBe(3);
+    tabs()[3]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(selected()).toBe(4);
+    expect(document.activeElement).toBe(tabs()[4]);
+    tabs()[4]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
     expect(selected()).toBe(3);
     expect(document.activeElement).toBe(tabs()[3]);
     tabs()[3]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
@@ -892,7 +905,7 @@ describe("ui", () => {
     expect(selected()).toBe(0);
     expect(document.activeElement).toBe(tabs()[0]);
     tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
-    expect(selected()).toBe(4); // wraps around to the last of the five tabs
+    expect(selected()).toBe(5); // wraps around to the last of the six tabs
   });
 
   it("the brand is the Firebreak mark, the name and a blue ug; it scrolls to the top", () => {

@@ -12,7 +12,18 @@ ROOT = Path(__file__).resolve().parents[2]
 BUILD = ROOT / "data" / "build"
 CURATED = ROOT / "data" / "curated"
 GOLDEN = ROOT / "contracts" / "golden"
+SCHEMAS = ROOT / "contracts"
+WEBI18N = ROOT / "web" / "src" / "i18n"
 COPY_DATA = ROOT / "web" / "scripts" / "copy-data.js"
+SCHEMA_FILES = [
+    "curated.schema.json",
+    "experiments.schema.json",
+    "library.schema.json",
+    "moments.schema.json",
+    "psi-text.schema.json",
+    "story.schema.json",
+    "tests.schema.json",
+]
 
 # name -> directories that may hold it, in copy-data.js preference order.
 # The "if existsSync" pair is conditional: required only when present.
@@ -31,7 +42,11 @@ CONDITIONAL = {
     "coverage.json": [BUILD],
     "provenance.json": [BUILD],
     "dictionary.json": [BUILD],
+    "es.meta.json": [WEBI18N],
+    "hi.meta.json": [WEBI18N],
 }
+for _schema in SCHEMA_FILES:
+    CONDITIONAL[_schema] = [SCHEMAS]
 
 
 def _read_json(path):
