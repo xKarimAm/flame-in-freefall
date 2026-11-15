@@ -112,6 +112,25 @@
 .end-btn.primary { background: var(--moon); color: var(--ink); border-color: var(--moon); font-weight: 700; }
 .end-btn.primary:hover { border-color: var(--ink-dark); }
 
+/* page turning: gentle proximity snap, one page at a time */
+html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) + 8px); }
+.cover, .chapter, #story .step, .ending { scroll-snap-align: start; }
+
+/* page dots: progress through the steps, fixed where the cards never sit */
+.page-dots {
+  position: fixed; left: 10px; top: 50%; transform: translateY(-50%); z-index: 15;
+  display: flex; flex-direction: column; gap: 7px; margin: 0; padding: 0; border: 0; background: none;
+  pointer-events: auto;
+}
+.page-dot {
+  width: 10px; height: 10px; padding: 0; font-size: 0;
+  border: 1px solid var(--muted-dark); border-radius: 50%; background: transparent; cursor: pointer;
+}
+.page-dot[aria-current="true"] { background: var(--ink-dark); border-color: var(--ink-dark); }
+@media (max-width: 1099px) {
+  .page-dots { left: 50%; top: calc(var(--chrome-h) + 6px); transform: translateX(-50%); flex-direction: row; }
+}
+
 /* narrow screens: cards sit at the bottom so the chart above stays readable */
 @media (max-width: 1099px) {
   #story .step { align-items: flex-end; padding-bottom: 5vh; }

@@ -88,13 +88,25 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
       }
       card.append(label, list);
     }
-    step.append(card);
+      step.append(card);
     section.append(step);
     steps.push(step);
     texts.push(text);
     pages.push(page);
     labels.push(label);
   }
+
+  // page dots: one per step, tracking the active one
+  const dotsNav = node("nav", "page-dots");
+  const dots: HTMLButtonElement[] = [];
+  for (const step of steps) {
+    const d = node("button", "page-dot");
+    d.type = "button";
+    d.addEventListener("click", () => scrollCenter(step));
+    dotsNav.append(d);
+    dots.push(d);
+  }
+  el.append(dotsNav);
 
   // ending card: what the visitor just saw, and three ways to go on
   const ending = node("section", "ending");
@@ -124,9 +136,18 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   ending.append(endCard);
   el.append(ending);
 
+  function markDots(active: number): void {
+    dots.forEach((d, j) => {
+      if (j === active) d.setAttribute("aria-current", "true");
+      else d.removeAttribute("aria-current");
+    });
+  }
+
   function render(): void {
     const { lens, locale } = ctx.store.get();
     el.dataset.lens = lens;
+    dotsNav.setAttribute("aria-label", ctx.t("ui.engine.pages"));
+    dots.forEach((d, i) => d.setAttribute("aria-label", ctx.t("ui.engine.page", { n: i + 1, total: dots.length })));
     coverTitle.textContent = ctx.t("ui.cover.title");
     coverLead.textContent = ctx.t("ui.cover.lead");
     coverCue.textContent = ctx.t("ui.cover.cue");
@@ -154,9 +175,32 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     }
   }
 
+  function pageEls(): HTMLElement[] {
+    return [...el.querySelectorAll<HTMLElement>(".cover, .step, .ending")];
+  }
+
+  /** Keyboard page turning: arrows and space move one page, never hijacking form controls. */
+  function onKey(e: KeyboardEvent): void {
+    if (!el.isConnected) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest("input, select, textarea, button, a, [contenteditable]")) return;
+    const dir = e.key === "ArrowDown" || e.key === "PageDown" || e.key === " " ? 1 : e.key === "ArrowUp" || e.key === "PageUp" ? -1 : 0;
+    if (!dir) return;
+    e.preventDefault();
+    const list = pageEls();
+    if (!list.length) return;
+    const line = window.scrollY + window.innerHeight * 0.4;
+    let at = list.findIndex((p) => p.getBoundingClientRect().top + window.scrollY > line + 1);
+    if (at === -1) at = list.length;
+    scrollCenter(list[Math.min(list.length - 1, Math.max(0, at - 1 + dir))]);
+  }
+  window.addEventListener("keydown", onKey);
+
   function activate(i: number): void {
     const { story, scene, beat } = flat[i];
     steps.forEach((s, j) => s.classList.toggle("is-active", j === i));
+    markDots(i);
     // sliders are (re)started only here, on entering a beat, so a user's moves survive while it stays active
     ctx.store.set({
       beat: { story: story.id, scene: scene.id, beat: beat.id, kind: beat.kind },

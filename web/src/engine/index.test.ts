@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
 // Generated with Claude, SI-assisted
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppState, Ctx, DataApi } from "../contract";
 import { dicts, makeT } from "../i18n/index";
@@ -199,6 +202,66 @@ describe("engine mount", () => {
       dicts.en!["ui.ending.data"],
     ]);
     expect(btns[0]!.classList.contains("primary")).toBe(true);
+  });
+
+  const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "engine.css"), "utf8");
+
+  it("page dots track the active step and jump on click", () => {
+    const { el, fire, steps } = setup();
+    const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
+    const dots = [...el.querySelectorAll<HTMLButtonElement>(".page-dots .page-dot")];
+    expect(dots).toHaveLength(steps.length);
+    expect(el.querySelector(".page-dots")!.getAttribute("aria-label")).toBe(dicts.en!["ui.engine.pages"]);
+    expect(dots[0]!.getAttribute("aria-current")).toBe("true");
+    expect(dots.slice(1).every((d) => !d.hasAttribute("aria-current"))).toBe(true);
+    expect(dots[2]!.getAttribute("aria-label")).toBe(
+      dicts.en!["ui.engine.page"]!.replace("{n}", "3").replace("{total}", String(steps.length)),
+    );
+    fire(2, "down");
+    expect(dots[2]!.getAttribute("aria-current")).toBe("true");
+    expect(dots[0]!.hasAttribute("aria-current")).toBe(false);
+    dots[1]!.click();
+    expect(scroll.mock.contexts.at(-1)).toBe(steps[1]);
+  });
+
+  it("arrow keys and space move one page, and never hijack form controls", () => {
+    const { el } = setup();
+    const pages = [...el.querySelectorAll<HTMLElement>(".cover, .step, .ending")];
+    expect(pages.length).toBeGreaterThan(3);
+    let y = 0;
+    Object.defineProperty(window, "scrollY", { configurable: true, get: () => y });
+    const docTop = (i: number): DOMRect =>
+      ({ top: i * 1000 - y, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+    pages.forEach((p, i) => {
+      p.getBoundingClientRect = () => docTop(i);
+    });
+    const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
+    const key = (key: string, target: Element = document.body) =>
+      target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    try {
+      key("ArrowDown");
+      expect(scroll.mock.contexts.at(-1)).toBe(pages[1]); // cover -> first step
+      y = 1000; // the scroll happened
+      key(" ");
+      expect(scroll.mock.contexts.at(-1)).toBe(pages[2]);
+      y = 2000;
+      expect(key("ArrowUp")).toBe(false); // preventDefault: the key turns the page instead of scrolling
+      expect(scroll.mock.contexts.at(-1)).toBe(pages[1]);
+      const before = scroll.mock.calls.length;
+      const input = document.createElement("input");
+      document.body.append(input);
+      key("ArrowDown", input);
+      expect(scroll.mock.calls.length).toBe(before);
+      input.remove();
+    } finally {
+      Object.defineProperty(window, "scrollY", { configurable: true, value: 0, writable: true });
+    }
+  });
+
+  it("pages snap gently and dots sit outside the cards", () => {
+    expect(css).toMatch(/scroll-snap-type:\s*y proximity/);
+    expect(css).toMatch(/\.cover, \.chapter, #story \.step, \.ending\s*\{[^}]*scroll-snap-align:\s*start/);
+    expect(css).toMatch(/\.page-dots\s*\{[^}]*position:\s*fixed/);
   });
 
   it("the ending buttons retry the sliders, open the stories and switch to the data", () => {

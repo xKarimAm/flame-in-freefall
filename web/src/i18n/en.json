@@ -2,6 +2,7 @@
   "ui.loading": "Loading NASA test data…",
   "ui.load-error": "Could not load the data.",
   "ui.engine.sources": "Sources",
+  "ui.engine.pages": "Story pages",
   "ui.engine.act": "Act {n}",
   "ui.engine.chapter": "Chapter {n}",
   "ui.engine.page": "Page {n} of {total}",
