@@ -187,11 +187,12 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const caption = captionOf(wanted, hl);
     const captionLines = caption ? wrap(caption, headChars) : [];
     const headH = empty ? 20 : (planeLines.length + captionLines.length) * LINE_PX + 8;
+    // the FM2 sentence lives in gap.text and may repeat an annotation word for word:
+    // keep each sentence once so the band never prints it twice
+    const annotationTexts = (stage.annotation ?? []).filter((a) => a.at === "lunar-plane").map((a) => t(a.text_key));
+    const fm2 = fm2Sentences(api.data.moon.gap.text).filter((s) => !annotationTexts.some((a) => a.includes(s)));
     const noteLines = lunar
-      ? [
-          ...(stage.annotation ?? []).filter((a) => a.at === "lunar-plane").map((a) => t(a.text_key)),
-          ...fm2Sentences(api.data.moon.gap.text),
-        ].flatMap((line) => wrap(line, Math.max(8, Math.floor((plotW - 16) / CHAR_PX))))
+      ? [...annotationTexts, ...fm2].flatMap((line) => wrap(line, Math.max(8, Math.floor((plotW - 16) / CHAR_PX))))
       : [];
     const bandH = lunar ? 28 + noteLines.length * LINE_PX + 10 : 0;
     scales = chartScales(size, dom, { bandH, headH, strip: strip.length > 0 });

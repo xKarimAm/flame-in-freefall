@@ -10,7 +10,7 @@ import { createStore, initialState } from "../store";
 import { mountSheet } from "../ui/sheet";
 import { SELECT_INVESTIGATION, mount } from "./index";
 import * as THREE from "three";
-import { TILT_H, TILT_MS, TILT_W, TILT_Y, TILT_Z, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltLabelAnchors, tiltLabelBoxes, tiltPlaneGeometry, tiltPose, tiltProgress } from "./tilt";
+import { TILT_H, TILT_MS, TILT_W, TILT_Y, TILT_Z, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltLabelAnchors, tiltLabelBoxes, tiltPlaneGeometry, tiltPose, tiltProgress, tokenDefaults } from "./tilt";
 import type { TiltColors, TiltFixedLabelId, TiltLabelId, TiltLabelSpec, TiltLabels } from "./tilt";
 import { CHART_RESERVE_PX, chartHeight, chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
@@ -373,6 +373,20 @@ describe("lunar band", () => {
       for (const l of lines) expect(l.textContent!.length * 7).toBeLessThanOrEqual(bw - 16 + 7); // wrapped to the band width
     }
   });
+  it("prints the FM2 sentence once, not once per source (task 40c)", () => {
+    const gap = {
+      view: "tilt-lunar",
+      show_families: allFamilies,
+      reference: ["heo-dm-1006" as const],
+      annotation: [
+        { id: "fm2", text_key: "story.the-gap.the-gap-main.gap.annotation-2", at: "lunar-plane" as const },
+      ],
+    } as StageState;
+    const { layer } = setup(gap, null, {}, { w: 688, h: 700 });
+    const words = texts(layer("lunar-band")).replace(/\s+/g, " ");
+    expect(words.match(/FM2 will burn/g)!.length).toBe(1);
+  });
+
   it("is labelled and holds the beat's annotation and the FM2 note, wrapped", () => {
     const { layer } = setup(compareStage, null, {}, { w: 390, h: 620 });
     const all = texts(layer("lunar-band")).replace(/\s+/g, " ");
@@ -787,6 +801,26 @@ describe("tilt assistive chart and keyboard dots (task 36)", () => {
     expect(tick.getAttribute("tabindex")).toBe("0");
     tick.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
     expect(seen.at(-1)).toBe(tick.getAttribute("data-id")!.split("#")[0]);
+  });
+});
+
+describe("tilt colours come from tokens.css (task 40d)", () => {
+  it("resolves every tilt colour from the token file, and tilt.ts holds no hex", () => {
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/tokens.css"), "utf8");
+    const tokens = tokenDefaults(css);
+    expect(tokens["--space-black"]).toBe("#1b1b1b");
+    expect(tokens["--muted-dark"]).toBe("#dfe1e2");
+    expect(tokens["--data-on-dark"]).toBe("#2491ff");
+    expect(tokens["--flame"]).toBe("#ff5804");
+    expect(tokens["--moon"]).toBe("#e7f434");
+    expect(tokens["--ink-dark"]).toBe("#ffffff");
+    const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "tilt.ts"), "utf8");
+    expect(src).not.toMatch(/#[0-9a-fA-F]{6}/);
+  });
+
+  it("leaves the light header controls on tokens (ui.css has no raw black)", () => {
+    const ui = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../ui/ui.css"), "utf8");
+    expect(ui).not.toMatch(/#000/);
   });
 });
 

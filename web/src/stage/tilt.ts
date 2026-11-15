@@ -7,6 +7,7 @@
 // The SVG chart stays the fallback (WebGL missing or reduced motion) and the accessible version;
 // the tilt points are never clickable — selection stays on the SVG chart, panel and sheet.
 import * as THREE from "three";
+import tokensCss from "../styles/tokens.css?raw";
 import { OUTCOME_GROUP } from "../contract";
 import type { Atmosphere, Ctx, Lens, Outcome, PlacedTest, StageState, StageView } from "../contract";
 import type { RefPlan } from "./plan";
@@ -213,12 +214,19 @@ export function moonBoxWorld(atm: Atmosphere, s: Scales): MoonBox {
   };
 }
 
-function cssVar(name: string, fallback: string): string {
+/** Token values parsed from styles/tokens.css, the single source for every colour. */
+export function tokenDefaults(css: string): Record<string, string> {
+  return Object.fromEntries([...css.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)].map((m) => [`--${m[1]}`, m[2]!.trim()]));
+}
+const TOKENS = tokenDefaults(tokensCss);
+
+/** A colour from the live stylesheet, falling back to its token value (never a typed hex). */
+function cssVar(name: string): string {
   try {
     const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return v || fallback;
+    return v || TOKENS[name]!;
   } catch {
-    return fallback;
+    return TOKENS[name]!;
   }
 }
 
@@ -552,13 +560,13 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
   const t = ctx.t;
   const view = buildTiltScene(
     {
-      ground: cssVar("--space-black", "#1b1b1b"),
-      edge: cssVar("--muted-dark", "#dfe1e2"),
-      muted: cssVar("--muted-dark", "#dfe1e2"),
-      near: cssVar("--data-on-dark", "#2491ff"),
-      burned: cssVar("--flame", "#ff5804"),
-      moon: cssVar("--moon", "#e7f434"),
-      ink: cssVar("--ink-dark", "#ffffff"),
+      ground: cssVar("--space-black"),
+      edge: cssVar("--muted-dark"),
+      muted: cssVar("--muted-dark"),
+      near: cssVar("--data-on-dark"),
+      burned: cssVar("--flame"),
+      moon: cssVar("--moon"),
+      ink: cssVar("--ink-dark"),
     },
     {
       micro: t("ui.stage.tilt.micro"),

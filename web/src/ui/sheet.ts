@@ -195,6 +195,12 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     return [...api.data.experiments].sort((a, b) => {
       const va = sortVal(a, sortKey);
       const vb = sortVal(b, sortKey);
+      // a missing range sorts last in both directions, never first when descending
+      const ma = typeof va === "number" && !Number.isFinite(va);
+      const mb = typeof vb === "number" && !Number.isFinite(vb);
+      if (ma && mb) return a.family.localeCompare(b.family) || a.acronym.localeCompare(b.acronym);
+      if (ma) return 1;
+      if (mb) return -1;
       const r = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb));
       return (r || a.family.localeCompare(b.family) || a.acronym.localeCompare(b.acronym)) * sortDir;
     });

@@ -301,6 +301,12 @@ describe("ui", () => {
     expect(panel.querySelector(".answer-wrap .answer")).not.toBeNull();
   });
 
+  it("the coverage box names air pressure or oxygen, never bare air (task 40b)", () => {
+    expect(i18nDicts.en!["ui.stage.exp.coverage.why"]).toBe(
+      "The rest are listed, not placed: nobody wrote down the air pressure or oxygen.",
+    );
+  });
+
   it("the answer is large type", () => {
     expect(css).toMatch(/\.answer\s*\{[^}]*font-size:\s*20px/);
   });
@@ -443,6 +449,22 @@ describe("ui", () => {
     const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
     expect(base).toMatch(/body\[data-lens="analyst"\] #story\s*\{\s*display:\s*none/);
     expect(base).toMatch(/body\[data-lens="analyst"\] #sheet\s*\{[^}]*width:\s*min\(52rem, 46vw\)/);
+  });
+
+  it("rows with no range sort last in both directions (task 40a)", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    const rows = () => [...sheet.querySelectorAll("table.investigations tbody tr")];
+    const sortBtn = (label: string) => [...sheet.querySelectorAll<HTMLButtonElement>("table.investigations th button.sort")].find((b) => b.textContent === label)!;
+    // PSI-98 has an oxygen range, the fixtures have none: descending must not float the gaps first
+    sortBtn("Oxygen range").click();
+    sortBtn("Oxygen range").click();
+    expect(rows()[0]!.textContent).toContain("21.5");
+    expect(rows().at(-1)!.textContent).toContain("not recorded");
+    sortBtn("Pressure range").click();
+    sortBtn("Pressure range").click();
+    expect(rows().at(-1)!.textContent).toContain("not recorded");
   });
 
   it("columns sort both ways and the family filter narrows the rows", () => {

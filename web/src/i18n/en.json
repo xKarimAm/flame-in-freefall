@@ -52,7 +52,7 @@
   "ui.stage.exp.iss.why": "It is the starting point every Moon air is compared with.",
   "ui.stage.exp.coverage.title": "Why some tests are missing",
   "ui.stage.exp.coverage.what": "{plotted} of {total} tests are dots.",
-  "ui.stage.exp.coverage.why": "The rest are listed, not placed: nobody wrote down their air.",
+  "ui.stage.exp.coverage.why": "The rest are listed, not placed: nobody wrote down the air pressure or oxygen.",
   "ui.stage.no-pressure": "Oxygen recorded, air pressure not recorded",
   "ui.stage.tick-title": "{fuel}: {o2}% oxygen, air pressure not recorded, {outcome}",
   "ui.stage.caption": "{name}: {n} tests plotted",
