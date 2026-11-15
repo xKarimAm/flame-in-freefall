@@ -25,6 +25,12 @@ UNCONDITIONAL = {
 CONDITIONAL = {
     "psi-text.json": [BUILD],
     "summaries.json": [BUILD],
+    "moments.json": [BUILD],
+    "library.json": [BUILD],
+    "search.json": [BUILD],
+    "coverage.json": [BUILD],
+    "provenance.json": [BUILD],
+    "dictionary.json": [BUILD],
 }
 
 
