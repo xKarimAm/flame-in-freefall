@@ -126,9 +126,26 @@ export function dialSVG(ctx: Ctx, shown: Incident[]): SVGSVGElement {
   }
   // the flame stands on the current mark (small on the ground with no marker): part of the dial
   const mark = shown.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== undefined);
-  chart.append(flameSVG(mark === undefined ? null : mark));
+  // K3: the flame's place follows only the oxygen mark. The dial is rebuilt on every page, so the
+  // wrapper starts at the previous page's mark and glides to this one (no teleport; reduced motion
+  // drops transitions globally in motion.css, so it just stands there).
+  const stand = y(mark ?? 0);
+  const travel = svg("g", { class: "flame-travel" });
+  travel.append(flameSVG(mark === undefined ? null : mark));
+  if (lastStand !== null && lastStand !== stand && typeof requestAnimationFrame === "function") {
+    travel.style.transform = `translateY(${lastStand - stand}px)`;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      travel.style.transition = "transform 600ms cubic-bezier(0.4, 0, 0.2, 1)";
+      travel.style.transform = "none";
+    }));
+  }
+  lastStand = stand;
+  chart.append(travel);
   return chart as SVGSVGElement;
 }
+
+/** ViewBox y the flame last stood on, kept across page rebuilds so the next page can glide from it. */
+let lastStand: number | null = null;
 
 // Simplified flat layers of the Firebreak flame (web/src/ui/logo-mark.svg) in the brand fills:
 // outer danger red, mid flame orange, inner amber, pale core. Decorative: aria-hidden, never measured.
