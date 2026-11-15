@@ -6,19 +6,18 @@
 
 **What is safe right now:** `main` is green and is the demo (`scripts/check.ps1`: 95 pipeline tests, 372 web tests, build). Run it: `cd web; npm run build; npm run preview`. If anything below goes wrong, present `main` as it is.
 
-## Work in flight (each on its own branch and worktree; nothing below is merged unless ticked)
-| # | What | Who | Worktree | Branch | State |
-|---|---|---|---|---|---|
-| 1 | Intro walkthrough: a guided tour of the page (story column, picture, page dots, chapters, lenses, Stories, Skip to Moon air), opened from a button on the cover and once on a first visit. New files `web/src/ui/tour.ts`, `tour.css`, `tour.test.ts`; two class names added in `chrome.ts`; one call in `ui/index.ts`; keys `ui.tour.*` in `en.json` after `ui.chrome.stories` | orchestrator (this session) | `E:\fif-wt\E` | `lane/ui/intro` | being written |
-| 2 | Story pages reveal in order (label, sentences, sources) and read like a picture book; "turn the page" cue; arrow keys | Sonnet coder C | `E:\fif-wt\C` | `lane/engine/page-reveal` | running (workflow) |
-| 3 | Experiment stories: shelf grouped by family, designed story page, previous/next | Sonnet coder B | `E:\fif-wt\B` | `lane/ui/library-pages` | running (workflow) |
-| 4 | Analyst dashboard: stat tiles, coverage by family, table quality | Sonnet coder D | `E:\fif-wt\D` | `lane/ui/dashboard` | running (workflow) |
-| 5 | `README.md` final pass and `docs/SUBMISSION.md` (text for the project form, every number backed by a repo file) | Sonnet docs coder | `E:\fif-wt\skel` | `lane/docs/submission` | running (workflow) |
-| 6 | Chart label collisions near the Moon box (R17), then the cover on wide screens (R19) | Muse Spark lane | `E:\fif-wt\release` | `release/web` | running since 17:35 (`scripts\night.ps1 -Lane release`); it cannot commit |
-| 7 | Header chapter names cut off between 1280 and 1600 px (R18) | orchestrator | `E:\fif-wt\E` | with #1 or its own branch | not started |
+## Work in flight (updated 18:10)
+**The Sonnet subagents hit this account's 5-hour limit at about 17:59 (resets 22:20 local). Do not start Sonnet agents from this account before then.** The orchestrator itself still runs.
 
-Each Sonnet coder pushes its branch and opens a pull request when done, so its work survives this session. See them with `gh pr list`.
+| # | What | State |
+|---|---|---|
+| 1 | Intro walkthrough (7 stops, button on the cover, opens once on a first visit) | **merged** PR #19, seen at 1536x864 |
+| 2 | Story pages reveal in order, picture-book text, "Scroll to turn the page" cue | **merged** PR #18 (built by Sonnet coder C; its QA agent never ran; I checked one page in the browser) |
+| 3 | Chart label slots (R17), full chapter names in the header (R18), cover on wide screens (R19), slider page text above the panel | **merged** PR #20, seen at 1280x720, 1366x768, 1920x1080 |
+| 4 | Experiment stories visible directly in Stories | **merged** PR #17 |
+| 5 | `docs/SUBMISSION.md` + README (R20), experiment shelf and pages (R21), Analyst dashboard (R22) | **Muse Spark lane running** since 18:10 on `release/web` (`E:\fif-wt\release`, queue `docs/RELEASE-QUEUE.md` "Last wave"). It cannot commit: after each run check, look, commit for it, PR to `main` |
 
+Leftover branches with nothing useful on them: `lane/ui/library-pages` (`E:\fif-wt\B`), `lane/ui/dashboard` (`E:\fif-wt\D`), `lane/docs/submission` (`E:\fif-wt\skel`): their coders died at the limit; check `git status` there before reusing.
 ## How to finish each item (the same steps for every branch)
 1. `git -C <worktree> fetch origin` then `git -C <worktree> rebase origin/main` (or merge). `en.json` conflicts: keep both blocks of keys.
 2. `powershell -ExecutionPolicy Bypass -File <worktree>\scripts\check.ps1` must print `check.ps1: green`.
