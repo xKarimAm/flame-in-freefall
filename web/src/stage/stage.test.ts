@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import type { AtmosphereId, DataApi, Experiment, Family, IncidentsData, Lens, MoonData, NearestQuery, NotPlacedRow, PlacedTest, Story, TestRun } from "../contract";
+import type { AtmosphereId, DataApi, Experiment, Family, IncidentsData, Lens, MoonData, NearestQuery, NotPlacedRow, PlacedTest, StageState, Story, TestRun } from "../contract";
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { mount } from "./index";
@@ -547,5 +547,82 @@ describe("incidentO2", () => {
     expect(incidentO2("26.5% nominal")).toBe(26.5);
     expect(incidentO2("Chemical oxygen generator (lithium perchlorate candle)")).toBeNull();
     expect(incidentO2("120% oxygen")).toBeNull();
+  });
+});
+
+describe("family parade", () => {
+  const act2 = (show_families: Family[]): StageState => ({ view: "micro-g", show_families, coverage: true });
+  const full: StageState = { view: "micro-g", show_families: allFamilies, coverage: true };
+
+  it("lists one pictogram and plain-word name per shown family, with its plotted count", () => {
+    const { host, api } = setup(act2(["droplets"]));
+    const parade = host.querySelector(".stage-parade")!;
+    expect((parade as HTMLElement).hidden).toBe(false);
+    const rows = [...parade.querySelectorAll(".parade-families li")];
+    expect(rows.length).toBe(1);
+    expect(rows[0]!.querySelector("svg")).not.toBeNull();
+    expect(rows[0]!.textContent).toContain(en["ui.family.droplets"]);
+    const n = api.placed().filter((p) => p.family === "droplets").length;
+    expect(n).toBeGreaterThan(0);
+    expect(rows[0]!.textContent).toContain(en["ui.stage.parade.plotted"]!.replace("{n}", String(n)));
+  });
+
+  it("counts up to the shown plotted count, the real total once every family has arrived", async () => {
+    const one = setup(act2(["droplets"]));
+    const oneTarget = one.api.placed().filter((p) => p.family === "droplets").length;
+    expect(one.host.querySelector(".parade-num")!.getAttribute("data-count")).toBe(String(oneTarget));
+    const all = setup(full);
+    expect(all.host.querySelector(".parade-num")!.getAttribute("data-count")).toBe(String(all.api.coverage().plotted));
+    await new Promise((r) => setTimeout(r, 900));
+    expect(one.host.querySelector(".parade-num")!.textContent).toBe(String(oneTarget));
+    expect(all.host.querySelector(".parade-num")!.textContent).toBe(String(all.api.coverage().plotted));
+  });
+
+  it("families with no pressure recorded show their listed count, never dots", () => {
+    const smokeRow: NotPlacedRow = {
+      id: "PSI-101#1", investigation: "PSI-101", family: "smoke detection", fuel: null,
+      o2_pct: null, pressure_kpa: null, outcome: "unknown", url: "https://example.test", reason: "no oxygen or pressure recorded",
+    };
+    const { host, api } = setup(act2(["droplets", "smoke detection"]), initialState.sliders, { notPlaced: [smokeRow] });
+    const rows = [...host.querySelectorAll(".parade-families li")];
+    expect(rows.length).toBe(2);
+    const smoke = rows.find((r) => r.textContent!.includes(en["ui.family.smoke detection"]!))!;
+    expect(api.placed().filter((p) => p.family === "smoke detection").length).toBe(0);
+    const listed = api.notPlaced("smoke detection").length;
+    expect(listed).toBeGreaterThan(0);
+    expect(smoke.textContent).toContain(en["ui.stage.parade.listed"]!.replace("{n}", String(listed)));
+  });
+
+  it("stays off the Moon-box and slider pages, and off other lenses", () => {
+    for (const stage of [
+      { ...full, reference: ["heo-dm-1006" as const] },
+      { ...full, sliders: { pressure_kpa: 56.5, o2_pct: 34 } },
+    ]) {
+      expect(setup(stage).host.querySelector(".stage-parade")!.hasAttribute("hidden")).toBe(true);
+      expect(setup(stage).host.querySelector(".stage-parade")!.children.length).toBe(0);
+    }
+    expect(setup(full, initialState.sliders, {}, SIZE, "astronaut").host.querySelector(".parade-num")).toBeNull();
+  });
+
+  it("is still and complete under reduced motion", () => {
+    const real = (window as unknown as Record<string, unknown>)["matchMedia"];
+    (window as unknown as Record<string, unknown>)["matchMedia"] = () => ({ matches: true });
+    try {
+      const { host, api } = setup(full);
+      const target = api.coverage().plotted;
+      expect(host.querySelector(".parade-num")!.textContent).toBe(String(target));
+    } finally {
+      if (real !== undefined) (window as unknown as Record<string, unknown>)["matchMedia"] = real;
+      else delete (window as unknown as Record<string, unknown>)["matchMedia"];
+    }
+  });
+
+  it("uses flat token colour, never yellow", () => {
+    const { host } = setup(full);
+    expect(host.querySelector(".stage-parade")!.innerHTML).not.toContain("--moon");
+    expect(host.querySelector(".stage-parade")!.innerHTML).not.toContain("#e7f434");
+    const rules = css.match(/\.(stage-parade|parade-[a-z-]+)[^{]*\{[^}]*\}/g) ?? [];
+    expect(rules.length).toBeGreaterThan(0);
+    expect(rules.join("")).not.toContain("--moon");
   });
 });

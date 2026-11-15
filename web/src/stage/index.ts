@@ -11,6 +11,7 @@ import type { Scales } from "./layout";
 import { dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
 import { dialSVG, flameSVG, incidentO2 } from "./picture";
+import { renderParade } from "./parade";
 import { DIAMOND, layoutRefs } from "./refs";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -65,7 +66,9 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   chart.append(gAxes, gHead, gBand, gStrip, gTests, gRefs, gNearest, gYou);
   plotBox.append(chart);
   const legend = html("ul", "stage-legend");
-  root.append(plotBox, legend);
+  const parade = html("div", "stage-parade");
+  parade.hidden = true;
+  root.append(plotBox, legend, parade);
   const incidents = html("div", "stage-incidents");
   incidents.hidden = true;
   el.append(root, incidents);
@@ -98,6 +101,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   function drawAll(): void {
     const state = store.get();
     const stage = state.stage;
+    renderParade(parade, ctx);
     const chartView = stage.view === "micro-g" || stage.view === "tilt-lunar" || stage.view === "empty";
     root.hidden = !chartView;
     incidents.hidden = chartView;

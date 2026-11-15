@@ -97,3 +97,14 @@
 .flame-guide { display: block; height: auto; }
 .flame-guide .flame-sway { transform-box: fill-box; transform-origin: 50% 90%; animation: flame-sway 1.6s steps(1) infinite alternate; }
 @keyframes flame-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+
+/* public picture (act 2): the family parade with its counter */
+.stage-parade { display: flex; flex: none; flex-wrap: wrap; align-items: baseline; gap: 8px 28px; padding: 12px 16px 12px 52px; color: var(--ink-dark); font-family: var(--font); }
+.stage-parade[hidden] { display: none; }
+.parade-count { margin: 0; font-size: 15px; color: var(--muted-dark); }
+.parade-num { font-size: 34px; font-weight: 700; color: var(--ink-dark); font-family: var(--font-id); }
+.parade-families { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; list-style: none; }
+.parade-families li { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.parade-families svg { width: 26px; height: 26px; flex: none; }
+.parade-name { color: var(--ink-dark); }
+.parade-n { color: var(--muted-dark); font-family: var(--font-id); }
