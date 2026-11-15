@@ -6,14 +6,14 @@
    index.ts adds .reveal to the step on activation (and .reveal-done after a lens or
    language change, so the words update in place without replaying) and sets --i per part:
    0 label, 1..n sentences, then sources, then the cue. --i stops at 7:
-   7 x 110 ms + 320 ms = 1.09 s. Inactive pages carry neither class: all parts are there, dimmed. */
+   7 x 75 ms + 650 ms = 1.18 s. Inactive pages carry neither class: all parts are there, dimmed. */
 @keyframes rv-in {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(var(--motion-enter-dist, 20px)); }
   to { opacity: 1; transform: none; }
 }
 .step.reveal:not(.reveal-done) .rv {
-  animation: rv-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--i, 0) * 110ms);
+  animation: rv-in var(--motion-enter-dur, 650ms) var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation-delay: calc(var(--i, 0) * var(--motion-stagger, 75ms));
 }
 
 /* ---- page design ---- */

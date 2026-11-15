@@ -44,7 +44,7 @@ describe("motion helpers (R8)", () => {
   it("chapter pictures enter with the chapter title (R13)", () => {
     const text = css();
     expect(text).toMatch(/\.chapter \.chapter-picture\s*\{[^}]*transition:\s*transform[^;]*opacity/);
-    expect(text).toMatch(/body\[data-motion="on"\] \.chapter:not\(\.is-seen\) \.chapter-picture\s*\{[^}]*transform:\s*translateX\(-24px\)/);
+    expect(text).toMatch(/body\[data-motion="on"\] \.chapter:not\(\.is-seen\) \.chapter-picture\s*\{[^}]*transform:\s*translateY\(var\(--motion-enter-dist\)\)/);
   });
 
   it("countUp writes the value once and respects reduced motion", () => {
