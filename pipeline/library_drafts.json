@@ -1,0 +1,211 @@
+{
+  "saffire": {
+    "core_quote": "The objectives of SAFFIRE-II are to determine how rapidly a large scale fire grows in low-gravity and to investigate the low-g flammability limits compared to those obtained in NASA’s normal gravity material flammability screening test.",
+    "core_investigation": "PSI-99",
+    "hook": "After leaving the station, a supply ship was turned into a brave lab where a large fire was lit on purpose.",
+    "reveal": "They placed fabric in a long duct where fans pulled air through, lit it, and watched with cameras and heat and air sensors as the flame moved and grew.",
+    "bridge": "Learning how fast a large fire grows with moving air helps us imagine how to keep Moon base air safe for people to breathe.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:05:35Z"
+    }
+  },
+  "bass": {
+    "core_quote": "The relation between these can be investigated by observing flames burning for the longer times available in flight.",
+    "core_investigation": "PSI-26",
+    "hook": "Can we really trust Earth tests to tell us how things burn up there. Bass checks whether our normal gravity test tells the truth in space.",
+    "reveal": "On the space station, fabric was lit at one end inside a glove box and air was blown with the flame or against it, while flame size, shape, color and spread were watched, and a gas like that used on station was tried to stop flames.",
+    "bridge": "This matters for a Moon base because learning what burns in space and how to put it out helps keep cabin air safe.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:06:14Z"
+    }
+  },
+  "bass-ii": {
+    "core_quote": "BASS-II results contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth.",
+    "core_investigation": "PSI-25",
+    "hook": "It is strange but true that in weightlessness a very soft flow can decide if a solid fuel lights, spreads, or goes out.",
+    "reveal": "Crew members worked as lab partners on the station, placing rods, slabs and other shapes in a small wind tunnel in a safe box and changing the air push and oxygen to watch how flames looked, grew and spread.",
+    "bridge": "This matters for Moon-base air because changing oxygen and air movement is part of learning how fire detection and suppression might work off Earth.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:06:39Z"
+    }
+  },
+  "flex": {
+    "core_quote": "The FLEX (Flame Extinguishment Experiment) investigation aims to map the flammability limits of liquid fuels in microgravity environments, measure the effectiveness of various gaseous fire suppressants such as CO2, He, and SF6, and develop reliable predictive models for combustion limits under reduced gravity conditions.",
+    "core_investigation": "PSI-69",
+    "hook": "When I face a fire, I need to know what will put it out. In space, we test which gases can stop a burning drop of fuel.",
+    "reveal": "They lit drops of fuel floating free and watched them burn, then slowly lowered the air until the drops would not light, and tested suppressant gases and a soft drift to see how the flame going out changed.",
+    "bridge": "This matters for a Moon base because the air we choose to breathe changes how easily a fire starts and what will put it out.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:07:07Z"
+    }
+  },
+  "flex-2": {
+    "core_quote": "The primary goal of the FLEX-2 flight experiments is to extend the results of FLEX-1 to fuels and environmental conditions that mimic real combustor conditions, as well as, provide benchmark experimental data on bi-component droplet combustion over a wide range of initial conditions in order to validate numerical simulations and to develop new theoretical models.",
+    "core_investigation": "PSI-68",
+    "hook": "As an engineer, I want fuels that act like what we use in a real combustor. So we set out to watch how tiny mixed fuel drops burn.",
+    "reveal": "We filled a chamber with chosen gas mixes, placed drops of fuel, let them settle, then lit them and watched the flame with cameras while tracking heat and pressure.",
+    "bridge": "To be clear, this test is about engine-like burning, not about the air we would breathe in a Moon home.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:07:35Z"
+    }
+  },
+  "cfi": {
+    "core_quote": "Analyze the effects of helium dilution on cool flame behavior.",
+    "core_investigation": "PSI-39",
+    "hook": "What makes a cool flame keep burning, and what makes it go out?",
+    "reveal": "They hung tiny fuel drops between thin needles or on fibers inside a chamber, lit them with a hot wire that pulled back, and used cameras to watch drop size and flame size while changing the gas mix.",
+    "bridge": "This work is not about Moon-base air, it is about how tiny fuel drops burn cool and make soot.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:08:12Z"
+    }
+  },
+  "cfi-g": {
+    "core_quote": "Determine the conditions for which cool diffusion flames occur for propane, n-butane, and n-pentane; normal and inverse flames; and a broad range of Zst, Tad, and fluent flow rate.",
+    "core_investigation": "PSI-159",
+    "hook": "Think like a cook with a recipe book, trying different fuels and flows to find the mix that makes a cool flame.",
+    "reveal": "They made round flames on the space station with different fuels and mixes, changing flows and pressures in both normal and backward directions, and watched them with cameras and light and heat tools.",
+    "bridge": "This work is not about Moon base air, it is about the basic recipe for when cool flames show up.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:08:38Z"
+    }
+  },
+  "flame-design": {
+    "core_quote": "Obtain soot-inception limits of quasi-steady normal and inverse spherical diffusion flames as functions of flow rate, Zst, amount of inert (N2 or CO2), and pressure for C2H4 and CH4 flames.",
+    "core_investigation": "PSI-10",
+    "hook": "I am trying to shape a round flame that stays clean instead of making soot.",
+    "reveal": "They lit round flames while falling and on the space station, tried many mixes, flows and pressures in both directions, and watched size, color, heat and soot with cameras and sensors.",
+    "bridge": "This test is not about Moon base air, it is about learning when round flames make soot and when they fade out.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:09:17Z"
+    }
+  },
+  "bre": {
+    "core_quote": "The BRE flight program seeks to establish the burning conditions in a quiescent microgravity ambient in terms of material properties.",
+    "core_investigation": "PSI-20",
+    "hook": "Think of a burner that acts as a stand-in for solid fuel. Scientists watch how it burns when the air around it stays perfectly still.",
+    "reveal": "The team sets the air in the chamber, starts the fuel flow and lights it. They watch the flame while the burner warms up, mapping how burning changes, until the flame goes out or the heat steadies, then they lower the flow to find where it dies.",
+    "bridge": "This matters for Moon-base air because the tests check space air mixes that crews might one day breathe.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:09:51Z"
+    }
+  },
+  "cld": {
+    "core_quote": "Characterize the behavior of weak coflow diffusion flames of methane and ethylene, as a function of velocity and fuel dilution, through measurement of flame shape, lift-off heights, temperatures and extinction limits.",
+    "core_investigation": "PSI-21",
+    "hook": "Come close and listen. Some flames whisper so softly they almost vanish, and we want to watch where they lift and fade.",
+    "reveal": "They made soft methane and ethylene flames with lots of thinning and watched shape and lift as they neared going out, and they watched soot glow to learn about heat in the flame.",
+    "bridge": "This work is not about Moon-base air, it is about understanding faint flames and soot to build better models.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:10:23Z"
+    }
+  },
+  "e-field": {
+    "core_quote": "The objective of this investigation is to better understand the relationship between electric field voltage and chemi-ion current, analyze the dynamic response of flames to electric field changes, evaluate soot formation, and characterize stabilized near-limit lifted flames.",
+    "core_investigation": "PSI-22",
+    "hook": "Who says flames get to do whatever they want. This test talks back and bosses them around with electricity.",
+    "reveal": "They lit gas flames floating weightless, with and without a soft flow of air around them. Then they switched on a field between the burner and a mesh above and watched how the charged bits in the flame moved it, how soot formed, and how fast it reacted, using cameras and heat sensors.",
+    "bridge": "This is not about Moon-base air, it is about learning how electricity can push a flame around.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:10:53Z"
+    }
+  },
+  "s-flame": {
+    "core_quote": "Measure and characterize the transient structure",
+    "core_investigation": "PSI-23",
+    "hook": "Think of a perfect round flame that stays still, the yardstick all computer models are judged against.",
+    "reveal": "They sent fuel and diluent mixes through a round porous burner and lit a steady round flame, then recorded light images, flame and burner heat, and radiant glow while varying flows and mixes.",
+    "bridge": "This work is not about Moon base air, it is about building a clean round flame to test models of heat and chemistry.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:11:30Z"
+    }
+  },
+  "slice": {
+    "core_quote": "The objective of this investigation is to better understand the structure and stability of laminar diffusion flames in microgravity.",
+    "core_investigation": "PSI-106",
+    "hook": "Picture a climber clinging to rock with fingertips, refusing to let go. A flame in weightlessness does the same at the edge of its burner.",
+    "reveal": "A fan pushed air past burner tubes that could be swapped out, with different fuels and mixes thinned with nitrogen, lit by hand, and lots of still photos with heat and flow readings alongside showed how shape linked to steadiness.",
+    "bridge": "This one is not about Moon-base air itself, but about how a calm flame holds on and stretches when gravity lets go.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:12:01Z"
+    }
+  },
+  "spice": {
+    "core_quote": "The objective of SPICE is to better understand the complex process of combustion by observing flames in a microgravity environment aboard the International Space Station (ISS) and analogous ground experiments.",
+    "core_investigation": "PSI-107",
+    "hook": "As a chemist I watch clean flames turn smoky and ask when and why soot slips free.",
+    "reveal": "They lit many flames inside a glovebox lab on the space station, using different fuels and air flows, and used still and video cameras to watch flame length and catch the moment each flame began to release soot.",
+    "bridge": "This work is not about the air in a Moon home, it is about how free-floating flames make soot.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:12:27Z"
+    }
+  },
+  "same": {
+    "core_quote": "One of the major goals of this investigation was to quantify the sizes that the liquid smoke particulate achieves in low gravity and to relate the droplet size distribution to the smoke generation and smoke transport conditions in the experiment.",
+    "core_investigation": "PSI-102",
+    "hook": "The smoke left behind tiny clues, and the detectives on orbit were on the case to track how they grew and where they drifted.",
+    "reveal": "The crew set up boxes and cameras, heated test materials to make smoke, checked smoke detectors, caught soot bits to study under a microscope, and weighed what was left to learn how much had burned.",
+    "bridge": "This matters for Moon-base air because knowing how smoke grows helps crews spot a fire early and keep breathing air safe.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:12:50Z"
+    }
+  },
+  "ground-soot": {
+    "core_quote": "The objective of this investigation was to integrate computational and experimental methods to derive temperature distributions and soot volume fractions from the Smoke Point in Coflow Experiment (SPICE) data available in PSI.",
+    "core_investigation": "PSI-60",
+    "hook": "Soot from flames behaves very differently on the ground than in weightless space. This work tries to explain what controls that big mismatch.",
+    "reveal": "They studied flame photos from the Smoke Point in Coflow Experiment to map heat and soot, then built computer models of flow and soot with light reabsorption and soot clumps growing. They ran the models for ground and weightless cases and compared them to the photos to test what matters most.",
+    "bridge": "This work is not about Moon base air, it is about why sooty flames look different with and without gravity.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:13:24Z"
+    }
+  },
+  "ground-models": {
+    "core_quote": "The objective of this research was to develop and validate new flamelet generated manifold (FGM) modeling techniques for concurrent flame spread in microgravity.",
+    "core_investigation": "PSI-62",
+    "hook": "I make models that try to copy how fire moves. My job is to make the math behave like real flames do.",
+    "reveal": "We ran computer copies of flames moving over flat sheets, balls, rods and wax sticks, then checked them against space photos of real Bass flames rebuilt into soot and heat maps to see if flame shape, heat, soot and spread pace matched.",
+    "bridge": "Knowing which spacecraft stuff can burn helps us guess how fire might act in the air of a Moon home.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:13:50Z"
+    }
+  },
+  "ground-cool-flames": {
+    "core_quote": "Focusing on both small and large droplets, the work mapped stability windows for ignition, sustained oscillation, transitions to hot ignition and warm-flame behavior, and extinction under microgravity.",
+    "core_investigation": "PSI-117",
+    "hook": "We dug into flight data from Flex to learn why some set cool flames kept burning while others died out.",
+    "reveal": "We built a computer model checked against space measurements, then tested drifting air alone, added heat alone, and both together on small and large drops to map starting, wobbling, warming, and fading.",
+    "bridge": "This study is not about Moon base air, it is about what tips tiny fuel drops toward lasting cool flames or toward going out.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:14:18Z"
+    }
+  },
+  "ground-flammability": {
+    "core_quote": "Develop a new diagram of the flammability limits of diffusional cool flames affected by radiation, diffusion, and convection.",
+    "core_investigation": "PSI-142",
+    "hook": "Like a mapmaker tracing faint shores, this work charts where cool flames can linger and where they must fade.",
+    "reveal": "Using space flame data as a guide, the team ran ground tests and computer models to see how changing air lets cool flames hold on or die out.",
+    "bridge": "This study is not about Moon base air directly, but about mapping cool flame limits in a broader sense.",
+    "ai": {
+      "model": "muse-spark-1.3-contributor",
+      "made_at": "2026-11-15T00:14:49Z"
+    }
+  }
+}

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .coverage import update_doc
 from .experiments import build_experiments, build_psi_text
+from .library import build_library, load_drafts
 from .moments import build_moments
 from .parsers import PARSERS
 from .sources import SOURCES
@@ -70,8 +71,10 @@ def main():
     write_json(BUILD_DIR / "moments.json", moments)
     texts = build_psi_text(SNAPSHOT)
     write_json(BUILD_DIR / "psi-text.json", texts)
+    library = build_library(load_drafts(), tests, moments, {t["id"]: t for t in texts})
+    write_json(BUILD_DIR / "library.json", library)
     update_doc(COVERAGE_MD, SNAPSHOT, tests)
-    print(f"wrote tests.json ({len(tests)} rows), experiments.json ({len(experiments)}), moments.json ({len(moments)}), psi-text.json ({len(texts)}), COVERAGE.md table")
+    print(f"wrote tests.json ({len(tests)} rows), experiments.json ({len(experiments)}), moments.json ({len(moments)}), psi-text.json ({len(texts)}), library.json ({len(library)} stories), COVERAGE.md table")
 
 
 if __name__ == "__main__":
