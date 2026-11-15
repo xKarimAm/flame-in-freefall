@@ -1,0 +1,48 @@
+{
+  "pictures": [
+    {
+      "id": "GRC-1998-C-00485",
+      "chapter": 1,
+      "file": "pictures/GRC-1998-C-00485.jpg",
+      "nasa_id": "GRC-1998-C-00485",
+      "title": "GRC-1998-C-00485",
+      "caption": "Comparison of a Candle Flame burning in normal gravity or 1-G (left) and a flame burning in Microgravity.",
+      "date": "2004-05-01",
+      "center": "GRC",
+      "credit": "NASA",
+      "source": "NASA Image and Video Library, GRC-1998-C-00485",
+      "url": "https://images.nasa.gov/details/GRC-1998-C-00485",
+      "alt": "Two candle flames side by side on black: a tall yellow teardrop flame on the left, a small round blue flame on the right.",
+      "edit": "Cropped: the white frame with the NASA insignia and the centre name is removed."
+    },
+    {
+      "id": "iss030e178648",
+      "chapter": 2,
+      "file": "pictures/iss030e178648.jpg",
+      "nasa_id": "iss030e178648",
+      "title": "Pettit performs a session of BASS Fire Safety Tests at the MSG",
+      "caption": "NASA astronaut Don Pettit, Expedition 30 flight engineer, performs a session of Burning and Suppression of Solids (BASS) fire safety tests at the Microgravity Sciences Glovebox (MSG)",
+      "date": "2012-03-30",
+      "center": "JSC",
+      "credit": "NASA",
+      "source": "NASA Image and Video Library, iss030e178648",
+      "url": "https://images.nasa.gov/details/iss030e178648",
+      "alt": "An astronaut in a black shirt reaches with both arms into a glovebox on the space station, surrounded by cameras and cables."
+    },
+    {
+      "id": "iss040e086481",
+      "chapter": 3,
+      "file": "pictures/iss040e086481.jpg",
+      "nasa_id": "iss040e086481",
+      "title": "BASS-II Experiment",
+      "caption": "Image taken on card 8 during BASS-II flame test session with reduced O2 partial pressure.",
+      "date": "2014-08-02",
+      "center": "JSC",
+      "credit": "NASA",
+      "source": "NASA Image and Video Library, iss040e086481",
+      "url": "https://images.nasa.gov/details/iss040e086481",
+      "alt": "A thin blue flame curves around the glowing tip of a dark rod against a black background.",
+      "photographer": "Reid Wiseman"
+    }
+  ]
+}

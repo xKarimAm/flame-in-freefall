@@ -17,6 +17,21 @@
           "url": { "type": "string", "pattern": "^https://" }
         }
       }
+    },
+    "pictures": {
+      "description": "pictures.json: real NASA photographs. title and caption are word for word from the NASA Image and Video Library record of nasa_id; alt is ours. The image files sit beside the file, in data/curated/pictures/.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "chapter", "file", "nasa_id", "title", "caption", "date", "credit", "source", "url", "alt"],
+        "properties": {
+          "chapter": { "type": "integer", "minimum": 1, "maximum": 4, "description": "the story chapter page that shows the picture" },
+          "file": { "type": "string", "pattern": "^pictures/[A-Za-z0-9-]+[.]jpg$", "description": "relative to data/curated/" },
+          "caption": { "type": "string", "description": "a word-for-word part of the NASA record's description" },
+          "edit": { "type": "string", "description": "what we changed in the image file, if anything" },
+          "url": { "type": "string", "pattern": "^https://" }
+        }
+      }
     }
   }
 }
