@@ -18,7 +18,7 @@
         "investigate the low-g flammability limits compared to those obtained in NASA"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "fire growth",
@@ -88,7 +88,7 @@
         "the Saffire-II investigation added more samples including SIBAL, silicone, structure PMMA, flat PMMA, and PMMA with Nomex"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "fire growth",
@@ -164,7 +164,7 @@
         "the Saffire III investigation also used SIBAL as the sample material"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "fire growth",
@@ -213,7 +213,7 @@
         "Assess the effectiveness of an inert, gaseous extinguishing agent (similar to that used on ISS) in putting out flames over different materials, geometries, preheating, and flow."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "material flammability",
@@ -304,7 +304,7 @@
         "BASS-II results contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "detection",
@@ -443,7 +443,7 @@
         "enhancing fire safety protocols for future space missions"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "suppression"
@@ -786,7 +786,7 @@
         "Study flame extinction mechanisms and their boundaries."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 8,
@@ -1106,7 +1106,7 @@
         "The Combustion Integrated Rack (CIR) contains the Multi-User Droplet Combustion Apparatus (MDCA) which facilitates the controlled combustion of fuel droplets."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 87,
@@ -1182,7 +1182,7 @@
         "Perform spherical diffusion flame tests aboard the International Space Station."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 333,
@@ -1229,7 +1229,7 @@
         "Perform spherical diffusion flame tests in drop towers and aboard the International Space Station."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 327,
@@ -1462,7 +1462,7 @@
         "a continuous set of data is produced for the flammability map"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "material flammability"
@@ -1589,7 +1589,7 @@
         "we plan to study methane and ethylene diffusion flames over a wide range of test conditions"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 0,
@@ -1725,7 +1725,7 @@
         "The E-FIELD flames experiment investigates how electric fields influence the behavior of laminar diffusion flames in microgravity."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 0,
@@ -1904,7 +1904,7 @@
         "mixtures of various gaseous fuels and diluents will be issued into an oxidizing environment through a spherical porous burner and ignited"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 0,
@@ -2197,7 +2197,7 @@
         "Quantify the effects of microgravity on flame length and radiative heat loss compared to normal gravity conditions."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 0,
@@ -2256,7 +2256,7 @@
         "Quantify the sooting propensity of different fuels"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 469,
@@ -2339,7 +2339,7 @@
         "ran the self diagnostic procedures on the two smoke detectors"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "detection"
@@ -2466,7 +2466,7 @@
         "an intumescent fire-retardant foam by Foamex"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 109,
@@ -2531,7 +2531,7 @@
         "reconcile microgravity and normal gravity flame behavior"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 0,
@@ -2566,7 +2566,7 @@
         "enable accurate prediction of flammability limits for spacecraft materials"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [
       "material flammability"
@@ -2621,7 +2621,7 @@
         "to explain run-to-run variability by isolating the roles of deliberate heating and unintentional drift-induced convection"
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 0,
@@ -2710,7 +2710,7 @@
         "Bridge the knowledge gap between the flammability limits and extinction limits of hot flames and cool flames."
       ],
       "model": "claude-sonnet-5-5",
-      "made_at": "2026-11-15T01:46:47.3360935+03:00"
+      "made_at": "2026-11-15T01:46:47+03:00"
     },
     "tags": [],
     "test_count": 0,
