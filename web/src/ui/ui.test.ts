@@ -151,7 +151,37 @@ describe("ui", () => {
     setup();
     const text = roots().panel.textContent!;
     expect(text).toContain("Nearest tested conditions, not a prediction. All tests ran in microgravity.");
-    expect(text).toContain("Distance counts 5 oxygen points the same as 25 kPa of pressure.");
+    expect(text).toContain("When measuring distance, 5 points of oxygen count the same as 25 kPa of pressure.");
+  });
+
+  it("public sentences read like plain words, with every number kept (task 27)", () => {
+    const en = i18nDicts.en!;
+    // the act-2 family beats, rewritten so a 10-year-old follows them
+    expect(en["story.what-nasa-tested.what-nasa-tested-main.gas-jets.public"]).toBe(
+      "Next, flames fed by a jet of gas. This is the biggest group, with 1,129 tests. Each dot is one test where NASA wrote down the air.");
+    expect(en["story.what-nasa-tested.what-nasa-tested-main.solids-duct.public"]).toBe(
+      "Then, solid materials burning in a duct of moving air. 251 tests are listed here, but none is a dot, because nobody wrote down the air pressure.");
+    expect(en["story.what-nasa-tested.what-nasa-tested-main.large-scale.public"]).toBe(
+      "Then, large fires on big samples, such as fabric. The 17 tests are listed here too, but none is a dot: nobody wrote down the air pressure.");
+    expect(en["story.what-nasa-tested.what-nasa-tested-main.smoke.public"]).toBe(
+      "Then, smoke. These are the only tests here on spotting smoke. All 117 are listed, but none is a dot: nobody wrote down the air pressure.");
+    expect(en["story.what-nasa-tested.what-nasa-tested-main.ground.public"]).toBe(
+      "Last, four studies that rely on computer models and work on the ground. They list no tests, so none of them is a dot.");
+    expect(en["story.what-nasa-tested.what-nasa-tested-main.compare.public"]).toBe(
+      "Side by side, only the drop and gas-flame tests have dots. The rest are listed, but they have no dot.");
+    expect(en["story.what-nasa-tested.what-nasa-tested-main.takeaway.public"]).toBe(
+      "So the tests are real, but only some are dots on the chart. Next, the air a Moon base would have.");
+    // the legend and the distance rule in plain words too
+    expect(en["ui.stage.legend.paper"]).toBe("Published in a paper, not in NASA's data archive");
+    expect(en["ui.nearest.weighting"]).toBe("When measuring distance, 5 points of oxygen count the same as 25 kPa of pressure.");
+    // the old phrasing appears in no public string anymore
+    const publicText = Object.entries(en)
+      .filter(([k]) => k.endsWith(".public") || k.startsWith("ui.stage.") || k.startsWith("ui.panel.") || k.startsWith("ui.nearest."))
+      .map(([, v]) => v)
+      .join("\n");
+    for (const banned of ["Those with their air recorded", "is on the chart", "could not be placed", "not in PSI"]) {
+      expect(publicText).not.toContain(banned);
+    }
   });
 
   it("a slider input changes store.sliders and the list re-renders from the api", () => {
