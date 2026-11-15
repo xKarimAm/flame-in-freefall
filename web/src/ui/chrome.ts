@@ -8,7 +8,7 @@ import markSvg from "./logo-mark.svg?raw";
 export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: HTMLElement) => void): void {
   const { store, t } = ctx;
   let lensButtons: [string, HTMLButtonElement][] = [];
-  let localeButtons: [string, HTMLButtonElement][] = [];
+  let localeSelect: HTMLSelectElement | null = null;
   let chips: [string, HTMLButtonElement][] = [];
   // autonyms: a language name in its own language is never translated, like the μg mark
   const localeNames: Record<string, string> = { en: "English", es: "Español", hi: "हिन्दी", ar: "العربية" };
@@ -57,20 +57,17 @@ export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: H
     });
     const group = h("div", { class: "lens-switch", role: "group", "aria-label": t("ui.chrome.lens-label") }, ...lensButtons.map(([, b]) => b));
     const locales = (Object.keys(ctx.dicts).length ? Object.keys(ctx.dicts) : ["en"]).filter((l) => l in localeNames);
-    localeButtons = locales.map((locale) => {
-      const b = h("button", { type: "button", class: "btn locale", "data-locale": locale, "aria-label": `${t("ui.chrome.locale-label")}: ${localeNames[locale]}` }, localeNames[locale]!);
-      b.addEventListener("click", () => store.set({ locale: locale as Locale }));
-      return [locale, b];
-    });
-    const lang = h("div", { class: "locale-switch", role: "group", "aria-label": t("ui.chrome.locale-label") }, ...localeButtons.map(([, b]) => b));
-    root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, lang, storiesBtn, skipBtn));
+    localeSelect = h("select", { class: "locale-select", "aria-label": t("ui.chrome.locale-label") },
+      ...locales.map((locale) => h("option", { value: locale, selected: locale === store.get().locale ? true : undefined }, localeNames[locale]!)));
+    localeSelect.addEventListener("change", () => store.set({ locale: localeSelect!.value as Locale }));
+    root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, storiesBtn, skipBtn, localeSelect));
     sync();
   }
 
   function sync(): void {
     const { lens, locale, beat } = store.get();
     for (const [l, b] of lensButtons) b.setAttribute("aria-pressed", String(l === lens));
-    for (const [l, b] of localeButtons) b.setAttribute("aria-pressed", String(l === locale));
+    if (localeSelect && localeSelect.value !== locale) localeSelect.value = locale;
     for (const [id, c] of chips) {
       if (id === beat?.story) c.setAttribute("aria-current", "true");
       else c.removeAttribute("aria-current");

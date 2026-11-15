@@ -263,10 +263,14 @@ describe("ui", () => {
     expect(roots().sheet.hidden).toBe(true);
   });
 
-  it("header button groups wrap instead of clipping", () => {
+  it("header button groups wrap instead of clipping; the locale picker is one compact select", () => {
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "ui.css"), "utf8");
     expect(css).toMatch(/\.lens-switch\s*\{[^}]*flex-wrap:\s*wrap/);
-    expect(css).toMatch(/\.locale-switch\s*\{[^}]*flex-wrap:\s*wrap/);
+    expect(css).not.toMatch(/\.locale-switch/);
+    expect(css).toMatch(/\.locale-select\s*\{[^}]*min-height:\s*32px/);
+    expect(css).toMatch(/min-width:\s*1280px\)\s*\{\s*\.chrome-bar\s*\{\s*flex-wrap:\s*nowrap/);
+    expect(css).toMatch(/min-width:\s*1280px\)\s*\{.*?\.lens-switch\s*\{\s*flex-wrap:\s*nowrap/s);
+    expect(css).toMatch(/min-width:\s*1280px\)\s*\{.*?\.chrome-bar\s*\{\s*flex-wrap:\s*nowrap;\s*min-height:\s*53px/s);
   });
 
   it("the panel is a bottom sheet under 1100px", () => {
@@ -275,14 +279,28 @@ describe("ui", () => {
     expect(base).toMatch(/@media\s*\(max-width:\s*1099px\)\s*\{[^}]*#panel\s*\{[^}]*max-height:\s*45vh/);
   });
 
-  it("the language picker lists the loaded locales and switches the store locale", () => {
+  it("the language picker is one compact select at the right end and switches the store locale", () => {
     const { store } = setup(null, i18nDicts);
-    const btns = [...roots().chrome.querySelectorAll<HTMLButtonElement>("button[data-locale]")];
-    expect(btns.map((b) => b.getAttribute("data-locale")).sort()).toEqual(Object.keys(i18nDicts).sort());
+    const chrome = roots().chrome;
+    expect(chrome.querySelectorAll("select.locale-select").length).toBe(1);
+    expect(chrome.querySelectorAll("button[data-locale]").length).toBe(0);
+    const sel = chrome.querySelector<HTMLSelectElement>("select.locale-select")!;
+    expect([...sel.options].map((o) => o.value).sort()).toEqual(Object.keys(i18nDicts).sort());
+    // autonyms: never translated
+    expect(sel.querySelector('option[value="en"]')!.textContent).toBe("English");
+    if ("es" in i18nDicts) expect(sel.querySelector('option[value="es"]')!.textContent).toBe("Español");
     const target = (Object.keys(i18nDicts) as (keyof typeof i18nDicts)[]).find((l) => l !== "en") ?? "en";
-    btns.find((b) => b.getAttribute("data-locale") === target)!.click();
+    sel.value = target;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
     expect(store.get().locale).toBe(target);
-    expect(roots().chrome.querySelector(`button[data-locale="${target}"]`)!.getAttribute("aria-pressed")).toBe("true");
+    // a locale change rebuilds the bar: re-query the live select
+    const live = () => roots().chrome.querySelector<HTMLSelectElement>("select.locale-select")!;
+    // at the right end of the bar, after the Skip button
+    expect(roots().chrome.querySelector(".chrome-bar")!.lastElementChild).toBe(live());
+    expect(live().value).toBe(target);
+    // and it follows the store back
+    store.set({ locale: "en" });
+    expect(live().value).toBe("en");
   });
 
   it("the investigations table has one row per experiment, sorted by family then acronym", () => {

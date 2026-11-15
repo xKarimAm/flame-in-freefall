@@ -14,6 +14,10 @@
 .brand-mark svg { display: block; height: 32px; width: auto; }
 .brand-ug { color: var(--data-on-dark); font-size: 0.6em; font-weight: 700; line-height: 0; margin-left: -6px; }
 .rail { display: flex; align-items: stretch; gap: 4px; min-width: 0; overflow-x: auto; }
+/* squeezed chapters shrink with an ellipsis instead of scrolling: every chapter stays visible */
+.rail .chip { min-width: 0; white-space: nowrap; }
+.rail .chip-num { flex: none; }
+.chip-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .chip { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; background: none; border: 0; border-bottom: 3px solid transparent; border-radius: var(--radius); color: var(--muted-dark); font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap; }
 .chip:hover { color: var(--ink-dark); }
 .chip[aria-current="true"] { color: var(--ink-dark); border-bottom-color: var(--flame); }
@@ -156,13 +160,23 @@ table.test-rows { margin-top: 12px; font-size: 14px; }
   /* numbers only; the titles stay readable to screen readers */
   .chip-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
-.locale-switch { display: flex; flex-wrap: wrap; gap: 8px; }
+/* one compact select: the language picker no longer wraps into a second header row */
+.locale-select { font: inherit; font-size: 14px; min-height: 32px; background: #000; color: var(--ink-dark); border: 1px solid var(--rule); border-radius: var(--radius); }
+/* at 1280 px and wider the header stays one 56 px row: the rail (min-width 0, scrolls) absorbs the squeeze.
+   The bar itself is 53 px (37 px controls + 16 px padding) so the whole header measures 56 px
+   with the 3 px brand rule; narrower screens keep the 40 px controls and the wrapping bar. */
+@media (min-width: 1280px) {
+  .chrome-bar { flex-wrap: nowrap; min-height: 53px; }
+  .chrome-bar > :not(.rail) { flex-shrink: 0; }
+  .chrome-bar .btn, .chrome-bar .chip { min-height: 37px; }
+  .lens-switch { flex-wrap: nowrap; }
+}
 /* header buttons have no whitespace between them, so the groups must wrap as flex */
 .lens-switch { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 767px) {
   .brand { font-size: 18px; }
   .lens-switch { order: 5; width: 100%; }
-  .locale-switch { order: 6; width: 100%; }
+  .locale-select { order: 6; }
   .lens-switch .lens { flex: 1; }
   #sheet { font-size: 14px; }
 }
