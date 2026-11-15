@@ -34,6 +34,13 @@ describe("stories/*.json", () => {
       }
   });
 
+  it("every beat carries at least one source: a page with no source link is a bug", () => {
+    for (const story of raw)
+      for (const scene of story.scenes)
+        for (const beat of scene.beats)
+          expect(beat.sources.length, `${story.id}/${scene.id}/${beat.id}`).toBeGreaterThan(0);
+  });
+
   it("uses only keys that exist in en.json, and every beat has an en public string", () => {
     for (const story of raw) {
       expect(en[story.title_key], story.title_key).toBeTypeOf("string");

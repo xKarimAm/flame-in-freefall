@@ -380,7 +380,7 @@ describe("ui", () => {
     sheet.querySelectorAll<HTMLButtonElement>("button.tab")[2]!.click();
     const rows = () => [...sheet.querySelectorAll("table.tests-table tbody tr")];
     expect(rows().length).toBe(tests.length);
-    expect(sheet.querySelector("table.tests-table caption")!.textContent).toContain(`${tests.length} test rows`);
+    expect(sheet.querySelector("table.tests-table caption")!.textContent).toContain(`${tests.length} matching test rows`);
     const sortBtn = (label: string) => [...sheet.querySelectorAll<HTMLButtonElement>("table.tests-table th button.sort")].find((b) => b.textContent === label)!;
     sortBtn("Oxygen").click();
     const o2s = rows().map((r) => r.children[2].textContent);
@@ -392,6 +392,41 @@ describe("ui", () => {
     const link = rows()[0]!.querySelectorAll("td")[6]!.querySelector("a")!;
     expect(link.getAttribute("href")).toMatch(/^https:\/\//);
     expect(unlinkedNumbers(sheet)).toEqual([]);
+  });
+
+  it("the tests tab caption counts matching rows and missing values sort last both ways", () => {
+    const extra: TestRun = {
+      id: "PSI-26#x", investigation: "PSI-26", fuel: "cloth-x", fuel_class: "solid", gravity: "micro-g",
+      o2_pct: null, pressure_kpa: null, outcome: "unknown",
+      source: { file: "csv_26_0.csv", row: 1, url: "https://psi.nasa.gov/physci/repo/data/investigations/PSI-26" },
+    };
+    tests.push(extra);
+    try {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      sheet.querySelectorAll<HTMLButtonElement>("button.tab")[2]!.click();
+      const rows = () => [...sheet.querySelectorAll("table.tests-table tbody tr")];
+      const caption = () => sheet.querySelector("table.tests-table caption")!.textContent!;
+      expect(caption()).toBe(`${tests.length} matching test rows`);
+      const fuelSel = sheet.querySelector<HTMLSelectElement>("#sheet-fuel")!;
+      fuelSel.value = "cloth-x";
+      fuelSel.dispatchEvent(new Event("change", { bubbles: true }));
+      expect(rows().length).toBe(1);
+      expect(caption()).toBe("1 matching test rows");
+      fuelSel.value = "";
+      fuelSel.dispatchEvent(new Event("change", { bubbles: true }));
+      const o2 = (r: Element) => r.children[2].textContent!;
+      const sortBtn = (label: string) => [...sheet.querySelectorAll<HTMLButtonElement>("table.tests-table th button.sort")].find((b) => b.textContent === label)!;
+      sortBtn("Oxygen").click(); // ascending: the unrecorded row sinks to the bottom
+      expect(o2(rows().at(-1)!)).toContain("not recorded");
+      sortBtn("Oxygen").click(); // descending: the unrecorded row stays at the bottom
+      expect(o2(rows()[0]!)).not.toContain("not recorded");
+      expect(o2(rows().at(-1)!)).toContain("not recorded");
+      expect(unlinkedNumbers(sheet)).toEqual([]);
+    } finally {
+      tests.pop();
+    }
   });
 
   it("the coverage panel counts every reason and the downloads link the data files", () => {
@@ -434,6 +469,24 @@ describe("ui", () => {
     expect(selected()).toBe("All investigations");
     store.set({ beat: { story: "s", scene: "a", beat: "c", kind: "focus" }, stage: { view: "tilt-lunar", analyst_sheet: "table" } });
     expect(selected()).toBe("All investigations");
+  });
+
+  it("sheet tabs move with the arrow keys", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    const tabs = () => [...sheet.querySelectorAll<HTMLButtonElement>("button.tab")];
+    const selected = () => tabs().findIndex((b) => b.getAttribute("aria-selected") === "true");
+    tabs()[0]!.focus();
+    expect(selected()).toBe(0);
+    tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(selected()).toBe(1);
+    expect(document.activeElement).toBe(tabs()[1]);
+    tabs()[1]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(selected()).toBe(0);
+    expect(document.activeElement).toBe(tabs()[0]);
+    tabs()[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(selected()).toBe(2); // wraps around
   });
 
   it("the brand is the Firebreak mark, the name and a blue ug; it scrolls to the top", () => {
@@ -579,6 +632,27 @@ describe("ui", () => {
     box.value = "";
     box.dispatchEvent(new Event("input", { bubbles: true }));
     expect(visible().length).toBe(2);
+  });
+
+  it("the overlay search matches chapter questions", () => {
+    setup();
+    document.getElementById("story")!.innerHTML =
+      `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="Build your Moon-base air"></section><section id="story-what-nasa-tested" data-story="what-nasa-tested" data-act="2" data-title="What NASA has tested"></section>`;
+    const storiesBtn = buttons(roots().chrome).find((b) => b.textContent === "Stories")!;
+    storiesBtn.click();
+    const box = roots().overlay.querySelector<HTMLInputElement>("#overlay-search")!;
+    const visible = () => [...roots().overlay.querySelectorAll<HTMLElement>(".story-card")].filter((c) => !c.hidden);
+    box.value = "must still be tested"; // the-gap's question, but that story is not on the page
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(visible().length).toBe(0);
+    box.value = "care about fire"; // why-oxygen's question, but that story is not on the page either
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(visible().length).toBe(0);
+    box.value = "inside or outside"; // moon-air's question
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(visible().length).toBe(1);
+    expect(visible()[0]!.textContent).toContain("Build your Moon-base air");
+    expect(roots().overlay.querySelector(".overlay-count")!.textContent).toBe("1 of 2 stories");
   });
 
   it("the engine ending card opens the Stories overlay through the open-overlay event", () => {

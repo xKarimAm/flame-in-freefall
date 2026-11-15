@@ -98,7 +98,8 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     labels.push(label);
   }
 
-  // page dots: one per step, tracking the active one
+  // page dots: one per step, tracking the active one. First in DOM (keyboard users
+  // reach it first), visually fixed in place by CSS, so the look does not change.
   const dotsNav = node("nav", "page-dots");
   const dots: HTMLButtonElement[] = [];
   for (const step of steps) {
@@ -108,7 +109,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     dotsNav.append(d);
     dots.push(d);
   }
-  el.append(dotsNav);
+  el.insertBefore(dotsNav, cover);
 
   // ending card: what the visitor just saw, and three ways to go on
   const ending = node("section", "ending");

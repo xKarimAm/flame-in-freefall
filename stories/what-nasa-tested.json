@@ -16,7 +16,20 @@
           "text": {
             "public": "story.what-nasa-tested.what-nasa-tested-main.why-test.public"
           },
-          "sources": []
+          "sources": [
+            {
+              "label": "PSI-69 FLEX, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69"
+            },
+            {
+              "label": "PSI-68 FLEX-2, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-68"
+            },
+            {
+              "label": "PSI-39 CFI, NASA PSI",
+              "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-39"
+            }
+          ]
         },
         {
           "id": "droplets",
@@ -277,7 +290,12 @@
           "text": {
             "public": "story.what-nasa-tested.what-nasa-tested-main.takeaway.public"
           },
-          "sources": []
+          "sources": [
+            {
+              "label": "Challenge #7 brief",
+              "url": "https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/"
+            }
+          ]
         }
       ]
     }

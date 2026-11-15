@@ -15,7 +15,12 @@
           "text": {
             "public": "story.moon-air.moon-air-main.hook.public"
           },
-          "sources": []
+          "sources": [
+            {
+              "label": "ICES-2022-45, NTRS 20220006612 (8.2 psia exploration atmosphere)",
+              "url": "https://ntrs.nasa.gov/citations/20220006612"
+            }
+          ]
         },
         {
           "id": "reveal",

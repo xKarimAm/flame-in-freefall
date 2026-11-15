@@ -226,6 +226,25 @@ describe("library", () => {
     void open;
   });
 
+  it("Tab stays inside the open dialog", async () => {
+    document.body.innerHTML = `<div id="overlay" hidden></div>`;
+    const c = ctx();
+    const root = document.getElementById("overlay")!;
+    const { openLibrary } = mountOverlay(root, c, async () => ({ stories, moments }));
+    await openLibrary(document.createElement("button"));
+    const focusable = () =>
+      [...root.querySelectorAll<HTMLElement>(".overlay-inner button, .overlay-inner a[href], .overlay-inner input")].filter(
+        (el) => !el.hidden && !el.closest("[hidden]"),
+      );
+    expect(focusable().length).toBeGreaterThan(2);
+    focusable().at(-1)!.focus();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+    expect(document.activeElement).toBe(focusable()[0]);
+    focusable()[0]!.focus();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true }));
+    expect(document.activeElement).toBe(focusable().at(-1));
+  });
+
   it("the open-library event opens the library and the open-overlay event still opens stories", async () => {
     document.body.innerHTML = `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="Build your Moon-base air"></section><div id="overlay" hidden></div>`;
     const c = ctx();

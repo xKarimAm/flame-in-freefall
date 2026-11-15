@@ -8,7 +8,7 @@ import type { AppState, AtmosphereId, DataApi, Experiment, Family, IncidentsData
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { SELECT_INVESTIGATION, mount } from "./index";
-import { TILT_MS, easeOutCubic, mountTilt, tiltPose } from "./tilt";
+import { TILT_MS, easeOutCubic, mountTilt, tiltPose, tiltProgress } from "./tilt";
 import { chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { dotKind, noPressureRows, refShape } from "./plan";
@@ -684,6 +684,15 @@ describe("three.js tilt", () => {
     expect(tilted.pos[1]).toBeLessThan(0);
     expect(tilted.pos[2]).toBeLessThan(8);
     expect(tilted.look).not.toEqual(flat.look);
+  });
+
+  it("runs the ease on the TILT_MS clock: halfway at 300 ms, done from 600 ms on", () => {
+    expect(tiltProgress(0, 1, 0)).toBe(0);
+    expect(tiltProgress(0, 1, 300)).toBe(0.5);
+    expect(tiltProgress(0, 1, TILT_MS)).toBe(1);
+    expect(tiltProgress(0, 1, TILT_MS + 400)).toBe(1);
+    expect(tiltProgress(1, 0, 300)).toBe(0.5);
+    expect(tiltProgress(1, 0, TILT_MS)).toBe(0);
   });
 
   it("keeps the SVG lunar band and a visible chart on tilt pages without WebGL", () => {

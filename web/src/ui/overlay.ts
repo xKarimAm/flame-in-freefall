@@ -26,7 +26,26 @@ export function mountOverlay(
     opener?.focus({ preventScroll: true });
   }
   function onKey(e: KeyboardEvent): void {
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") {
+      close();
+      return;
+    }
+    // focus trap: Tab never leaves the modal while it is open
+    if (e.key !== "Tab" || root.hidden) return;
+    const items = [
+      ...root.querySelectorAll<HTMLElement>(".overlay-inner button, .overlay-inner a[href], .overlay-inner input"),
+    ].filter((el) => !el.hidden && !el.closest("[hidden]"));
+    if (!items.length) return;
+    const first = items[0]!;
+    const last = items[items.length - 1]!;
+    const active = document.activeElement as HTMLElement | null;
+    if (e.shiftKey && (active === first || !root.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   /** What a story card matches: titles, families, and the investigations it cites (titles, acronyms, fuels). */
@@ -34,6 +53,11 @@ export function mountOverlay(
     const id = sec.dataset.story ?? "";
     const bits = [id, sec.dataset.title ?? ""];
     const story = stories.find((s) => s.id === id);
+    if (story) {
+      const qKey = story.title_key.replace(/\.title$/, ".question");
+      const q = t(qKey);
+      if (q !== qKey) bits.push(q);
+    }
     for (const scene of story?.scenes ?? []) {
       for (const beat of scene.beats) {
         for (const f of beat.stage.show_families ?? []) bits.push(f, t(`ui.family.${f}`));

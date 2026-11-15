@@ -20,6 +20,15 @@ export function num(value: number, digits: number, unit: string, href: string): 
   return cite(unit ? `${text} ${unit}` : text, href);
 }
 
+/** A count from the data files, linked to the built tests file it was counted from. */
+export function dataLink(text: string): HTMLAnchorElement {
+  const a = document.createElement("a");
+  a.href = "data/tests.json";
+  a.setAttribute("download", "");
+  a.textContent = text;
+  return a;
+}
+
 /** Same, but null shows a dash and the words "not recorded" (never 0). */
 export function numOrMissing(
   t: (key: string) => string,

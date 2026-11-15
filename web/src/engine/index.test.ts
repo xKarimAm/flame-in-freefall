@@ -44,8 +44,8 @@ describe("engine mount", () => {
   );
   // the moon-air beat with live sliders (kind "interactive")
   const slidersBeat = flat.findIndex((f) => f.story.id === "moon-air" && f.beat.stage.sliders);
-  // a beat with no sources and no astronaut key, for the fallback assertions
-  const bare = flat.findIndex((f) => f.beat.sources.length === 0 && f.beat.text.astronaut === undefined);
+  // a beat with no astronaut key, for the fallback assertions (every beat has sources now)
+  const bare = flat.findIndex((f) => f.beat.text.astronaut === undefined);
 
   it("renders sections and steps with the DOM conventions", () => {
     const { el, steps } = setup();
@@ -67,7 +67,14 @@ describe("engine mount", () => {
     expect(links[0].target).toBe("_blank");
     expect(links[0].rel).toBe("noopener");
     expect(step.textContent).toContain(dicts.en!["ui.engine.sources"]);
-    expect(steps[bare].querySelector("ul, a")).toBeNull(); // no sources: no list
+    expect(steps.every((s) => s.querySelector("ul.step-sources"))).toBe(true); // every beat lists a source
+  });
+
+  it("puts the page dots first in DOM order, ahead of the cover", () => {
+    const { el } = setup();
+    const order = [...el.children].map((c) => c.className);
+    expect(order[0]).toContain("page-dots");
+    expect(order[1]).toContain("cover");
   });
 
   it("activates the first beat on mount", () => {
@@ -120,7 +127,8 @@ describe("engine mount", () => {
     const covers = el.querySelectorAll(".cover");
     expect(covers).toHaveLength(1);
     expect(covers[0].classList.contains("step")).toBe(false);
-    expect(el.firstElementChild).toBe(covers[0]);
+    expect(el.children[0].classList.contains("page-dots")).toBe(true); // dots nav first for keyboard users
+    expect(el.children[1]).toBe(covers[0]);
     expect(covers[0].querySelector("h1")!.textContent).toBe(dicts.en!["ui.cover.title"]);
     expect(covers[0].querySelector(".cover-lead")!.textContent).toBe(dicts.en!["ui.cover.lead"]);
     expect(covers[0].querySelector(".cover-cue")!.textContent).toBe(dicts.en!["ui.cover.cue"]);

@@ -300,13 +300,15 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   }
 
   function sortedTestRows(placed: Set<string>): TestRun[] {
+    // missing values sort last in both directions, never first when descending
+    const missing = testSortDir === 1 ? Infinity : -Infinity;
     const val = (r: TestRun): string | number => {
       switch (testSortKey) {
         case "investigation": return api.experiment(r.investigation)?.acronym ?? r.investigation;
         case "fuel": return r.fuel ?? "";
-        case "o2": return r.o2_pct ?? Infinity;
-        case "pressure": return r.pressure_kpa ?? Infinity;
-        case "flow": return r.flow_cm_s ?? Infinity;
+        case "o2": return r.o2_pct ?? missing;
+        case "pressure": return r.pressure_kpa ?? missing;
+        case "flow": return r.flow_cm_s ?? missing;
         case "outcome": return r.outcome;
         case "source": return r.id;
         case "placed": return placed.has(r.id) ? 0 : 1;
@@ -325,7 +327,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     const rows = sortedTestRows(placed);
     return h("div", { class: "tests-tab" },
       h("table", { class: "tests-table" },
-        h("caption", {}, h("span", { "data-own": true }, t("ui.sheet.tests-caption", { n: rows.length }))),
+        h("caption", {}, h("span", { "data-own": true }, t("ui.sheet.tests-matching", { n: rows.length }))),
         testHead(),
         h("tbody", {}, ...rows.map((r) => {
           const e = api.experiment(r.investigation);
@@ -414,9 +416,19 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   }
 
   function build(): void {
-    tabBtns = (["investigations", "margins", "tests"] as Tab[]).map((k) => {
+    const order: Tab[] = ["investigations", "margins", "tests"];
+    tabBtns = order.map((k) => {
       const b = h("button", { type: "button", role: "tab", class: "btn tab" }, t(`ui.sheet.tab.${k}`));
       b.addEventListener("click", () => { tab = k; render(); });
+      // ARIA tabs pattern: Left/Right move between tabs and activate the new one
+      b.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        e.preventDefault();
+        const next = order[(order.indexOf(k) + (e.key === "ArrowRight" ? 1 : order.length - 1)) % order.length]!;
+        tab = next;
+        render();
+        tabBtns.find(([t]) => t === next)![1].focus();
+      });
       return [k, b];
     });
     body = h("div", { class: "sheet-body", role: "tabpanel" });

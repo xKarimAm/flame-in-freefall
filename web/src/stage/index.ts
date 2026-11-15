@@ -5,6 +5,7 @@ import "./stage.css";
 import { SLIDER_RANGE } from "../contract";
 import type { AppState, Ctx, Incident, NearestRow, PlacedTest } from "../contract";
 import { queryFromState } from "../store";
+import { dataLink } from "../ui/dom";
 import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartScales, niceRange, wrap } from "./layout";
 import type { Size } from "./layout";
 import type { Scales } from "./layout";
@@ -100,14 +101,6 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   function nearestRows(state: AppState): NearestRow[] {
     const query = queryFromState(state);
     return query ? api.nearest(query, 10, state.family ?? undefined).rows : [];
-  }
-
-  /** A number from the data files, linked to the built tests file it was counted from. */
-  function dataLink(text: string): HTMLAnchorElement {
-    const a = html("a", undefined, text);
-    a.href = "data/tests.json";
-    a.setAttribute("download", "");
-    return a;
   }
 
   function dotTitle(row: PlacedTest): string {

@@ -6,6 +6,7 @@
 // the real plotted total once every family has arrived. Flat colour from tokens only, never yellow.
 import type { Ctx, Family } from "../contract";
 import { FAMILIES } from "../contract";
+import { dataLink } from "../ui/dom";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -58,15 +59,6 @@ export function paradeActive(ctx: Ctx): boolean {
     !s.stage.reference &&
     !s.stage.sliders
   );
-}
-
-/** A count from the data files, linked to the built tests file it was counted from. */
-function dataLink(text: string): HTMLAnchorElement {
-  const a = document.createElement("a");
-  a.href = "data/tests.json";
-  a.setAttribute("download", "");
-  a.textContent = text;
-  return a;
 }
 
 /** Counts the number up over 600 ms; still and complete under reduced motion. */

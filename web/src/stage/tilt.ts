@@ -21,6 +21,11 @@ export function easeOutCubic(k: number): number {
   return 1 - Math.pow(1 - c, 3);
 }
 
+/** The animation loop's own clock: fraction of the TILT_MS ease elapsed, clamped. Pure. */
+export function tiltProgress(from: number, to: number, elapsedMs: number): number {
+  return from + (to - from) * Math.min(1, elapsedMs / TILT_MS);
+}
+
 export interface Pose {
   pos: [number, number, number];
   look: [number, number, number];
@@ -186,7 +191,7 @@ export function mountTilt(container: HTMLElement, ctx: Ctx, onError: () => void)
       const step = (): void => {
         if (token !== animToken || dead) return;
         try {
-          k = from + (to - from) * Math.min(1, (performance.now() - start) / TILT_MS);
+          k = tiltProgress(from, to, performance.now() - start);
           applyPose();
         } catch (e) { fail(e); return; }
         if (k !== to) raf = requestAnimationFrame(step);
