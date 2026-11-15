@@ -2,13 +2,16 @@
   "saffire": {
     "core_quote": "The objectives of SAFFIRE-II are to determine how rapidly a large scale fire grows in low-gravity and to investigate the low-g flammability limits compared to those obtained in NASA’s normal gravity material flammability screening test.",
     "core_investigation": "PSI-99",
-    "hook": "They lit a big fire in space on purpose to learn how fast it can grow.",
-    "reveal": "After leaving the station, Saffire set out to light samples inside a long duct where fans moved air past the flames, with cameras and heat sensors watching how fast fire grew, using Sibal fabric mixed with silicone and PMMA in flat and structure forms and with Nomex.",
-    "bridge": "Knowing how these fabrics and test samples burn in low gravity helps think about safer air for a Moon base.",
+    "hook": "They lit a large fire in space on purpose. It rode in the Cygnus resupply vehicle after it left the station while cameras watched.",
+    "reveal": "Saffire set out to test how fast a large fire grows in low-gravity, using separate pieces of Sibal fabric, silicone, structure PMMA, flat PMMA, and PMMA with Nomex in a flow duct with fans moving air past them while cameras and heat sensors watched.",
+    "bridge": "Knowing how fabric burns in moving air with low gravity helps us think about what air is safe to breathe in a Moon home.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T04:15:48Z"
-    }
+      "made_at": "2026-11-15T05:55:03Z"
+    },
+    "engineer_text": "The experiment set out to measure how rapidly a large scale fire grows in low gravity and to compare low gravity flammability limits with those from NASA normal gravity screening.",
+    "engineer_quote": "The objectives of SAFFIRE-II are to determine how rapidly a large scale fire grows in low-gravity and to investigate the low-g flammability limits compared to those obtained in NASA’s normal gravity material flammability screening test.",
+    "engineer_investigation": "PSI-99"
   },
   "bass": {
     "core_quote": "Begin to bridge the gap between the normal gravity NASA-STD-6001 Test#1 method, ground-based microgravity tests, and actual material flammability in microgravity.",
@@ -19,7 +22,10 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:13:14Z"
-    }
+    },
+    "engineer_text": "This investigation set out to bridge ground-based flammability tests and actual material flammability in microgravity by watching flames burn for longer times in flight.",
+    "engineer_quote": "Begin to bridge the gap between the normal gravity NASA-STD-6001 Test#1 method, ground-based microgravity tests, and actual material flammability in microgravity.",
+    "engineer_investigation": "PSI-26"
   },
   "bass-ii": {
     "core_quote": "Study the ignition, flame growth, flame spread, and extinction limits for solid fuels burning in low-velocity forced flows in microgravity.",
@@ -30,7 +36,10 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:13:40Z"
-    }
+    },
+    "engineer_text": "Results from this experiment contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth.",
+    "engineer_quote": "BASS-II results contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth.",
+    "engineer_investigation": "PSI-25"
   },
   "flex": {
     "core_quote": "The FLEX (Flame Extinguishment Experiment) investigation aims to map the flammability limits of liquid fuels in microgravity environments, measure the effectiveness of various gaseous fire suppressants such as CO2, He, and SF6, and develop reliable predictive models for combustion limits under reduced gravity conditions.",
@@ -41,7 +50,10 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:14:49Z"
-    }
+    },
+    "engineer_text": "This investigation aims to map when liquid fuels can burn in weightlessness and test how well different gas suppressants can put those flames out to help improve fire safety procedures for future missions.",
+    "engineer_quote": "These investigations are essential for advancing the fundamental understanding of combustion processes in microgravity and enhancing fire safety protocols for future space missions.",
+    "engineer_investigation": "PSI-69"
   },
   "flex-2": {
     "core_quote": "The primary goal of the FLEX-2 flight experiments is to extend the results of FLEX-1 to fuels and environmental conditions that mimic real combustor conditions, as well as, provide benchmark experimental data on bi-component droplet combustion over a wide range of initial conditions in order to validate numerical simulations and to develop new theoretical models.",
@@ -52,7 +64,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:07:35Z"
-    }
+    },
+    "engineer_absent": true
   },
   "cfi": {
     "core_quote": "Analyze the effects of helium dilution on cool flame behavior.",
@@ -63,29 +76,32 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:08:12Z"
-    }
+    },
+    "engineer_absent": true
   },
   "cfi-g": {
-    "core_quote": "Determine the conditions for which cool diffusion flames occur for propane, n-butane, and n-pentane; normal and inverse flames; and a broad range of Zst, Tad, and fluent flow rate.",
+    "core_quote": "Plan and support flight testing on the International Space Station (ISS).",
     "core_investigation": "PSI-159",
-    "hook": "Think like a cook with a recipe book, trying different fuels and flows to find the mix that makes a cool flame.",
-    "reveal": "They made round flames on the space station with different fuels and mixes, changing flows and pressures in both normal and backward directions, and watched them with cameras and light and heat tools.",
-    "bridge": "This work is not about Moon base air, it is about the basic recipe for when cool flames show up.",
+    "hook": "Think of this like a recipe book for cool flames that the team plans to test on the space station.",
+    "reveal": "The plan is to make round flames on the space station with different fuels and air mixes, changing flow and pressure and flame direction, and watching with cameras and heat tools to learn when cool flames could form.",
+    "bridge": "This study is not about Moon base air but about the basic recipe for when cool flames might appear.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:08:38Z"
-    }
+      "made_at": "2026-11-15T05:53:45Z"
+    },
+    "engineer_absent": true
   },
   "flame-design": {
     "core_quote": "Obtain soot-inception limits of quasi-steady normal and inverse spherical diffusion flames as functions of flow rate, Zst, amount of inert (N2 or CO2), and pressure for C2H4 and CH4 flames.",
     "core_investigation": "PSI-10",
-    "hook": "I am trying to shape a round flame that stays clean instead of making soot.",
-    "reveal": "They lit round flames while falling and on the space station, tried many mixes, flows and pressures in both directions, and watched size, color, heat and soot with cameras and sensors.",
-    "bridge": "This test is not about Moon base air, it is about learning when round flames make soot and when they fade out.",
+    "hook": "We plan to shape round flames to learn when soot begins to show.",
+    "reveal": "The team plans to try round flames in drop towers and on the space station using different flows and pressures, and to watch when soot starts and how size and color and heat change with cameras and heat sensors.",
+    "bridge": "This study is about how round flames form soot, not about the air in a Moon base.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:09:17Z"
-    }
+      "made_at": "2026-11-15T05:54:28Z"
+    },
+    "engineer_absent": true
   },
   "bre": {
     "core_quote": "The BRE flight program seeks to establish the burning conditions in a quiescent microgravity ambient in terms of material properties.",
@@ -96,7 +112,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:14:01Z"
-    }
+    },
+    "engineer_absent": true
   },
   "cld": {
     "core_quote": "Characterize the behavior of weak coflow diffusion flames of methane and ethylene, as a function of velocity and fuel dilution, through measurement of flame shape, lift-off heights, temperatures and extinction limits.",
@@ -107,7 +124,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:14:24Z"
-    }
+    },
+    "engineer_absent": true
   },
   "e-field": {
     "core_quote": "The objective of this investigation is to better understand the relationship between electric field voltage and chemi-ion current, analyze the dynamic response of flames to electric field changes, evaluate soot formation, and characterize stabilized near-limit lifted flames.",
@@ -118,7 +136,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:10:53Z"
-    }
+    },
+    "engineer_absent": true
   },
   "s-flame": {
     "core_quote": "to compare with detailed computational simulation to assess transport properties and detailed chemical kinetics (including chemiluminescence)",
@@ -129,7 +148,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:15:18Z"
-    }
+    },
+    "engineer_absent": true
   },
   "slice": {
     "core_quote": "The objective of this investigation is to better understand the structure and stability of laminar diffusion flames in microgravity.",
@@ -140,7 +160,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:16:36Z"
-    }
+    },
+    "engineer_absent": true
   },
   "spice": {
     "core_quote": "The objective of SPICE is to better understand the complex process of combustion by observing flames in a microgravity environment aboard the International Space Station (ISS) and analogous ground experiments.",
@@ -151,7 +172,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:12:27Z"
-    }
+    },
+    "engineer_absent": true
   },
   "same": {
     "core_quote": "One of the major goals of this investigation was to quantify the sizes that the liquid smoke particulate achieves in low gravity and to relate the droplet size distribution to the smoke generation and smoke transport conditions in the experiment.",
@@ -162,7 +184,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T04:16:13Z"
-    }
+    },
+    "engineer_absent": true
   },
   "ground-soot": {
     "core_quote": "The objective of this investigation was to integrate computational and experimental methods to derive temperature distributions and soot volume fractions from the Smoke Point in Coflow Experiment (SPICE) data available in PSI.",
@@ -173,7 +196,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:13:24Z"
-    }
+    },
+    "engineer_absent": true
   },
   "ground-models": {
     "core_quote": "The objective of this research was to develop and validate new flamelet generated manifold (FGM) modeling techniques for concurrent flame spread in microgravity.",
@@ -184,7 +208,10 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:13:50Z"
-    }
+    },
+    "engineer_text": "This research set out to develop modeling techniques for flame spread to help enable prediction of flammability limits for spacecraft materials and support spacecraft safety and hazard mitigation.",
+    "engineer_quote": "Ultimately, the long-term goal was to enable accurate prediction of flammability limits for spacecraft materials and to provide a tool that could also serve as a subgrid-scale model in large-eddy simulations of fires, supporting spacecraft safety and hazard mitigation.",
+    "engineer_investigation": "PSI-62"
   },
   "ground-cool-flames": {
     "core_quote": "Focusing on both small and large droplets, the work mapped stability windows for ignition, sustained oscillation, transitions to hot ignition and warm-flame behavior, and extinction under microgravity.",
@@ -195,7 +222,8 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:14:18Z"
-    }
+    },
+    "engineer_absent": true
   },
   "ground-flammability": {
     "core_quote": "Develop a new diagram of the flammability limits of diffusional cool flames affected by radiation, diffusion, and convection.",
@@ -206,6 +234,7 @@
     "ai": {
       "model": "muse-spark-1.3-contributor",
       "made_at": "2026-11-15T00:14:49Z"
-    }
+    },
+    "engineer_absent": true
   }
 }

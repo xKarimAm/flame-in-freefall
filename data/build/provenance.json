@@ -1,0 +1,987 @@
+[
+  {
+    "file": "csv_69_34.csv",
+    "investigation": "PSI-69",
+    "mapped": true,
+    "rows_read": 274,
+    "rows_mapped": 274,
+    "columns": {
+      "o2_pct": "O initial ambient composition; mole fraction",
+      "pressure_kpa": "Ambient pressure; mmHg",
+      "flow_cm_s": null,
+      "outcome": "Test end",
+      "burn_time_s": "Burn time; s"
+    },
+    "units": {
+      "o2_pct": {
+        "column": "O initial ambient composition; mole fraction",
+        "kind": "fraction",
+        "conversion": "mole fraction x100 to percent"
+      },
+      "pressure_kpa": {
+        "column": "Ambient pressure; mmHg",
+        "unit": "mmHg",
+        "factor": 0.133322,
+        "cell_overrides": []
+      },
+      "burn_time_s": {
+        "column": "Burn time; s",
+        "unit": "s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 274,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 273,
+        "empty": 0,
+        "unparsable": 1
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 274,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 268,
+        "empty": 6,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": [
+      {
+        "field": "pressure_kpa",
+        "row": 114,
+        "raw": "0"
+      }
+    ]
+  },
+  {
+    "file": "csv_68_35.csv",
+    "investigation": "PSI-68",
+    "mapped": true,
+    "rows_read": 8,
+    "rows_mapped": 8,
+    "columns": {
+      "o2_pct": "Oxygen Mole Fraction",
+      "pressure_kpa": "Ambient Pressure (atm)",
+      "flow_cm_s": "Flow Velocity (cm/s)",
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "o2_pct": {
+        "column": "Oxygen Mole Fraction",
+        "kind": "fraction",
+        "conversion": "mole fraction x100 to percent"
+      },
+      "pressure_kpa": {
+        "column": "Ambient Pressure (atm)",
+        "unit": "atm",
+        "factor": 101.325,
+        "cell_overrides": []
+      },
+      "flow_cm_s": {
+        "column": "Flow Velocity (cm/s)",
+        "unit": "cm/s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 8,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 8
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 8
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 8,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": [
+      {
+        "field": "pressure_kpa",
+        "row": 1,
+        "raw": "0.5; 1.0; 1.5; 2.0; or 3.0"
+      },
+      {
+        "field": "flow_cm_s",
+        "row": 1,
+        "raw": "0.1 - 5"
+      },
+      {
+        "field": "pressure_kpa",
+        "row": 2,
+        "raw": "0.5; 1.0; 1.5; 2.0; or 3.0"
+      }
+    ]
+  },
+  {
+    "file": "csv_39_33.csv",
+    "investigation": "PSI-39",
+    "mapped": true,
+    "rows_read": 87,
+    "rows_mapped": 87,
+    "columns": {
+      "o2_pct": "Oxygen",
+      "pressure_kpa": "Pressure",
+      "flow_cm_s": null,
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "o2_pct": {
+        "column": "Oxygen",
+        "kind": "fraction",
+        "conversion": "mole fraction x100 to percent"
+      },
+      "pressure_kpa": {
+        "column": "Pressure",
+        "unit": "atm",
+        "factor": 101.325,
+        "cell_overrides": []
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 87,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 84,
+        "empty": 0,
+        "unparsable": 3
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 87,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": [
+      {
+        "field": "pressure_kpa",
+        "row": 56,
+        "raw": "5 atm"
+      },
+      {
+        "field": "pressure_kpa",
+        "row": 57,
+        "raw": "5 atm"
+      },
+      {
+        "field": "pressure_kpa",
+        "row": 58,
+        "raw": "5 atm"
+      }
+    ]
+  },
+  {
+    "file": "csv_159_50.csv",
+    "investigation": "PSI-159",
+    "mapped": true,
+    "rows_read": 179,
+    "rows_mapped": 179,
+    "columns": {
+      "o2_pct": " XO2 before test",
+      "pressure_kpa": "approx p (bar)",
+      "flow_cm_s": null,
+      "outcome": "Self-ext or flow term",
+      "burn_time_s": "burn time (sec)"
+    },
+    "units": {
+      "o2_pct": {
+        "column": " XO2 before test",
+        "kind": "fraction",
+        "conversion": "mole fraction x100 to percent"
+      },
+      "pressure_kpa": {
+        "column": "approx p (bar)",
+        "unit": "bar",
+        "factor": 100.0,
+        "cell_overrides": []
+      },
+      "burn_time_s": {
+        "column": "burn time (sec)",
+        "unit": "s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 179,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 179,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 134,
+        "empty": 0,
+        "unparsable": 45
+      },
+      "burn_time_s": {
+        "parsed": 175,
+        "empty": 4,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": [
+      {
+        "field": "outcome",
+        "row": 24,
+        "raw": "-"
+      },
+      {
+        "field": "outcome",
+        "row": 27,
+        "raw": "-"
+      },
+      {
+        "field": "outcome",
+        "row": 28,
+        "raw": "-"
+      }
+    ]
+  },
+  {
+    "file": "csv_159_51.csv",
+    "investigation": "PSI-159",
+    "mapped": true,
+    "rows_read": 154,
+    "rows_mapped": 154,
+    "columns": {
+      "o2_pct": "XO2",
+      "pressure_kpa": "approx p (bar)",
+      "flow_cm_s": null,
+      "outcome": "Self -ext or flow term",
+      "burn_time_s": "burn time (sec)"
+    },
+    "units": {
+      "o2_pct": {
+        "column": "XO2",
+        "kind": "fraction",
+        "conversion": "mole fraction x100 to percent"
+      },
+      "pressure_kpa": {
+        "column": "approx p (bar)",
+        "unit": "bar",
+        "factor": 100.0,
+        "cell_overrides": []
+      },
+      "burn_time_s": {
+        "column": "burn time (sec)",
+        "unit": "s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 154,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 154,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 148,
+        "empty": 0,
+        "unparsable": 6
+      },
+      "burn_time_s": {
+        "parsed": 154,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": [
+      {
+        "field": "outcome",
+        "row": 30,
+        "raw": "-"
+      },
+      {
+        "field": "outcome",
+        "row": 85,
+        "raw": "-"
+      },
+      {
+        "field": "outcome",
+        "row": 93,
+        "raw": "-"
+      }
+    ]
+  },
+  {
+    "file": "csv_10_55.csv",
+    "investigation": "PSI-10",
+    "mapped": true,
+    "rows_read": 207,
+    "rows_mapped": 207,
+    "columns": {
+      "o2_pct": "XO2 (init)",
+      "pressure_kpa": "pmean (atm)",
+      "flow_cm_s": null,
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "o2_pct": {
+        "column": "XO2 (init)",
+        "kind": "fraction",
+        "conversion": "mole fraction x100 to percent"
+      },
+      "pressure_kpa": {
+        "column": "pmean (atm)",
+        "unit": "atm",
+        "factor": 101.325,
+        "cell_overrides": []
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 207,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 187,
+        "empty": 20,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 207,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_10_56.csv",
+    "investigation": "PSI-10",
+    "mapped": true,
+    "rows_read": 120,
+    "rows_mapped": 120,
+    "columns": {
+      "o2_pct": "XO2",
+      "pressure_kpa": "pmean (atm)",
+      "flow_cm_s": null,
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "o2_pct": {
+        "column": "XO2",
+        "kind": "fraction",
+        "conversion": "mole fraction x100 to percent"
+      },
+      "pressure_kpa": {
+        "column": "pmean (atm)",
+        "unit": "atm",
+        "factor": 101.325,
+        "cell_overrides": []
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 109,
+        "empty": 0,
+        "unparsable": 11
+      },
+      "pressure_kpa": {
+        "parsed": 120,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 120,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": [
+      {
+        "field": "o2_pct",
+        "row": 30,
+        "raw": "RAMP"
+      },
+      {
+        "field": "o2_pct",
+        "row": 31,
+        "raw": "RAMP"
+      },
+      {
+        "field": "o2_pct",
+        "row": 32,
+        "raw": "RAMP"
+      }
+    ]
+  },
+  {
+    "file": "csv_107_36.csv",
+    "investigation": "PSI-107",
+    "mapped": true,
+    "rows_read": 469,
+    "rows_mapped": 469,
+    "columns": {
+      "o2_pct": null,
+      "pressure_kpa": null,
+      "flow_cm_s": "Air Rate (cm/s)",
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "flow_cm_s": {
+        "column": "Air Rate (cm/s)",
+        "unit": "cm/s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 444,
+        "empty": 25,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 469,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_98_39.csv",
+    "investigation": "PSI-98",
+    "mapped": true,
+    "rows_read": 4,
+    "rows_mapped": 4,
+    "columns": {
+      "o2_pct": "Percent O2",
+      "pressure_kpa": null,
+      "flow_cm_s": "Air Flow (cm/s)",
+      "outcome": null,
+      "burn_time_s": "Burn Time (s)"
+    },
+    "units": {
+      "o2_pct": {
+        "column": "Percent O2",
+        "kind": "percent",
+        "conversion": "percent as recorded"
+      },
+      "flow_cm_s": {
+        "column": "Air Flow (cm/s)",
+        "unit": "cm/s"
+      },
+      "burn_time_s": {
+        "column": "Burn Time (s)",
+        "unit": "s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 2,
+        "empty": 2,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 2,
+        "empty": 2,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 2,
+        "empty": 2,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 2,
+        "empty": 2,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_99_39.csv",
+    "investigation": "PSI-99",
+    "mapped": true,
+    "rows_read": 11,
+    "rows_mapped": 11,
+    "columns": {
+      "o2_pct": "Percent O2 (Note 1)",
+      "pressure_kpa": null,
+      "flow_cm_s": "Air Flow (cm/s)",
+      "outcome": null,
+      "burn_time_s": "Burn Time (s)"
+    },
+    "units": {
+      "o2_pct": {
+        "column": "Percent O2 (Note 1)",
+        "kind": "percent",
+        "conversion": "percent as recorded"
+      },
+      "flow_cm_s": {
+        "column": "Air Flow (cm/s)",
+        "unit": "cm/s"
+      },
+      "burn_time_s": {
+        "column": "Burn Time (s)",
+        "unit": "s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 9,
+        "empty": 2,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 9,
+        "empty": 2,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 5,
+        "empty": 2,
+        "unparsable": 4
+      },
+      "burn_time_s": {
+        "parsed": 5,
+        "empty": 2,
+        "unparsable": 4
+      }
+    },
+    "unparsable_cells": [
+      {
+        "field": "burn_time_s",
+        "row": 1,
+        "raw": "Insignificant"
+      },
+      {
+        "field": "outcome",
+        "row": 1,
+        "raw": "Insignificant"
+      },
+      {
+        "field": "burn_time_s",
+        "row": 2,
+        "raw": "Insignificant"
+      }
+    ]
+  },
+  {
+    "file": "csv_100_40.csv",
+    "investigation": "PSI-100",
+    "mapped": true,
+    "rows_read": 2,
+    "rows_mapped": 2,
+    "columns": {
+      "o2_pct": null,
+      "pressure_kpa": null,
+      "flow_cm_s": "Air Flow ",
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "flow_cm_s": {
+        "column": "Air Flow ",
+        "unit": "cm/s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 2,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 2,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_25_37.csv",
+    "investigation": "PSI-25",
+    "mapped": true,
+    "rows_read": 129,
+    "rows_mapped": 129,
+    "columns": {
+      "o2_pct": "Calibrated  initial O2 % by vol ",
+      "pressure_kpa": null,
+      "flow_cm_s": null,
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "o2_pct": {
+        "column": "Calibrated  initial O2 % by vol ",
+        "kind": "percent",
+        "conversion": "percent as recorded"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 129,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 129,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_26_34.csv",
+    "investigation": "PSI-26",
+    "mapped": true,
+    "rows_read": 122,
+    "rows_mapped": 122,
+    "columns": {
+      "o2_pct": null,
+      "pressure_kpa": null,
+      "flow_cm_s": null,
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {},
+    "fields": {
+      "o2_pct": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 122,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_101_37.csv",
+    "investigation": "PSI-101",
+    "mapped": true,
+    "rows_read": 109,
+    "rows_mapped": 109,
+    "columns": {
+      "o2_pct": null,
+      "pressure_kpa": null,
+      "flow_cm_s": "Inlet velocity (cm/s)",
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "flow_cm_s": {
+        "column": "Inlet velocity (cm/s)",
+        "unit": "cm/s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 109,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 109,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_102_35.csv",
+    "investigation": "PSI-102",
+    "mapped": true,
+    "rows_read": 8,
+    "rows_mapped": 8,
+    "columns": {
+      "o2_pct": null,
+      "pressure_kpa": null,
+      "flow_cm_s": "Air Flow (cm/s)",
+      "outcome": null,
+      "burn_time_s": null
+    },
+    "units": {
+      "flow_cm_s": {
+        "column": "Air Flow (cm/s)",
+        "unit": "cm/s"
+      }
+    },
+    "fields": {
+      "o2_pct": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "pressure_kpa": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      },
+      "flow_cm_s": {
+        "parsed": 4,
+        "empty": 4,
+        "unparsable": 0
+      },
+      "outcome": {
+        "parsed": 0,
+        "empty": 8,
+        "unparsable": 0
+      },
+      "burn_time_s": {
+        "parsed": 0,
+        "empty": 0,
+        "unparsable": 0
+      }
+    },
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_20_38.csv",
+    "investigation": "PSI-20",
+    "mapped": false,
+    "rows_read": 18,
+    "rows_mapped": 0,
+    "reason": "one row per test day with a list of O2 values and no pressure; not individual runs",
+    "columns": {},
+    "units": {},
+    "fields": {},
+    "unparsable_cells": []
+  },
+  {
+    "file": "bre.csv",
+    "investigation": "PSI-20",
+    "mapped": false,
+    "rows_read": 18,
+    "rows_mapped": 0,
+    "reason": "same table as csv_20_38.csv (copy); not individual runs",
+    "columns": {},
+    "units": {},
+    "fields": {},
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_21_39.csv",
+    "investigation": "PSI-21",
+    "mapped": false,
+    "rows_read": 32,
+    "rows_mapped": 0,
+    "reason": "one row per test day with a fuel-concentration range; not individual runs",
+    "columns": {},
+    "units": {},
+    "fields": {},
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_22_49.csv",
+    "investigation": "PSI-22",
+    "mapped": false,
+    "rows_read": 32,
+    "rows_mapped": 0,
+    "reason": "one row per test day, no O2 or pressure columns; not individual runs",
+    "columns": {},
+    "units": {},
+    "fields": {},
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_23_42.csv",
+    "investigation": "PSI-23",
+    "mapped": false,
+    "rows_read": 18,
+    "rows_mapped": 0,
+    "reason": "one row per test day with approximate atmosphere text; not individual runs",
+    "columns": {},
+    "units": {},
+    "fields": {},
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_106_36.csv",
+    "investigation": "PSI-106",
+    "mapped": false,
+    "rows_read": 12,
+    "rows_mapped": 0,
+    "reason": "one row per test day with fuel text only; not individual runs",
+    "columns": {},
+    "units": {},
+    "fields": {},
+    "unparsable_cells": []
+  },
+  {
+    "file": "csv_142_49.csv",
+    "investigation": "PSI-142",
+    "mapped": false,
+    "rows_read": 8,
+    "rows_mapped": 0,
+    "reason": "index of data sets and figures in a publication; not test runs",
+    "columns": {},
+    "units": {},
+    "fields": {},
+    "unparsable_cells": []
+  }
+]
