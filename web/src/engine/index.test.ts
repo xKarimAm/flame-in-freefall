@@ -583,8 +583,8 @@ describe("engine mount", () => {
   });
 
   it("R19: the cover scales with the viewport and centres the dial and flame on wide screens", () => {
-    // the title grows with the viewport instead of staying at 64 px
-    expect(css).toMatch(/\.cover-title\s*\{[^}]*font-size:\s*clamp\([^)]*vw/);
+    // the title stays at the cover token: at 6vw it wrapped to three lines (taste inspector, headline-lines)
+    expect(css).toMatch(/\.cover-title\s*\{[^}]*font-size:\s*var\(--text-cover\)/);
     const stageCss = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "stage", "stage.css"), "utf8");
     // the dial (and the flame drawn inside it) grows with the viewport while the cover is on
     expect(stageCss).toMatch(/body\[data-cover="true"\][\s\S]*?\.o2-dial\s*\{[^}]*height:\s*clamp\([^)]*vh/);

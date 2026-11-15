@@ -123,3 +123,6 @@ body[data-lens="analyst"] #stage { display: none; }
 @media (max-width: 767px) {
   :root { --chrome-h: 104px; }
 }
+
+/* the slider panel belongs to its own page: it never stays over the cover or a chapter page */
+body[data-stage-hidden="true"] #panel { display: none; }

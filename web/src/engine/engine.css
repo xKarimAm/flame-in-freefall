@@ -14,7 +14,7 @@
   max-width: 20ch;
   margin: 0;
   /* R19: the title grows with the viewport (40 px phones, 64 px near 1100 px, 96 px cap) */
-  font-size: clamp(40px, 6vw, 96px);
+  font-size: var(--text-cover); /* taste inspector: the title holds two lines at every width */
   font-weight: 700;
   line-height: 1.1;
 }
