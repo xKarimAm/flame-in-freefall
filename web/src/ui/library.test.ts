@@ -2,7 +2,7 @@
 // Generated with Muse Spark, SI-assisted. Library view tests: real data/build files, no typed-in content.
 import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Ctx, DataApi } from "../contract";
+import { FAMILIES, type Ctx, type DataApi } from "../contract";
 import { createDataApi } from "../data/index";
 import { makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
@@ -11,6 +11,7 @@ import {
   parseMoments,
   renderLibraryList,
   renderLibraryPage,
+  shelfOrder,
   type LibraryMoment,
   type LibraryStory,
 } from "./library";
@@ -77,35 +78,40 @@ describe("library", () => {
     }
   });
 
-  it("public lens: signature first, then hook, one moment as a large number, then bridge (task 53)", () => {
+  it("public lens: beats left with the hook as headline, the moment as hero right, then signature (R21)", () => {
     for (const s of stories) {
       const c = ctx();
       const page = renderLibraryPage(s, moments, c);
       expect(page.querySelector("h3.lib-title")!.textContent).toContain(s.title);
       expect(page.querySelector(".lib-voice")!.textContent).toContain(s.voice);
-      const order = [...page.children].map((el) => el.className);
-      const at = (sel: string): number => order.findIndex((k) => k.split(" ").some((w) => w === sel));
-      expect(at("lib-sig")).toBeGreaterThanOrEqual(0); // the story's own signature view, first
-      expect(at("lib-hook")).toBeGreaterThan(at("lib-sig"));
-      expect(at("lib-bridge")).toBeGreaterThan(at("lib-hook"));
-      expect(at("lib-ai")).toBeGreaterThan(at("lib-bridge"));
-      expect(page.textContent).toContain(s.hook);
-      expect(page.textContent).toContain(s.bridge);
-      expect(page.textContent).not.toContain(s.reveal);
-      expect(page.querySelector("blockquote.lib-quote")).toBeNull();
-      expect(page.querySelectorAll(".lib-moment").length).toBe(0);
+      const spread = page.querySelector(".lib-spread")!;
+      expect(spread, "two-column spread").not.toBeNull();
+      const beats = spread.querySelector(".lib-beats")!;
+      expect(beats.querySelector(".lib-hook")!.textContent).toContain(s.hook);
+      expect(beats.querySelector(".lib-bridge")!.textContent).toContain(s.bridge);
+      const hero = spread.querySelector(".lib-hero")!;
       if (!s.moments.length) {
-        expect(page.querySelector(".lib-bignum")).toBeNull(); // no moments, no large number
+        expect(hero.querySelector(".lib-bignum")).toBeNull(); // no moments, no large number
+        expect(hero.textContent).toContain("text and papers only");
       } else {
         const m = mom(s.moments[0]);
-        const big = page.querySelector(".lib-bignum")!;
-        expect(at("lib-bignum")).toBeGreaterThan(at("lib-hook"));
-        expect(at("lib-bignum")).toBeLessThan(at("lib-bridge"));
+        const big = hero.querySelector(".lib-bignum")!;
         expect(big.textContent).toContain(m.label);
         const link = big.querySelector(`a[href="${m.url}"]`)!;
         expect(link.textContent).toContain(fmtCheck(m.value));
         if (m.value_max != null) expect(link.textContent).toContain(fmtCheck(m.value_max));
+        const psiUrl = c.api.experiment(s.core.investigation)!.psi_url;
+        expect(hero.querySelector(`.lib-psi a[href="${psiUrl}"]`)).not.toBeNull(); // the PSI link rides with the hero
       }
+      expect(page.textContent).toContain(s.hook);
+      expect(page.textContent).toContain(s.bridge);
+      expect(page.textContent).not.toContain(s.reveal);
+      expect(page.querySelector("blockquote.lib-quote")).toBeNull();
+      const order = [...page.children].map((el) => el.className);
+      const at = (sel: string): number => order.findIndex((k) => k.split(" ").some((w) => w === sel));
+      expect(at("lib-spread")).toBeGreaterThanOrEqual(0);
+      expect(at("lib-sig")).toBeGreaterThan(at("lib-spread")); // the story's own signature view, after the spread
+      expect(at("lib-ai")).toBeGreaterThan(at("lib-sig"));
       const ai = page.querySelector(".lib-ai")!;
       expect(ai.textContent).toContain("AI summary");
       expect(ai.textContent).toContain(s.ai.model);
@@ -495,5 +501,120 @@ describe("library", () => {
     expect(cards.length).toBe(19);
     [...cards].find((b) => b.textContent!.includes("putting fire out"))!.click();
     expect(opened).toBe("flex");
+  });
+
+  it("the shelf walks families in FAMILIES order and keeps file order inside a family (R21)", () => {
+    const c = ctx();
+    const ordered = shelfOrder(stories, c);
+    expect(ordered).toHaveLength(19);
+    const rank = (s: LibraryStory): number => {
+      const f = c.api.familyOf(s.core.investigation);
+      return f ? FAMILIES.indexOf(f) : FAMILIES.length;
+    };
+    const ranks = ordered.map(rank);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+    for (const f of FAMILIES) {
+      const fileOrder = stories.filter((s) => c.api.familyOf(s.core.investigation) === f).map((s) => s.id);
+      expect(
+        ordered.filter((s) => c.api.familyOf(s.core.investigation) === f).map((s) => s.id),
+        `file order inside ${f}`,
+      ).toEqual(fileOrder);
+    }
+    const ghost: LibraryStory = { ...stories[0]!, id: "ghost", core: { quote: "x", investigation: "PSI-404" } };
+    expect(shelfOrder([...stories, ghost], c).at(-1)!.id).toBe("ghost"); // unknown family sorts last
+  });
+
+  it("the shelf groups cards under family headings with a family class and data counts (R21)", () => {
+    const c = ctx();
+    const list = renderLibraryList(stories, c, () => {});
+    const groups = [...list.querySelectorAll<HTMLElement>(".lib-group")];
+    const present = FAMILIES.filter((f) => stories.some((s) => c.api.familyOf(s.core.investigation) === f));
+    expect(present).toHaveLength(6); // every family has a story
+    expect(groups.map((g) => g.querySelector(".lib-group-title")!.textContent)).toEqual(
+      present.map((f) => c.t(`ui.family.${f}`)),
+    );
+    expect(list.querySelectorAll(".lib-grid")).toHaveLength(groups.length);
+    const cards = [...list.querySelectorAll<HTMLButtonElement>(".library-card")];
+    expect(cards).toHaveLength(19);
+    for (const card of cards) {
+      expect(card.querySelector(".lib-card-title")).not.toBeNull(); // at most 3 lines, in CSS
+      expect(card.querySelector(".lib-card-voice")!.textContent).toContain("Told in the voice of");
+      expect(card.className, "family class").toMatch(/fam-[a-z-]+/);
+    }
+    const flex = cards.find((b) => b.textContent!.includes("FLEX: putting fire out"))!;
+    expect(flex.className).toContain("fam-droplets");
+    expect(flex.querySelector(".lib-card-count")!.textContent).toBe("274 tests"); // counted from the data
+    const bre = cards.find((b) => b.textContent!.includes("BRE:"))!;
+    expect(bre.querySelector(".lib-card-count")!.textContent).toBe("Text and papers only");
+    // the singular comes through its own key: fake one test on PSI-20
+    const one = { ...stories[0]!, id: "one", investigations: ["PSI-20"] };
+    const solo = {
+      ...c,
+      api: {
+        ...c.api,
+        experiment: ((id: string) =>
+          id === "PSI-20" ? { ...c.api.experiment(id)!, test_count: 1 } : c.api.experiment(id)) as Ctx["api"]["experiment"],
+      },
+    };
+    expect(renderLibraryList([one], solo, () => {}).querySelector(".lib-card-count")!.textContent).toBe("1 test");
+  });
+
+  it("previous and next walk the shelf order and stop at its ends, focusing the page heading (R21)", async () => {
+    document.body.innerHTML = `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="x"></section><div id="overlay" hidden></div>`;
+    const c = ctx();
+    const root = document.getElementById("overlay")!;
+    const { openLibrary } = mountOverlay(root, c, async () => ({ stories, moments }));
+    await openLibrary(document.createElement("button"));
+    const ordered = shelfOrder(stories, c);
+    const cards = [...root.querySelectorAll<HTMLButtonElement>(".library-card")];
+    expect(cards.map((b) => b.querySelector(".lib-card-title")!.textContent)).toEqual(ordered.map((s) => s.title));
+    cards[0]!.click();
+    expect(root.querySelector(".lib-title")!.textContent).toContain(ordered[0]!.title);
+    expect(document.activeElement).toBe(root.querySelector(".lib-title"));
+    expect(root.querySelector<HTMLButtonElement>(".lib-prev")!.disabled).toBe(true); // the shelf starts here
+    expect(root.querySelector<HTMLButtonElement>(".lib-next")!.disabled).toBe(false);
+    expect(root.querySelector(".lib-next")!.textContent).toContain(ordered[1]!.title);
+    root.querySelector<HTMLButtonElement>(".lib-next")!.click();
+    expect(root.querySelector(".lib-title")!.textContent).toContain(ordered[1]!.title);
+    expect(document.activeElement).toBe(root.querySelector(".lib-title"));
+    for (let guard = 0; guard < 20 && !root.querySelector<HTMLButtonElement>(".lib-next")!.disabled; guard++) {
+      root.querySelector<HTMLButtonElement>(".lib-next")!.click();
+    }
+    expect(root.querySelector(".lib-title")!.textContent).toContain(ordered.at(-1)!.title);
+    expect(root.querySelector<HTMLButtonElement>(".lib-next")!.disabled).toBe(true); // the shelf ends here
+    expect(root.querySelector<HTMLButtonElement>(".lib-prev")!.disabled).toBe(false);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    expect(root.hidden).toBe(true);
+  });
+
+  it("the shelf search hides empty family groups but keeps the count (R21)", async () => {
+    document.body.innerHTML = `<section id="story-moon-air" data-story="moon-air" data-act="3" data-title="x"></section><div id="overlay" hidden></div>`;
+    const c = ctx();
+    const root = document.getElementById("overlay")!;
+    const { openLibrary } = mountOverlay(root, c, async () => ({ stories, moments }));
+    await openLibrary(document.createElement("button"));
+    const box = root.querySelector<HTMLInputElement>("#overlay-search")!;
+    box.value = "grows differently";
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(root.querySelector(".overlay-count")!.textContent).toBe("1 of 19 experiments");
+    const shown = [...root.querySelectorAll<HTMLElement>(".lib-group")].filter((g) => !g.hidden);
+    expect(shown).toHaveLength(1); // only the smoke-detection group stays
+    expect(shown[0]!.textContent).toContain("SAME / SAME-R");
+  });
+
+  it("every number on the shelf and the story page sits in a source link or the data's own (R21)", () => {
+    const c = ctx();
+    const out: string[] = [];
+    const list = renderLibraryList(stories, c, () => {});
+    const walker = document.createTreeWalker(list, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const el = n.parentElement!;
+      if (!/\d/.test(n.textContent ?? "")) continue;
+      // counts are the data's own; titles are names (FLEX-2), like the page helper's h3 exclusion
+      if (el.closest('a[href^="https://"], a[href^="data/"], [data-own], .lib-card-title')) continue;
+      out.push(n.textContent!.trim());
+    }
+    expect(out).toEqual([]);
+    for (const s of stories) expect(unlinkedDataNumbers(renderLibraryPage(s, moments, c))).toEqual([]);
   });
 });

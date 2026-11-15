@@ -4,7 +4,7 @@ import type { Ctx } from "../contract";
 import { OPEN_LIBRARY_EVENT } from "../engine/index";
 import { stories } from "../engine/stories";
 import { h, prefersReducedMotion } from "./dom";
-import { loadLibrary, renderLibraryList, renderLibraryPage, type LibraryMoment, type LibraryStory } from "./library";
+import { loadLibrary, renderLibraryList, renderLibraryPage, shelfOrder, type LibraryMoment, type LibraryStory } from "./library";
 
 export function mountOverlay(
   root: HTMLElement,
@@ -33,7 +33,7 @@ export function mountOverlay(
     // focus trap: Tab never leaves the modal while it is open
     if (e.key !== "Tab" || root.hidden) return;
     const items = [
-      ...root.querySelectorAll<HTMLElement>(".overlay-inner button, .overlay-inner a[href], .overlay-inner input"),
+      ...root.querySelectorAll<HTMLElement>(".overlay-inner button:not(:disabled), .overlay-inner a[href], .overlay-inner input"),
     ].filter((el) => !el.hidden && !el.closest("[hidden]"));
     if (!items.length) return;
     const first = items[0]!;
@@ -96,6 +96,8 @@ export function mountOverlay(
         total++;
         if (hit) n++;
       }
+      // a family heading goes with its cards: no visible card, no heading
+      for (const g of body.querySelectorAll<HTMLElement>(".lib-group")) g.hidden = !g.querySelector(".library-card:not([hidden])");
       count.textContent =
         body.querySelector(".library-card") != null
           ? t("ui.library.count", { shown: n, total })
@@ -146,11 +148,7 @@ export function mountOverlay(
     void lib.then(
       (data) => {
         if (mark !== opened) return;
-        const openPage = (id: string): void => {
-          const story = data.stories.find((s) => s.id === id);
-          if (story) renderPage(story, data.moments);
-        };
-        libBtn.replaceWith(h("h3", { class: "library-title" }, t("ui.library.title")), renderLibraryList(data.stories, ctx, openPage));
+        libBtn.replaceWith(h("h3", { class: "library-title" }, t("ui.library.title")), renderLibraryList(data.stories, ctx, pageOpener(data)));
         show(root.querySelector<HTMLInputElement>("#overlay-search")?.value ?? "");
       },
       () => { lib = null; },
@@ -172,21 +170,26 @@ export function mountOverlay(
       return;
     }
     if (mark !== opened) return;
-    const openPage = (id: string): void => {
-      const story = data.stories.find((s) => s.id === id);
-      if (story) renderPage(story, data.moments);
-    };
     const back = h("button", { type: "button", class: "btn library-back" }, t("ui.library.stories"));
     back.addEventListener("click", renderStories);
     body.replaceChildren(
       h("h3", { class: "library-title" }, t("ui.library.title")),
-      renderLibraryList(data.stories, ctx, openPage),
+      renderLibraryList(data.stories, ctx, pageOpener(data)),
       back,
     );
     show("");
   }
 
-  function renderPage(story: LibraryStory, moments: LibraryMoment[]): void {
+  function pageOpener(data: { stories: LibraryStory[]; moments: LibraryMoment[] }): (id: string) => void {
+    const order = shelfOrder(data.stories, ctx);
+    return (id) => {
+      const at = order.findIndex((s) => s.id === id);
+      if (at >= 0) renderPage(order, at, data.moments);
+    };
+  }
+
+  function renderPage(order: LibraryStory[], at: number, moments: LibraryMoment[]): void {
+    const story = order[at]!;
     const { body } = shell();
     const back = h("button", { type: "button", class: "btn library-back" }, t("ui.library.back"));
     back.addEventListener("click", () => void renderLibrary());
@@ -200,8 +203,31 @@ export function mountOverlay(
     } catch {
       page = h("p", {}, t("ui.library.unavailable"));
     }
-    body.append(back, page);
-    back.focus();
+    // previous and next walk the shelf order and stop at its ends
+    const step = (to: number, key: string): HTMLButtonElement => {
+      const other = order[to];
+      const b = h("button", { type: "button", class: "btn" }, t(key));
+      if (!other) {
+        b.disabled = true;
+        return b;
+      }
+      b.append(h("span", { class: "lib-pager-title", "data-own": true }, other.title));
+      b.addEventListener("click", () => renderPage(order, to, moments));
+      return b;
+    };
+    const prev = step(at - 1, "ui.library.prev");
+    prev.classList.add("lib-prev");
+    const next = step(at + 1, "ui.library.next");
+    next.classList.add("lib-next");
+    const pager = h("nav", { class: "lib-pager", "aria-label": t("ui.library.pager-label") }, prev, next);
+    body.append(back, page, pager);
+    // opening a page moves focus to its heading, so a screen reader starts at the story
+    root.scrollTop = 0;
+    const heading = page.querySelector<HTMLElement>(".lib-title");
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    } else back.focus();
   }
 
   function open(from: HTMLElement): void {
