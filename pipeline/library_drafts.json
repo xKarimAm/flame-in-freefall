@@ -24,12 +24,12 @@
   "bass-ii": {
     "core_quote": "BASS-II results contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth.",
     "core_investigation": "PSI-25",
-    "hook": "It is strange but true that in weightlessness a very soft flow can decide if a solid fuel lights, spreads, or goes out.",
-    "reveal": "Crew members worked as lab partners on the station, placing rods, slabs and other shapes in a small wind tunnel in a safe box and changing the air push and oxygen to watch how flames looked, grew and spread.",
-    "bridge": "This matters for Moon-base air because changing oxygen and air movement is part of learning how fire detection and suppression might work off Earth.",
+    "hook": "In space, even a soft and gentle breeze can decide if a flame grows or fades away.",
+    "reveal": "Astronauts lit small pieces of fuel inside a tiny wind tunnel on the space station and watched the flames while changing the soft airflow and the amount of oxygen in the air.",
+    "bridge": "This matters for a Moon base because the air we choose to breathe also changes how a flame starts and spreads.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:06:39Z"
+      "made_at": "2026-11-15T00:54:51Z"
     }
   },
   "flex": {
@@ -121,14 +121,14 @@
     }
   },
   "s-flame": {
-    "core_quote": "Measure and characterize the transient structure",
+    "core_quote": "Determine the quasi-steady convective/chemical-kinetic extinction limits (low system Damköhler numbers) and radiative/chemical-kinetic extinction limits (high system Damköhler numbers) for mixtures of different H2/CH4/diluent ratios (soot-free) and different C2H4/diluent ratios (sooty).",
     "core_investigation": "PSI-23",
-    "hook": "Think of a perfect round flame that stays still, the yardstick all computer models are judged against.",
-    "reveal": "They sent fuel and diluent mixes through a round porous burner and lit a steady round flame, then recorded light images, flame and burner heat, and radiant glow while varying flows and mixes.",
-    "bridge": "This work is not about Moon base air, it is about building a clean round flame to test models of heat and chemistry.",
+    "hook": "The benchmark for fire is a perfect sphere, the same in every direction and easy to compare with computer models.",
+    "reveal": "They sent hydrogen, methane or ethylene mixed with diluent gas out through a round porous burner and lit a round steady flame, then measured flame pictures, flame and burner heat, and radiated heat to check against computer simulations.",
+    "bridge": "This is not a test of Moon base air, but a clean benchmark for checking how flames move heat and chemicals.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:11:30Z"
+      "made_at": "2026-11-15T00:55:28Z"
     }
   },
   "slice": {
