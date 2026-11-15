@@ -7,7 +7,6 @@
   "ui.engine.chapter": "Capítulo {n}",
   "ui.engine.page": "Página {n} de {total}",
   "ui.cover.title": "Fuego, oxígeno y la Luna",
-  "ui.cover.lead": "Pruebas de fuego de NASA en microgravedad en un gráfico, con las que no se pueden colocar en una lista al lado, y hasta dónde llega la evidencia para una base en la Luna.",
   "ui.cover.cue": "Desliza para pasar la página",
   "ui.stage.title": "Gráfico de evidencia: pruebas de fuego de NASA en microgravedad según la presión del aire y el oxígeno",
   "ui.stage.dial-title": "Rueda del oxígeno: de 0 a 100 % de oxígeno, con los aires usados y planeados por NASA marcados",
