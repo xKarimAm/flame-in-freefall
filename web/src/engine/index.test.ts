@@ -67,7 +67,7 @@ describe("engine mount", () => {
     expect(links[0].target).toBe("_blank");
     expect(links[0].rel).toBe("noopener");
     expect(step.textContent).toContain(dicts.en!["ui.engine.sources"]);
-    expect(steps.every((s) => s.querySelector("ul.step-sources"))).toBe(true); // every beat lists a source
+    expect(steps.every((s) => s.querySelector("p.step-sources"))).toBe(true); // every beat lists a source
   });
 
   it("puts the page dots first in DOM order, ahead of the cover", () => {
@@ -134,11 +134,21 @@ describe("engine mount", () => {
     expect(covers[0].querySelector(".cover-cue")!.textContent).toBe(dicts.en!["ui.cover.cue"]);
   });
 
+  it("sources ride on one small line after the card text (task 44)", () => {
+    const { steps } = setup();
+    const card = steps[hook].querySelector(".step-card")!;
+    expect(card.querySelector("ul.step-sources")).toBeNull();
+    const line = card.querySelector("p.step-sources")!;
+    expect(line.textContent).toMatch(/^Sources: /);
+    expect(line.querySelectorAll("a").length).toBeGreaterThan(0);
+    expect(line.textContent).toContain(", ");
+  });
+
   it("story text is a paragraph in a 30rem card, never a heading (task 43)", () => {
     const { steps } = setup();
     for (const s of steps) {
       expect(s.querySelector(".step-text")!.tagName).toBe("P");
-      expect(s.querySelector(".step-card .step-sources-label")!.tagName).toBe("P");
+      expect(s.querySelector(".step-card .step-sources")).not.toBeNull();
     }
     expect(css).toMatch(/\.step-card\s*\{[^}]*width:\s*min\(30rem/);
   });
@@ -332,6 +342,15 @@ describe("engine mount", () => {
       Object.defineProperty(window, "scrollY", { configurable: true, value: 0, writable: true });
       document.documentElement.lang = "en";
     }
+  });
+
+  it("cards stay light: bar but no box fill, 24px padding (task 44)", () => {
+    expect(css).toMatch(/\.step-card\s*\{[^}]*border-left:\s*4px/);
+    const first = css.slice(css.indexOf(".step-card {"), css.indexOf("}", css.indexOf(".step-card {")));
+    expect(first).not.toContain("background");
+    expect(first).toContain("padding: 24px");
+    // narrow exception: cards scroll behind the pinned stage and must disappear behind it
+    expect(css).toMatch(/@media\s*\(max-width:\s*1099px\)[\s\S]*?#story \.step-card\s*\{[^}]*background:\s*var\(--space-black\)/);
   });
 
   it("columns never share space and the stage hides behind covers and chapters (task 41)", () => {

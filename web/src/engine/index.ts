@@ -40,7 +40,6 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const flat = flattenBeats(stories);
   const steps: HTMLElement[] = [];
   const texts: HTMLElement[] = [];
-  const labels: HTMLElement[] = []; // the "Sources" label of each step (a detached stub when the beat has no sources)
   const pages: HTMLElement[] = []; // the "Page n of total" line of each step
   const headings: { section: HTMLElement; h2: HTMLElement; question: HTMLElement; key: string; act: number }[] = [];
   const sections = new Map<string, HTMLElement>();
@@ -76,26 +75,25 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     const page = node("p", "step-page");
     const text = node("p", "step-text");
     card.append(page, text);
-    const label = node("p", "step-sources-label");
+    // the sources ride on one small line after the card text
     if (beat.sources.length) {
-      const list = node("ul", "step-sources");
-      for (const s of beat.sources) {
+      const line = node("p", "step-sources");
+      line.append(document.createTextNode(`${ctx.t("ui.engine.sources")}: `));
+      beat.sources.forEach((s, i) => {
+        if (i > 0) line.append(document.createTextNode(", "));
         const a = node("a", undefined, s.label);
         a.href = safeHref(s.url);
         a.target = "_blank";
         a.rel = "noopener";
-        const li = node("li");
-        li.append(a);
-        list.append(li);
-      }
-      card.append(label, list);
+        line.append(a);
+      });
+      card.append(line);
     }
-      step.append(card);
+    step.append(card);
     section.append(step);
     steps.push(step);
     texts.push(text);
     pages.push(page);
-    labels.push(label);
   }
 
   // page dots: one per step, tracking the active one. First in DOM (keyboard users
@@ -175,7 +173,6 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     flat.forEach(({ beat }, i) => {
       pages[i].textContent = ctx.t("ui.engine.page", { n: i + 1, total: flat.length });
       texts[i].textContent = resolveText(ctx.dicts, beat.text, lens, locale);
-      labels[i].textContent = ctx.t("ui.engine.sources");
     });
     for (const { section, h2, question, key, act } of headings) {
       h2.textContent = ctx.t("ui.engine.chapterTitle", { n: act, title: ctx.t(key) });

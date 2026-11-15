@@ -330,6 +330,11 @@ describe("ui", () => {
     expect(dl.textContent).toContain("no pressure recorded");
   });
 
+  it("the panel explainer has no nested box (task 44)", () => {
+    expect(css).not.toMatch(/\.panel-exp\s*\{[^}]*background/);
+    expect(css).not.toMatch(/\.panel-exp\s*\{[^}]*border-left/);
+  });
+
   it("the family filter is one label wrapping the select (task 44e)", () => {
     setup();
     const label = roots().panel.querySelector("label.family")!;

@@ -54,7 +54,7 @@ dl.not-placed dd { margin: 2px 0 0; }
 .answer-wrap:empty { display: none; }
 .answer a { color: var(--ink-dark); }
 /* one explainer box style, not two */
-.panel-exp { line-height: 1.45; margin: 0 0 12px; padding: 10px 12px; background: var(--space-deep); border-left: 3px solid var(--data-on-dark); }
+.panel-exp { line-height: 1.45; margin: 0 0 12px; }
 .panel-exp[hidden] { display: none; }
 .panel-exp h4 { margin: 0 0 4px; font-size: var(--text-meta); font-weight: 700; color: var(--ink-dark); }
 .panel-exp p { margin: 0; color: var(--muted-dark); }
