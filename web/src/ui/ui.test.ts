@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppData, Ctx, DataApi, Experiment, NearestRow, PlacedTest, TestRun } from "../contract";
+import { SELECT_INVESTIGATION } from "../stage/index";
 import { createDataApi } from "../data/index";
 import { stories } from "../engine/stories";
 import { makeT } from "../i18n/index";
@@ -275,6 +276,25 @@ describe("ui", () => {
       if (r.pressure_kpa !== null) expect(cells[2]!.textContent).toContain(String(Number(r.pressure_kpa.toFixed(1))));
     });
     expect(unlinkedNumbers(roots().sheet)).toEqual([]);
+  });
+
+  it("selecting a row dispatches for the chart; an incoming selection opens the row", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const seen: (string | null)[] = [];
+    window.addEventListener(SELECT_INVESTIGATION, (e) =>
+      seen.push((e as CustomEvent<{ investigation: string | null }>).detail.investigation));
+    const psi69 = experiments.find((e) => e.id === "PSI-69")!;
+    const btn69 = [...roots().sheet.querySelectorAll<HTMLButtonElement>("button.row-open")].find((b) => b.textContent === psi69.acronym)!;
+    btn69.click();
+    expect(seen).toEqual(["PSI-69"]);
+    expect(roots().sheet.querySelector("tr.detail")).not.toBeNull();
+    const psi98 = experiments.find((e) => e.id === "PSI-98")!;
+    window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: "PSI-98" } }));
+    const openBtn = roots().sheet.querySelector("tr.detail")!.previousElementSibling!.querySelector("button.row-open")!;
+    expect(openBtn.textContent).toBe(psi98.acronym);
+    window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: null } }));
+    expect(roots().sheet.querySelector("tr.detail")).toBeNull();
   });
 
   it("the coverage panel counts every reason and the downloads link the data files", () => {

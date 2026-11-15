@@ -1,6 +1,7 @@
 // Analyst sheet: all investigations, and the Moon-gravity margins from moon.json.
 // Generated with Claude, SI-assisted.
 import { FAMILIES, type Ctx, type Experiment, type Family, type Publication, type StageState } from "../contract";
+import { SELECT_INVESTIGATION } from "../stage/index";
 import { cite, h, num, numOrMissing } from "./dom";
 
 type Tab = "investigations" | "margins";
@@ -17,6 +18,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   let sortKey: SortKey = "family";
   let sortDir: 1 | -1 = 1;
   let famFilter: Family | null = null;
+  let selectedInv: string | null = null;
 
   const table = (cls: string, caption: Node, head: string[], rows: Node[][]): HTMLElement =>
     h("table", { class: cls },
@@ -61,23 +63,35 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
       h("p", {}, cite(t("ui.sheet.detail.psi-link"), e.psi_url, "plain")));
   }
 
-  /** The acronym opens or closes the detail row under its row. */
-  function toggle(btn: HTMLButtonElement, e: Experiment): void {
-    const row = btn.closest("tr")!;
-    const next = row.nextElementSibling;
-    if (next?.classList.contains("detail")) {
-      next.remove();
-      btn.setAttribute("aria-expanded", "false");
-      return;
-    }
-    const cell = h("td", { colspan: String(row.children.length) }, detail(e));
-    row.after(h("tr", { class: "detail" }, cell));
+  /** Opens the investigation's row (closing any other), without scrolling. */
+  function openRow(id: string): boolean {
+    const btn = [...body.querySelectorAll<HTMLButtonElement>("button.row-open")].find((b) => b.dataset.investigation === id);
+    const e = api.experiment(id);
+    if (!btn || !e) return false;
     btn.setAttribute("aria-expanded", "true");
+    const row = btn.closest("tr")!;
+    row.after(h("tr", { class: "detail" }, h("td", { colspan: String(row.children.length) }, detail(e))));
+    return true;
+  }
+
+  /** Closes every open detail row, then opens the selected investigation's row, scrolling to it. */
+  function selectRow(id: string | null, scroll: boolean): void {
+    for (const d of body.querySelectorAll("tr.detail")) {
+      d.previousElementSibling?.querySelector("button.row-open")?.setAttribute("aria-expanded", "false");
+      d.remove();
+    }
+    if (id && openRow(id) && scroll) body.querySelector("tr.detail")!.scrollIntoView({ block: "nearest" });
+  }
+
+  /** The acronym opens or closes the detail row under its row, selecting the investigation for the stage. */
+  function toggle(btn: HTMLButtonElement, e: Experiment): void {
+    const open = btn.getAttribute("aria-expanded") !== "true";
+    window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: open ? e.id : null } }));
   }
 
   // data-own: the acronym is a name, not a number; the title link beside it goes to the PSI page
   function openButton(e: Experiment): HTMLButtonElement {
-    const btn = h("button", { type: "button", class: "row-open", "aria-expanded": "false", "data-own": true }, e.acronym);
+    const btn = h("button", { type: "button", class: "row-open", "aria-expanded": "false", "data-own": true, "data-investigation": e.id }, e.acronym);
     btn.addEventListener("click", () => toggle(btn, e));
     return btn;
   }
@@ -218,6 +232,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     if (sig !== next) {
       sig = next;
       body.replaceChildren(tab === "investigations" ? investigations() : margins());
+      if (tab === "investigations" && selectedInv) selectRow(selectedInv, false);
     }
   }
 
@@ -237,6 +252,11 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   const key = (s: ReturnType<typeof store.get>) => (s.beat ? `${s.beat.story}/${s.beat.scene}/${s.beat.beat}` : "");
   build();
   root.hidden = store.get().lens !== "analyst";
+  // dot clicks on the chart select an investigation here; row clicks select it there (see stage/index.ts)
+  window.addEventListener(SELECT_INVESTIGATION, (e) => {
+    selectedInv = (e as CustomEvent<{ investigation: string | null }>).detail.investigation;
+    selectRow(selectedInv, true);
+  });
   store.subscribe((s, prev) => {
     root.hidden = s.lens !== "analyst";
     document.body.dataset.lens = s.lens;

@@ -16,6 +16,10 @@ import { DIAMOND, layoutRefs } from "./refs";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+/** Dot clicks and sheet rows select an investigation through this event (detail: { investigation: string | null }).
+ *  The stage highlights that investigation's dots; the sheet opens its row. See ui/sheet.ts. */
+export const SELECT_INVESTIGATION = "firebreak:select-investigation";
+
 type Attrs = Record<string, string | number>;
 
 function svg(tag: string, attrs: Attrs = {}, text?: string): SVGElement {
@@ -74,6 +78,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   el.append(root, incidents);
 
   const dots = new Map<string, SVGElement>(); // test id -> circle, reused so class changes can transition
+  let selectedInv: string | null = null; // the linked selection (a dot click or a sheet row), not the story
   let size: Size | null = opts.size ?? null;
   // what the last full draw decided; the live draw (sliders) reuses it
   let scales: Scales | null = null;
@@ -134,9 +139,11 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     // text that moves the plot down: the plane label + caption rows, and the lunar band
     const x0 = MARGIN.left + (strip.length ? STRIP_W : 0);
     const plotW = Math.max(40, size.w - MARGIN.right - x0);
+    // A linked selection (dot click or sheet row) joins the beat highlight as the investigation.
+    const hl = selectedInv ? { ...stage.highlight, investigation: selectedInv } : stage.highlight;
     const headChars = Math.max(8, Math.floor((size.w - MARGIN.left - MARGIN.right) / (CHAR_PX + 0.5)));
     const planeLines = wrap(t("ui.stage.microg-plane"), headChars);
-    const caption = captionOf(wanted, stage.highlight);
+    const caption = captionOf(wanted, hl);
     const captionLines = caption ? wrap(caption, headChars) : [];
     const headH = empty ? 20 : (planeLines.length + captionLines.length) * LINE_PX + 8;
     const noteLines = lunar
@@ -194,11 +201,14 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     // dots, one circle per drawn test; the highlight colours only the ones it names
     const kindSet = new Set<DotKind>();
     for (const test of wanted) {
-      const kind = dotKind(test, stage.highlight);
+      const kind = dotKind(test, hl);
       kindSet.add(kind);
       let c = dots.get(test.id);
       if (!c) {
         c = svg("circle", { "data-id": test.id });
+        const inv = test.investigation;
+        c.addEventListener("click", () =>
+          window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: selectedInv === inv ? null : inv } })));
         dots.set(test.id, c);
         gTests.append(c);
       }
@@ -216,10 +226,13 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       rect.append(svg("title", {}, `${t("ui.stage.no-pressure")}: ${strip.length}`));
       gStrip.append(rect);
       for (const row of strip) {
-        const kind = dotKind(row, stage.highlight);
+        const kind = dotKind(row, hl);
         kindSet.add(kind);
         const tick = svg("line", { class: kind === "default" ? "ptick" : `ptick ${kind}`, x1: sx + 4, x2: sx + sw - 4, y1: y(row.o2_pct), y2: y(row.o2_pct), "data-id": row.id });
         tick.append(svg("title", {}, t("ui.stage.tick-title", { fuel: row.fuel ?? t("ui.stage.no-fuel"), o2: row.o2_pct, outcome: row.outcome })));
+        const inv = row.investigation;
+        tick.addEventListener("click", () =>
+          window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: selectedInv === inv ? null : inv } })));
         gStrip.append(tick);
       }
     }
@@ -283,6 +296,9 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       ...rows.map((row) => {
         const c = svg("circle", { class: "dot nearest", cx: x(row.pressure_kpa), cy: y(row.o2_pct), r: 5, "data-id": row.id });
         c.append(svg("title", {}, dotTitle(row)));
+        const inv = row.investigation;
+        c.addEventListener("click", () =>
+          window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: selectedInv === inv ? null : inv } })));
         return c;
       }),
     );
@@ -356,6 +372,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   }
 
   // ---------- wiring ----------
+  window.addEventListener(SELECT_INVESTIGATION, (e) => {
+    selectedInv = (e as CustomEvent<{ investigation: string | null }>).detail.investigation;
+    drawAll();
+  });
   store.subscribe((state, prev) => {
     const full = state.stage !== prev.stage || state.locale !== prev.locale || state.lens !== prev.lens || (state.sliders === null) !== (prev.sliders === null);
     if (state.stage !== prev.stage) extra = [];

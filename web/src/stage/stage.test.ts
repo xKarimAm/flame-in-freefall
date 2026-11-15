@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AtmosphereId, DataApi, Experiment, Family, IncidentsData, Lens, MoonData, NearestQuery, NotPlacedRow, PlacedTest, StageState, Story, TestRun } from "../contract";
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
-import { mount } from "./index";
+import { SELECT_INVESTIGATION, mount } from "./index";
 import { chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
 import { dotKind, noPressureRows, refShape } from "./plan";
@@ -538,6 +538,47 @@ describe("public picture", () => {
     expect(css).toMatch(/@keyframes flame-sway/);
     expect(css).toMatch(/\.flame-guide \.flame-sway\s*\{[^}]*animation:\s*flame-sway/);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.stage-incidents \*/);
+  });
+});
+
+describe("linked selection", () => {
+  const linkedSetup = () => setup({ view: "micro-g", show_families: allFamilies });
+  const testDot = (host: HTMLElement, id: string) =>
+    [...host.querySelectorAll('[data-layer="tests"] [data-id]')].find((d) => d.getAttribute("data-id") === id)!;
+
+  it("clicking a dot selects its investigation and highlights its dots", () => {
+    const { host, api } = linkedSetup();
+    const placed = api.placed();
+    const a = placed[0]!;
+    const other = placed.find((p) => p.investigation !== a.investigation)!;
+    const seen: (string | null)[] = [];
+    window.addEventListener(SELECT_INVESTIGATION, (e) =>
+      seen.push((e as CustomEvent<{ investigation: string | null }>).detail.investigation));
+    const cls = (id: string) => testDot(host, id).getAttribute("class");
+    expect(cls(a.id)).toBe("dot");
+    testDot(host, a.id).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(seen).toEqual([a.investigation]);
+    expect(cls(a.id)).not.toBe("dot");
+    expect(cls(other.id)).toBe("dot");
+    testDot(host, a.id).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(seen).toEqual([a.investigation, null]);
+    expect(cls(a.id)).toBe("dot");
+  });
+
+  it("an incoming selection highlights dots without a store change", () => {
+    const { host, store, api } = linkedSetup();
+    const a = api.placed()[0]!;
+    const before = store.get();
+    window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: a.investigation } }));
+    expect(store.get()).toBe(before);
+    const dots = [...host.querySelectorAll('[data-layer="tests"] circle')];
+    const same = dots.filter((d) => {
+      const id = d.getAttribute("data-id")!;
+      return id === a.id || id.startsWith(`${a.investigation}#`);
+    });
+    expect(same.length).toBeGreaterThan(0);
+    expect(same.every((d) => d.getAttribute("class") !== "dot")).toBe(true);
+    expect(dots.filter((d) => !same.includes(d)).every((d) => d.getAttribute("class") === "dot")).toBe(true);
   });
 });
 
