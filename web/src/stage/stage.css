@@ -3,12 +3,44 @@
    Generated with Claude, SI-assisted. */
 .stage-root { display: flex; flex-direction: column; width: 100%; height: 100%; color: var(--ink-dark); font-family: var(--font); }
 .stage-root[hidden], .stage-incidents[hidden] { display: none; }
-.stage-plot { position: relative; flex: 1 1 0; min-height: 0; }
+.stage-plot { position: relative; flex: none; min-height: 0; }
 .stage-svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-.stage-svg text { fill: var(--muted-dark); font-size: 12px; }
-.stage-svg .axis-title { font-size: 13px; }
-.stage-svg .plane-label { fill: var(--ink-dark); font-size: 13px; font-weight: 500; }
-.stage-svg .caption { fill: var(--data-on-dark); font-size: 14px; font-weight: 700; }
+.stage-tilt { position: absolute; inset: 0; overflow: hidden; }
+.stage-tilt[hidden] { display: none; }
+/* the tilt canvas is the decorative duplicate (aria-hidden): the SVG stays the accessible
+   chart, clipped aside while the tilt runs, never display:none */
+.stage-svg.behind-tilt { width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.stage-tilt canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.tilt-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+/* every label stays inside the stage box: capped width, border-box padding and
+   word wrapping, so a late font swap or a re-wrap can never run a label past
+   the frame (R9: the lunar sentence ran to the window edge at 1440 px). */
+.tilt-label { position: absolute; margin: 0; max-width: 100%; box-sizing: border-box; font-size: var(--text-meta); color: var(--muted-dark); background: var(--space-deep); padding: 2px 6px; white-space: nowrap; overflow-wrap: break-word; }
+.tilt-label[hidden] { display: none; }
+/* the three plane labels are large: each picture names its own plane. JS sets the exact
+   box corner (see tiltLabelBoxes), so there are no offsets here: what is measured is shown.
+   The lunar label wraps at the plot edge on narrow pages instead of leaving the box. */
+.tilt-label.plane-micro, .tilt-label.plane-lunar, .tilt-label.plane-earth { font-size: var(--text-card); font-weight: 700; color: var(--ink-dark); }
+.tilt-label.plane-lunar { max-width: 100%; white-space: normal; }
+/* R11/R12: from 1100 to 1279 px every label is capped at its plane's drawn width
+   (about 26rem), so the lunar sentence wraps onto two centred lines instead of
+   running past the plane to the window edge; the centred box hangs below its
+   plane's top edge (JS lunarBelow), never over the plane above. From 1280 px up
+   the sentence fits on one 644 px line in the 864 px stage: no cap, no wrap,
+   centred on its plane's centre above the plane. Narrow screens keep the 100 % cap. */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .tilt-label { max-width: 26rem; }
+  .tilt-label.plane-lunar { max-width: 26rem; text-align: center; }
+}
+@media (min-width: 1280px) {
+  .tilt-label { max-width: 26rem; }
+  .tilt-label.plane-lunar { max-width: none; white-space: nowrap; text-align: center; }
+}
+.tilt-label.you { color: var(--ink-dark); }
+.stage-svg text { fill: var(--muted-dark); font-size: var(--text-meta); }
+.stage-svg .axis-title { font-size: var(--text-meta); }
+.stage-svg .plane-label { fill: var(--ink-dark); font-size: var(--text-meta); font-weight: 500; }
+.stage-svg .caption { fill: var(--data-on-dark); font-size: var(--text-meta); font-weight: 700; }
 .stage-svg .grid { stroke: var(--muted-dark); stroke-opacity: 0.15; stroke-width: 1; }
 
 /* every test: quiet grey; colour only for meaning. The reveal (a family's dots appearing) is the
@@ -44,11 +76,12 @@
 
 /* the deliberately empty lunar plane */
 .lunar-band { fill: none; stroke: var(--muted-dark); stroke-width: 1.5; stroke-dasharray: 6 4; }
-.stage-svg .lunar-note { fill: var(--ink-dark); font-size: 13px; }
+.stage-svg .lunar-note { fill: var(--ink-dark); font-size: var(--text-meta); }
 
 /* legend in words, under the plot */
-.stage-legend { flex: none; margin: 0; padding: 4px 16px 8px 52px; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted-dark); }
-.stage-legend li { display: flex; align-items: center; gap: 6px; }
+.stage-legend { flex: none; margin: 0; padding: 4px 16px 8px 52px; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--text-meta); color: var(--muted-dark); }
+.stage-legend li { display: flex; align-items: center; gap: 6px; padding: 2px 6px; }
+.stage-legend li:hover { background-color: var(--space-black); }
 .stage-legend .coverage { font-family: var(--font-id); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; box-sizing: border-box; }
 .sw-default { background: var(--muted-dark); opacity: 0.5; border-radius: 50%; }
@@ -66,10 +99,10 @@
 /* incident view: one large page per incident; one fills the box, two sit side by side (stacked under 1100px) */
 .stage-incidents { display: grid; grid-template-columns: 1fr; grid-auto-rows: minmax(min-content, 1fr); gap: 24px; width: 100%; height: 100%; overflow: auto; color: var(--ink-dark); font-family: var(--font); }
 @media (min-width: 1100px) { .stage-incidents[data-count="2"] { grid-template-columns: 1fr 1fr; } }
-.incident-card { padding: 24px 28px; border-left: 6px solid var(--danger); background: var(--space-black); font-size: 18px; line-height: 1.55; }
-.incident-card h3 { margin: 0 0 4px; font-size: 32px; line-height: 1.15; }
-.incident-card .incident-meta { margin: 0 0 16px; color: var(--muted-dark); font-family: var(--font-id); font-size: 14px; }
-.incident-card .incident-lead { font-size: 22px; line-height: 1.4; }
+.incident-card { padding: 24px 28px; border-left: 4px solid var(--danger); background: var(--space-black); font-size: var(--text-body); line-height: 1.55; }
+.incident-card h3 { margin: 0 0 4px; font-size: var(--text-card); line-height: 1.15; }
+.incident-card .incident-meta { margin: 0 0 16px; color: var(--muted-dark); font-family: var(--font-id); font-size: var(--text-meta); }
+.incident-card .incident-lead { font-size: var(--text-card); line-height: 1.4; }
 .incident-card p { margin: 0 0 12px; }
 .incident-card strong { font-weight: 700; }
 .incident-card a { color: var(--ink-dark); }
@@ -77,3 +110,94 @@
 @media (prefers-reduced-motion: reduce) {
   .stage-root *, .stage-incidents * { transition: none !important; animation: none !important; }
 }
+
+/* public picture (act 1): the oxygen dial fills the stage height, the flame standing
+   on its mark; incident cards share the row on wide screens, stack below it under 1100px */
+.stage-incidents.public-picture { align-items: stretch; }
+.picture-side { display: flex; min-height: 0; padding-top: var(--flame-overhang, 0px); }
+@media (min-width: 1100px) {
+  .stage-incidents.public-picture[data-count="1"] { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  /* two incidents stack vertically beside the dial: one card column with a 280 px
+     floor (R2a); the single-column rows grow with the cards and the stage scrolls */
+  .stage-incidents.public-picture[data-count="2"] { grid-template-columns: auto minmax(280px, 1fr); grid-template-rows: auto auto auto; }
+}
+/* explicit placement on wide screens: the dial and the cards share row 1, the source line spans row 2 */
+@media (min-width: 1100px) {
+  .stage-incidents.public-picture > .picture-side { grid-column: 1; grid-row: 1; }
+  .stage-incidents.public-picture > .dial-source { grid-column: 1 / -1; grid-row: 2; }
+  .stage-incidents.public-picture > .incident-card { grid-row: 1; min-width: 0; }
+  /* two incidents: the dial spans both card rows, the cards stack in column 2 with
+     their 280 px floor, the source line moves to row 3 (R2a) */
+  .stage-incidents.public-picture[data-count="2"] > .picture-side { grid-row: 1 / span 2; }
+  .stage-incidents.public-picture[data-count="2"] > .dial-source { grid-row: 3; }
+  .stage-incidents.public-picture[data-count="2"] > .incident-card { grid-column: 2; grid-row: auto; min-width: 280px; }
+}
+.incident-card { overflow-wrap: anywhere; } /* long source URLs must not widen the card's column */
+/* the cover shows only the dial and the flame: incident cards hide while it fills the screen (R2b) */
+body[data-cover="true"] .stage-incidents .incident-card { display: none; }
+/* the dial instrument: as tall as the stage box allows (capped near its drawn size so the
+   12-unit scale reads 12 px and the labels 17 px), flame on the mark inside the art */
+.public-picture .o2-dial { height: 100%; max-height: 34rem; width: auto; max-width: none; }
+/* narrow screens: the dial keeps the stage width (the flame zone scales with it, so
+   nothing is cut off) with its readout below it; the stage scrolls inside itself.
+   This block stays after the height-driven rule so it wins at equal specificity (R7) */
+@media (max-width: 1099px) {
+  .stage-incidents.public-picture > .picture-side { flex-direction: column; }
+  /* width in, height out: the 500-unit viewBox (flame zone plus dial) scales whole,
+     so the flame zone can never push the dial past the stage edge */
+  .public-picture .o2-dial { width: 100%; max-width: 100%; height: auto; max-height: none; aspect-ratio: 500 / 560; }
+}
+.public-picture .incident-card { font-size: var(--text-body); }
+.public-picture .incident-card h3 { font-size: var(--text-card); }
+.public-picture .incident-card .incident-lead { font-size: var(--text-card); }
+.dial-source { grid-column: 1 / -1; margin: 0; font-size: var(--text-meta); color: var(--muted-dark); }
+.dial-source a { color: var(--ink-dark); }
+.o2-dial { display: block; width: 100%; max-width: 300px; height: auto; }
+.o2-dial text { fill: var(--muted-dark); font-size: var(--text-body); }
+.o2-dial .dial-frame { stroke: var(--muted-dark); stroke-width: 12; }
+.o2-dial .dial-tick { stroke: var(--muted-dark); stroke-width: 1.5; }
+.o2-dial .dial-point { fill: var(--data-on-dark); }
+.o2-dial .dial-band { fill: var(--data-on-dark); fill-opacity: 0.12; stroke: var(--data-on-dark); stroke-width: 1.5; }
+.o2-dial .dial-mark { fill: var(--ink-dark); }
+.o2-dial .dial-marker { stroke: var(--ink-dark); stroke-width: 3; }
+/* chapter 1's oxygen handle: the visitor's own mark, draggable along the axis */
+.o2-dial .dial-you { stroke: var(--data-on-dark); stroke-width: 3; cursor: ns-resize; }
+.o2-dial .dial-hit { fill: transparent; cursor: ns-resize; }
+/* chapter 2's family tap: one button per family under the legend */
+.family-pick { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+.family-pick[hidden] { display: none; }
+/* chapter 4's plane step: three gravity buttons and the count they hold */
+.plane-step { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+.plane-step[hidden] { display: none; }
+/* narrow screens: the button rows and the parade counter keep the 16 px page margin,
+   and the parade rides at the top of the pinned stage box so the scrolling cards
+   never cover the counter (R9b) */
+@media (max-width: 1099px) {
+  .family-pick { padding: 0 16px; }
+  .plane-step { padding: 0 16px; }
+  .stage-parade { order: -1; }
+}
+.plane-step .plane-result { flex-basis: 100%; margin: 0; font-size: var(--text-body); color: var(--ink-dark); }
+.picture-side .dial-result { margin: 8px 0 0; font-size: var(--text-body); color: var(--ink-dark); }
+.flame-guide { display: block; height: auto; }
+.flame-guide .flame-sway { transform-box: fill-box; transform-origin: 50% 90%; animation: flame-sway 1.6s steps(1) infinite alternate; }
+@keyframes flame-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+
+/* public picture (act 2): the family parade with its counter */
+.stage-parade { display: flex; flex: none; flex-wrap: wrap; align-items: baseline; gap: 8px 28px; padding: 12px 16px 12px 52px; color: var(--ink-dark); font-family: var(--font); }
+.stage-parade[hidden] { display: none; }
+.parade-count { margin: 0; font-size: var(--text-body); color: var(--muted-dark); }
+.parade-num { font-size: var(--text-chapter); font-weight: 700; color: var(--ink-dark); font-family: var(--font-id); }
+.parade-families { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; list-style: none; }
+.parade-families li { display: flex; align-items: center; gap: 8px; font-size: var(--text-meta); }
+.parade-families svg { width: 26px; height: 26px; flex: none; }
+.parade-name { color: var(--ink-dark); }
+.parade-n { color: var(--muted-dark); font-family: var(--font-id); }
+
+/* explainer boxes: small labelled cards for the page that first shows a thing */
+.stage-explainers { display: flex; flex: none; flex-wrap: wrap; gap: 8px 16px; padding: 4px 16px 12px 52px; color: var(--ink-dark); font-family: var(--font); }
+.stage-explainers[hidden] { display: none; }
+.exp { max-width: 26rem; padding: 24px; background: var(--space-black); border-left: 4px solid var(--data-on-dark); }
+.exp h4 { margin: 0 0 4px; font-size: var(--text-meta); font-weight: 700; }
+.exp p { margin: 0; font-size: var(--text-meta); line-height: 1.45; color: var(--muted-dark); }
+.exp .exp-why { margin-top: 4px; color: var(--ink-dark); }

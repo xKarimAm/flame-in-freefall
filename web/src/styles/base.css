@@ -8,11 +8,14 @@ body {
   background: var(--space-deep);
   color: var(--ink-dark);
   font-family: var(--font);
-  font-size: 17px;
+  font-size: var(--text-body);
   line-height: 1.5;
 }
 a { color: inherit; }
-:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+/* white on the dark story, ink on the light analyst sheet; yellow stays on the Moon
+   box and the primary button only */
+:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+#sheet :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* header: lens switch, Stories, Skip to Moon air */
 #chrome {
@@ -27,35 +30,77 @@ a { color: inherit; }
   height: calc(100vh - var(--chrome-h));
   overflow: hidden;
 }
-/* story steps scroll over the stage; only the cards take clicks */
+/* desktop: two columns that never share space. The story column is the left 40 %
+   (cards only); the stage is the right 60 %, sticky. Only the cards take clicks. */
+@media (min-width: 1100px) {
+  main { display: grid; grid-template-columns: 40% 60%; align-items: start; }
+  #story { grid-column: 1; grid-row: 1; }
+  #stage { grid-column: 2; grid-row: 1; }
+}
 #story {
   position: relative; z-index: 10;
-  margin-top: calc(-1 * (100vh - var(--chrome-h)));
   pointer-events: none;
 }
 #story .step { pointer-events: auto; }
+/* under 1100 px the stage pins under the header at 45 % of the viewport with a solid
+   ground and sits below the story: cards scroll over it on their opaque ground, so
+   large text is never hidden behind the pinned chart while scrolling (R7) */
+@media (max-width: 1099px) {
+  #stage { height: 45vh; z-index: 1; background: var(--space-deep); }
+}
+/* while the cover or a chapter page is on screen the stage hides instead of peeking out */
+body[data-stage-hidden="true"] #stage { visibility: hidden; }
 
-/* slider panel + nearest list (right side; the UI hides it while sliders are locked) */
+/* slider panel + nearest list: a bottom sheet like the analyst sheet, same width, centered */
 #panel {
   position: fixed; z-index: 20;
-  top: calc(var(--chrome-h) + var(--gap)); right: var(--gap); bottom: var(--gap);
-  width: var(--panel-w); max-width: calc(100vw - 2 * var(--gap));
-  overflow: auto;
+  left: 50%; right: auto; transform: translateX(-50%); bottom: var(--gap);
+  width: min(420px, calc(100vw - 2 * var(--gap)));
+  max-height: 45vh; overflow: auto;
 }
 #panel[hidden], #sheet[hidden], #overlay[hidden] { display: none; }
 
-/* wide screens: the story cards (28rem + 4vw margin, see engine.css) are on the left and the panel on the right,
-   so the chart takes the middle and never sits under either */
+/* R10: from 1100px up the panel lives inside the story column (the left 40 %),
+   never over the stage: its left edge follows the story text margin and its width
+   keeps its right edge left of the 40 % line. Under 1100 px it stays the centred sheet. */
 @media (min-width: 1100px) {
-  #stage { padding-left: calc(4vw + 28rem + 24px); }
-  body:has(#panel:not([hidden])) #stage { padding-right: calc(var(--panel-w) + 2 * var(--gap)); }
+  #panel {
+    left: max(4vw, 16px);
+    right: auto;
+    transform: none;
+    width: min(420px, calc(40vw - max(4vw, 16px) - 32px));
+    /* taller on tall screens, but never over the step text above it (it ends about 330px below the header) */
+    max-height: max(45vh, calc(100vh - var(--chrome-h) - 330px));
+  }
+  /* while the panel is shown the active step's card sits at the top of its page
+     (the step is a row flex, so align-items parks it vertically) with room for the
+     sticky header, so the sources end above the panel's top edge */
+  body:has(#panel:not([hidden])) #story .step.is-active {
+    align-items: flex-start;
+    padding-top: calc(var(--chrome-h) + 16px);
+  }
 }
+
+/* tabular numbers everywhere a number can move (slider readouts already have it) */
+body { font-variant-numeric: tabular-nums; }
 
 /* analyst sheet: a light sheet over the dark story */
 #sheet {
   position: fixed; z-index: 25;
   left: 0; right: 0; bottom: 0; max-height: 70vh; overflow: auto;
   background: var(--sheet); color: var(--ink);
+}
+
+/* analyst workspace: the sheet replaces the story column; the dashboard has its own
+   chart, so the story stage hides and the sheet takes the full window width (R2f) */
+body[data-lens="analyst"] #story { display: none; }
+body[data-lens="analyst"] main { display: block; }
+body[data-lens="analyst"] #stage { display: none; }
+@media (min-width: 1100px) {
+  body[data-lens="analyst"] #sheet {
+    top: var(--chrome-h); bottom: 0; left: 0; right: 0;
+    width: auto; max-width: none; max-height: none;
+  }
 }
 #sheet a { color: var(--link); }
 
@@ -64,10 +109,7 @@ a { color: inherit; }
 
 #status { position: fixed; z-index: 50; left: var(--gap); bottom: var(--gap); color: var(--muted-dark); }
 
-/* below 1100px the panel is a bottom sheet and the chart keeps the full width */
-@media (max-width: 1099px) {
-  #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: 45vh; }
-}
+/* the panel is a bottom sheet at every width, so the chart always keeps the full width */
 
 /* narrow screens: the header wraps to two rows; this is the first-paint guess, chrome.ts then measures it */
 @media (max-width: 767px) {

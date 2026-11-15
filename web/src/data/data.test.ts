@@ -8,6 +8,7 @@ import {
   parseMoon,
   parseTests,
 } from "./index";
+import { loadPictures, parsePictures } from "./pictures";
 
 function golden(name: string): unknown {
   const url = new URL(`../../../contracts/golden/${name}`, import.meta.url);
@@ -82,5 +83,37 @@ describe("data loader", () => {
     expect(() => parseTests({})).toThrow();
     expect(() => parseMoon([])).toThrow();
     expect(() => parseIncidents(null)).toThrow();
+  });
+
+  it("parses curated chapter pictures with NASA sources (R13)", () => {
+    const pics = parsePictures(curated("pictures.json"));
+    expect(pics.map((p) => p.chapter).sort()).toEqual([1, 2, 3]);
+    for (const p of pics) {
+      expect(p.file).toMatch(/^pictures\/.+\.jpg$/);
+      expect(p.caption.length).toBeGreaterThan(0);
+      expect(p.alt.length).toBeGreaterThan(0);
+      expect(p.credit.length).toBeGreaterThan(0);
+      expect(p.url).toMatch(/^https?:\/\//);
+    }
+  });
+
+  it("rejects malformed picture payloads instead of guessing (R13)", () => {
+    expect(() => parsePictures(null)).toThrow();
+    expect(() => parsePictures({ pictures: [{ chapter: "one" }] })).toThrow();
+    expect(() => parsePictures({ pictures: [{ chapter: 1 }] })).toThrow();
+  });
+
+  it("loads no pictures when pictures.json is missing, without throwing (R13)", async () => {
+    const realFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = (async () => ({ ok: false, status: 404 }) as unknown as Response) as typeof fetch;
+      await expect(loadPictures()).resolves.toEqual([]);
+      globalThis.fetch = (async () => {
+        throw new Error("network down");
+      }) as typeof fetch;
+      await expect(loadPictures()).resolves.toEqual([]);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
   });
 });

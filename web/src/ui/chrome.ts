@@ -1,6 +1,6 @@
-// Header bar: Firebreak mark and name, chapter rail, lens switch, Stories, Skip to Moon air.
+// Header bar: Firebreak mark and name, chapter rail, lens switch, language picker, Stories, Skip to Moon air.
 // Generated with Claude, SI-assisted.
-import { LENSES, MOON_STORY_ID, type Ctx } from "../contract";
+import { LENSES, MOON_STORY_ID, type Ctx, type Locale } from "../contract";
 import { stories } from "../engine/stories";
 import { h, prefersReducedMotion } from "./dom";
 import markSvg from "./logo-mark.svg?raw";
@@ -8,7 +8,14 @@ import markSvg from "./logo-mark.svg?raw";
 export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: HTMLElement) => void): void {
   const { store, t } = ctx;
   let lensButtons: [string, HTMLButtonElement][] = [];
+  let localeSelect: HTMLSelectElement | null = null;
   let chips: [string, HTMLButtonElement][] = [];
+  // the four bar controls that move into the Menu on a phone; reassigned on every rebuild
+  let movers: HTMLElement[] = [];
+  let menuBody: HTMLElement | null = null;
+  let narrowMql: MediaQueryList | null = null;
+  // autonyms: a language name in its own language is never translated, like the μg mark
+  const localeNames: Record<string, string> = { en: "English", es: "Español", hi: "हिन्दी", ar: "العربية" };
 
   const behavior = (): ScrollBehavior => (prefersReducedMotion() ? "auto" : "smooth");
 
@@ -53,13 +60,51 @@ export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: H
       return [lens, b];
     });
     const group = h("div", { class: "lens-switch", role: "group", "aria-label": t("ui.chrome.lens-label") }, ...lensButtons.map(([, b]) => b));
-    root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, storiesBtn, skipBtn));
+    const locales = (Object.keys(ctx.dicts).length ? Object.keys(ctx.dicts) : ["en"]).filter((l) => l in localeNames);
+    localeSelect = h("select", { class: "locale-select", "aria-label": t("ui.chrome.locale-label") },
+      ...locales.map((locale) => h("option", { value: locale, selected: locale === store.get().locale ? true : undefined }, localeNames[locale]!)));
+    // a locale change rebuilds the bar: keep focus on the new picker
+    localeSelect.addEventListener("change", () => {
+      store.set({ locale: localeSelect!.value as Locale });
+      root.querySelector<HTMLSelectElement>(".locale-select")?.focus();
+    });
+    menuBody = h("div", { class: "menu-body" });
+    const menu = h("details", { class: "chrome-menu" },
+      h("summary", { class: "menu-button btn" }, t("ui.chrome.menu")), menuBody);
+    movers = [group, storiesBtn, skipBtn, localeSelect];
+    root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, storiesBtn, skipBtn, localeSelect, menu));
+    watchNarrow();
+    place();
     sync();
   }
 
+  /** Under 768 px the bar keeps one row (mark, chapter numbers, Menu) and the four
+   *  controls move into the Menu; wider, they move back. Reparenting keeps the same
+   *  nodes, so listeners, state and focus survive the move. */
+  function place(): void {
+    if (!menuBody) return;
+    const bar = root.querySelector(":scope > .chrome-bar");
+    const menu = root.querySelector(":scope .chrome-menu");
+    if (!bar || !menu) return;
+    if (narrowMql?.matches) {
+      for (const m of movers) menuBody.append(m);
+    } else {
+      for (const m of movers) bar.insertBefore(m, menu);
+    }
+  }
+
+  function watchNarrow(): void {
+    if (narrowMql || typeof window.matchMedia !== "function") return;
+    narrowMql = window.matchMedia("(max-width: 767px)");
+    const onChange = (): void => place();
+    if (typeof narrowMql.addEventListener === "function") narrowMql.addEventListener("change", onChange);
+    else narrowMql.addListener(onChange);
+  }
+
   function sync(): void {
-    const { lens, beat } = store.get();
+    const { lens, locale, beat } = store.get();
     for (const [l, b] of lensButtons) b.setAttribute("aria-pressed", String(l === lens));
+    if (localeSelect && localeSelect.value !== locale) localeSelect.value = locale;
     for (const [id, c] of chips) {
       if (id === beat?.story) c.setAttribute("aria-current", "true");
       else c.removeAttribute("aria-current");

@@ -1,0 +1,60 @@
+{
+  "id": "the-gap",
+  "act": 4,
+  "title_key": "story.the-gap.title",
+  "scenes": [
+    {
+      "id": "the-gap-main",
+      "beats": [
+        {
+          "id": "gap",
+          "kind": "takeaway",
+          "stage": {
+            "view": "tilt-lunar",
+            "show_families": [
+              "large-scale solids",
+              "solids in flow duct",
+              "gas jets",
+              "droplets",
+              "smoke detection"
+            ],
+            "reference": [
+              "heo-dm-1006"
+            ],
+            "annotation": [
+              {
+                "id": "no-lunar-tests",
+                "text_key": "story.the-gap.the-gap-main.gap.annotation",
+                "at": "lunar-plane"
+              },
+              {
+                "id": "fm2-note",
+                "text_key": "story.the-gap.the-gap-main.gap.annotation-2",
+                "at": "lunar-plane"
+              }
+            ]
+          },
+          "text": {
+            "public": "story.the-gap.the-gap-main.gap.public",
+            "astronaut": "story.the-gap.the-gap-main.gap.astronaut",
+            "analyst": "story.the-gap.the-gap-main.gap.analyst"
+          },
+          "sources": [
+            {
+              "label": "Challenge #7 brief; LPSC 2026, NTRS 20260000646",
+              "url": "https://ntrs.nasa.gov/citations/20260000646"
+            },
+            {
+              "label": "ICES-2020-173, NTRS 20205000063",
+              "url": "https://ntrs.nasa.gov/citations/20205000063"
+            },
+            {
+              "label": "Niehaus et al., ICES-2025, NTRS 20250002675",
+              "url": "https://ntrs.nasa.gov/citations/20250002675"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

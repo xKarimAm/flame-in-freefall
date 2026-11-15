@@ -9,6 +9,7 @@ export const initialState: AppState = {
   stage: { view: "empty" },
   sliders: null,
   family: null,
+  filters: { search: "", fuel: null, outcome: null, plotted: "all" },
 };
 
 export function createStore(start: AppState = initialState): Store {

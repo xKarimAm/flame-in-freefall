@@ -1,6 +1,7 @@
 // Pure "what to draw" decisions for the stage (no DOM). Generated with Claude, SI-assisted.
 import { OUTCOME_GROUP } from "../contract";
-import type { Atmosphere, DataApi, Family, NotPlacedRow, Outcome, PlacedTest, StageState } from "../contract";
+import type { Atmosphere, ChartFilters, DataApi, Family, Lens, NotPlacedRow, Outcome, PlacedTest, StageState } from "../contract";
+import { airName } from "../ui/dom";
 
 /** default = quiet grey (not highlighted). Highlighted tests: burned = orange, went-out = hollow blue,
  *  other = filled blue (the record says neither burned nor went out). */
@@ -68,6 +69,24 @@ export function pressuresForDomain(drawn: PlacedTest[], placed: PlacedTest[], re
   ];
 }
 
+/** Whether a drawn row (a dot or a listed tick) survives the store's whole filter set.
+ *  `haystack` is the row's searchable text (investigation, acronym, title, family, fuel),
+ *  already lowercase; the store search is stored lowercase too. Pure. */
+export function chartPasses(
+  p: { id: string; family: Family | null; fuel: string | null; outcome: Outcome },
+  f: { family: Family | null } & ChartFilters,
+  placed: Set<string>,
+  haystack: string,
+): boolean {
+  if (f.family && p.family !== f.family) return false;
+  if (f.fuel && p.fuel !== f.fuel) return false;
+  if (f.outcome && p.outcome !== f.outcome) return false;
+  if (f.plotted === "plotted" && !placed.has(p.id)) return false;
+  if (f.plotted === "unplaced" && placed.has(p.id)) return false;
+  if (f.search && !haystack.toLowerCase().includes(f.search)) return false;
+  return true;
+}
+
 /** Tests with oxygen recorded but no pressure, in the families the beat has revealed.
  *  They are never given an x position. */
 export function noPressureRows(stage: StageState, rows: NotPlacedRow[]): (NotPlacedRow & { o2_pct: number })[] {
@@ -79,10 +98,11 @@ export function noPressureRows(stage: StageState, rows: NotPlacedRow[]): (NotPla
 export type Swatch = DotKind | "nearest" | "tick" | "paper" | "moon" | "ref" | "open" | "you";
 export interface LegendItem { swatch: Swatch; text: string }
 
-/** Legend in words, only for what is on screen right now. */
+/** Legend in words, only for what is on screen right now. Atmosphere names are plain words in Public. */
 export function legendItems(
   t: (key: string) => string,
   drawn: { kinds: ReadonlySet<DotKind>; nearest: boolean; refs: RefPlan; you: boolean; noPressure: number },
+  lens: Lens,
 ): LegendItem[] {
   const items: LegendItem[] = [];
   if (drawn.kinds.has("default")) items.push({ swatch: "default", text: t("ui.stage.legend.other") });
@@ -94,7 +114,8 @@ export function legendItems(
   if (drawn.refs.paper.length) items.push({ swatch: "paper", text: t("ui.stage.legend.paper") });
   for (const b of drawn.refs.bands) {
     const swatch: Swatch = b.shape === "moon-box" ? "moon" : b.shape === "open" ? "open" : "ref";
-    items.push({ swatch, text: b.shape === "open" ? `${b.atm.name}. ${t("ui.stage.legend.open-band")}` : b.atm.name });
+    const name = airName(lens, b.atm, t);
+    items.push({ swatch, text: b.shape === "open" ? `${name}. ${t("ui.stage.legend.open-band")}` : name });
   }
   if (drawn.you) items.push({ swatch: "you", text: t("ui.stage.your-air") });
   return items;

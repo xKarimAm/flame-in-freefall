@@ -1,7 +1,11 @@
 // Scroll engine: stories -> steps -> active beat -> store. Coder C owns this folder (T5).
 // Generated with Claude, SI-assisted.
 import scrollama from "scrollama";
+import { MOON_STORY_ID } from "../contract";
 import type { Ctx } from "../contract";
+import { DATA_URL_BASE } from "../data/index";
+import type { ChapterPicture } from "../data/pictures";
+import { safeHref } from "../ui/dom";
 import "./engine.css";
 import { flattenBeats, stories } from "./stories";
 import { resolveText } from "./text";
@@ -21,21 +25,63 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?
   return e;
 }
 
-export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = scrollama): void {
+/** The ending card talks to the rest of the app without importing it: scrolling is DOM,
+ *  the data lens is the store, and the Stories overlay listens for this event (see ui/overlay.ts). */
+export const OPEN_OVERLAY_EVENT = "firebreak:open-overlay";
+/** The ending card's "See every experiment" opens the library, not the story list. */
+export const OPEN_LIBRARY_EVENT = "firebreak:open-library";
+
+function scrollCenter(el: Element | null): void {
+  if (!el) return;
+  const behavior =
+    typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  (el as HTMLElement).scrollIntoView({ block: "center", behavior });
+}
+
+/** A chapter page's NASA photograph (R13): the figure for the chapter number, with the
+ *  record's own caption, credit link and edit note. No picture fact is typed here.
+ *  R14: each part of the figcaption is its own block line (caption, "Image: credit",
+ *  edit note) so the caption never runs into the credit. */
+export function chapterFigure(pic: ChapterPicture, imageWord: string): HTMLElement {
+  const figure = node("figure", "chapter-picture");
+  const img = node("img");
+  img.src = `${DATA_URL_BASE}/${pic.file}`;
+  img.alt = pic.alt;
+  img.setAttribute("loading", "lazy");
+  const cap = node("figcaption");
+  cap.append(node("span", "chapter-caption", pic.caption));
+  const credit = node("span", "chapter-credit");
+  credit.append(document.createTextNode(`${imageWord}: `));
+  const a = node("a", undefined, pic.credit);
+  a.href = safeHref(pic.url);
+  a.target = "_blank";
+  a.rel = "noopener";
+  credit.append(a);
+  cap.append(credit);
+  if (pic.edit) {
+    cap.append(node("span", "chapter-edit", pic.edit));
+  }
+  figure.append(img, cap);
+  return figure;
+}
+
+export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = scrollama, pictures: ChapterPicture[] = []): void {
   const flat = flattenBeats(stories);
   const steps: HTMLElement[] = [];
   const texts: HTMLElement[] = [];
-  const labels: HTMLElement[] = []; // the "Sources" label of each step (a detached stub when the beat has no sources)
   const pages: HTMLElement[] = []; // the "Page n of total" line of each step
-  const headings: { section: HTMLElement; label: HTMLElement; h2: HTMLElement; question: HTMLElement; key: string; act: number }[] = [];
+  const headings: { section: HTMLElement; h2: HTMLElement; question: HTMLElement; key: string; act: number }[] = [];
   const sections = new Map<string, HTMLElement>();
 
   el.replaceChildren();
   const cover = node("section", "cover");
   const coverTitle = node("h1", "cover-title");
   const coverLead = node("p", "cover-lead");
+  const coverAudience = node("p", "cover-audience");
+  const coverExplore = node("button", "btn primary cover-explore");
+  coverExplore.type = "button";
   const coverCue = node("p", "cover-cue");
-  cover.append(coverTitle, coverLead, coverCue);
+  cover.append(coverTitle, coverLead, coverAudience, coverExplore, coverCue);
   el.append(cover);
   for (const { story, scene, beat } of flat) {
     let section = sections.get(story.id);
@@ -45,12 +91,17 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
       section.dataset.story = story.id;
       section.dataset.act = String(story.act);
       const header = node("header", "chapter");
-      const label = node("p", "chapter-label");
+      // R14: the title and its question stay together in one group beside the figure,
+      // the question 16 px under the title, the group vertically centred on the page.
+      const copy = node("div", "chapter-text");
       const h2 = node("h2", "story-title");
       const question = node("p", "chapter-question"); // attached in render() only when the dictionary has the key
-      header.append(label, h2);
+      copy.append(h2);
+      header.append(copy);
+      const pic = pictures.find((p) => p.chapter === story.act);
+      if (pic) header.append(chapterFigure(pic, ctx.t("ui.engine.pictureImage")));
       section.append(header);
-      headings.push({ section, label, h2, question, key: story.title_key, act: story.act });
+      headings.push({ section, h2, question, key: story.title_key, act: story.act });
       sections.set(story.id, section);
       el.append(section);
     }
@@ -62,42 +113,119 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     const page = node("p", "step-page");
     const text = node("p", "step-text");
     card.append(page, text);
-    const label = node("h3", "step-sources-label");
+    // the sources ride on one small line after the card text
     if (beat.sources.length) {
-      const list = node("ul", "step-sources");
-      for (const s of beat.sources) {
+      const line = node("p", "step-sources");
+      line.append(document.createTextNode(`${ctx.t("ui.engine.sources")}: `));
+      beat.sources.forEach((s, i) => {
+        if (i > 0) line.append(document.createTextNode(", "));
         const a = node("a", undefined, s.label);
-        a.href = s.url;
+        a.href = safeHref(s.url);
         a.target = "_blank";
         a.rel = "noopener";
-        const li = node("li");
-        li.append(a);
-        list.append(li);
-      }
-      card.append(label, list);
+        line.append(a);
+      });
+      card.append(line);
     }
     step.append(card);
     section.append(step);
     steps.push(step);
     texts.push(text);
     pages.push(page);
-    labels.push(label);
+  }
+
+  // page dots: one per step, tracking the active one. First in DOM (keyboard users
+  // reach it first), visually fixed in place by CSS, so the look does not change.
+  const dotsNav = node("nav", "page-dots");
+  const dots: HTMLButtonElement[] = [];
+  for (const step of steps) {
+    const d = node("button", "page-dot");
+    d.type = "button";
+    d.addEventListener("click", () => scrollCenter(step));
+    dotsNav.append(d);
+    dots.push(d);
+  }
+  el.insertBefore(dotsNav, cover);
+
+  // ending card: what the visitor just saw, and three ways to go on
+  const ending = node("section", "ending");
+  const endTitle = node("h2", "end-title");
+  const endSummary = node("p", "end-summary");
+  const endActions = node("div", "end-actions");
+  const exploreBtn = node("button", "end-btn primary");
+  exploreBtn.type = "button";
+  const retryBtn = node("button", "end-btn");
+  retryBtn.type = "button";
+  const libraryBtn = node("button", "end-btn");
+  libraryBtn.type = "button";
+  const explore = (): void => {
+    ctx.store.set({ lens: "analyst" });
+    scrollCenter(document.getElementById("sheet"));
+  };
+  coverExplore.addEventListener("click", explore);
+  exploreBtn.addEventListener("click", explore);
+  retryBtn.addEventListener("click", () =>
+    scrollCenter(
+      document.querySelector(`#story-${MOON_STORY_ID} .step[data-sliders="true"]`) ??
+        document.querySelector(`#story-${MOON_STORY_ID}`),
+    ),
+  );
+  libraryBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent(OPEN_LIBRARY_EVENT, { detail: libraryBtn })));
+  endActions.append(exploreBtn, retryBtn, libraryBtn);
+  const endCard = node("div", "end-card");
+  endCard.append(endTitle, endSummary, endActions);
+  ending.append(endCard);
+  el.append(ending);
+
+  function markDots(active: number): void {
+    dots.forEach((d, j) => {
+      if (j === active) d.setAttribute("aria-current", "true");
+      else d.removeAttribute("aria-current");
+    });
+  }
+
+  /** The cover shows only the dial and the flame: incident cards hide while it fills the screen. */
+  function updateCoverFlag(): void {
+    const cover = el.querySelector(".cover");
+    if (!cover) return;
+    const vh = window.innerHeight;
+    const r = cover.getBoundingClientRect();
+    document.body.dataset.cover = r.top < vh / 2 && r.bottom > vh / 2 ? "true" : "false";
+  }
+
+  /** The stage hides while a chapter page fills the screen; the cover keeps its live
+   *  stage behind the text, so only chapters hide it. */
+  function updateStageHidden(): void {
+    const vh = window.innerHeight;
+    const inView = (n: Element): boolean => {
+      const r = n.getBoundingClientRect();
+      return r.top < vh / 2 && r.bottom > vh / 2;
+    };
+    document.body.dataset.stageHidden = [...el.querySelectorAll(".chapter")].some(inView) ? "true" : "false";
   }
 
   function render(): void {
     const { lens, locale } = ctx.store.get();
     el.dataset.lens = lens;
+    document.documentElement.lang = locale;
+    dotsNav.setAttribute("aria-label", ctx.t("ui.engine.pages"));
+    dots.forEach((d, i) => d.setAttribute("aria-label", ctx.t("ui.engine.page", { n: i + 1, total: dots.length })));
     coverTitle.textContent = ctx.t("ui.cover.title");
     coverLead.textContent = ctx.t("ui.cover.lead");
+    coverAudience.textContent = ctx.t("ui.cover.audience");
+    coverExplore.textContent = ctx.t("ui.engine.explore");
     coverCue.textContent = ctx.t("ui.cover.cue");
+    endTitle.textContent = ctx.t("ui.ending.title");
+    endSummary.textContent = ctx.t("ui.ending.summary");
+    exploreBtn.textContent = ctx.t("ui.engine.explore");
+    retryBtn.textContent = ctx.t("ui.ending.retry");
+    libraryBtn.textContent = ctx.t("ui.ending.library");
     flat.forEach(({ beat }, i) => {
       pages[i].textContent = ctx.t("ui.engine.page", { n: i + 1, total: flat.length });
       texts[i].textContent = resolveText(ctx.dicts, beat.text, lens, locale);
-      labels[i].textContent = ctx.t("ui.engine.sources");
     });
-    for (const { section, label, h2, question, key, act } of headings) {
-      label.textContent = ctx.t("ui.engine.chapter", { n: act });
-      h2.textContent = ctx.t(key);
+    for (const { section, h2, question, key, act } of headings) {
+      h2.textContent = ctx.t("ui.engine.chapterTitle", { n: act, title: ctx.t(key) });
       section.dataset.title = h2.textContent;
       const qKey = key.replace(/\.title$/, ".question");
       const q = ctx.t(qKey);
@@ -109,9 +237,36 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     }
   }
 
+  function pageEls(): HTMLElement[] {
+    return [...el.querySelectorAll<HTMLElement>(".cover, .step, .ending")];
+  }
+
+  /** Keyboard page turning: arrows and space move one page, never hijacking form controls,
+   *  and never inside the analyst workspace or the open overlay. */
+  function onKey(e: KeyboardEvent): void {
+    if (!el.isConnected) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (ctx.store.get().lens === "analyst") return;
+    const overlay = document.getElementById("overlay");
+    if (overlay && !overlay.hidden) return;
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest("input, select, textarea, button, a, [contenteditable], #sheet, #panel, #overlay")) return;
+    const dir = e.key === "ArrowDown" || e.key === "PageDown" || e.key === " " ? 1 : e.key === "ArrowUp" || e.key === "PageUp" ? -1 : 0;
+    if (!dir) return;
+    e.preventDefault();
+    const list = pageEls();
+    if (!list.length) return;
+    const line = window.scrollY + window.innerHeight * 0.4;
+    let at = list.findIndex((p) => p.getBoundingClientRect().top + window.scrollY > line + 1);
+    if (at === -1) at = list.length;
+    scrollCenter(list[Math.min(list.length - 1, Math.max(0, at - 1 + dir))]);
+  }
+  window.addEventListener("keydown", onKey);
+
   function activate(i: number): void {
     const { story, scene, beat } = flat[i];
     steps.forEach((s, j) => s.classList.toggle("is-active", j === i));
+    markDots(i);
     // sliders are (re)started only here, on entering a beat, so a user's moves survive while it stays active
     ctx.store.set({
       beat: { story: story.id, scene: scene.id, beat: beat.id, kind: beat.kind },
@@ -124,6 +279,14 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   ctx.store.subscribe((s, prev) => {
     if (s.lens !== prev.lens || s.locale !== prev.locale) render();
   });
+  const onScroll = (): void => {
+    if (!el.isConnected) return;
+    updateStageHidden();
+    updateCoverFlag();
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  updateStageHidden();
+  updateCoverFlag();
 
   if (steps.length === 0) return;
   makeScroller()

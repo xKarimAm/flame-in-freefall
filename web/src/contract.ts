@@ -31,7 +31,7 @@ export type Outcome =
   | "unknown";
 
 /** How the stage colours a recorded outcome. Words, not a prediction:
- *  "burned"   = the test record says it burned to the end of the test
+ *  "burned"   = the test record says it kept burning
  *               (burned, completion, flow-terminated = still burning when the flow was shut off);
  *  "went-out" = the record says the flame went out by itself (extinction, self-extinguished);
  *  "other"    = disruption, no-ignition, unknown. */
@@ -238,6 +238,17 @@ export interface DataApi {
 // ---------- story (contracts/story.schema.json) ----------
 export type Lens = "public" | "astronaut" | "analyst";
 export const LENSES: readonly Lens[] = ["public", "astronaut", "analyst"];
+
+/** Which test rows the chart (and the sheet tables) show. The whole set lives in the
+ *  store so every view draws the same rows; `family` stays a top-level field. */
+export type PlottedFilter = "all" | "plotted" | "unplaced";
+export interface ChartFilters {
+  /** lowercased trimmed search text; empty = off */
+  search: string;
+  fuel: string | null;
+  outcome: Outcome | null;
+  plotted: PlottedFilter;
+}
 export type Locale = "en" | "es" | "hi" | "ar";
 export type BeatKind = "hook" | "reveal" | "focus" | "compare" | "takeaway" | "interactive";
 export type StageView = "empty" | "incident" | "micro-g" | "tilt-lunar";
@@ -308,6 +319,8 @@ export interface AppState {
   sliders: { pressure_kpa: number; o2_pct: number } | null;
   /** family filter of the nearest list; null = all families */
   family: Family | null;
+  /** search, fuel, outcome and plotted filters; every view draws the same rows */
+  filters: ChartFilters;
 }
 
 export interface Store {

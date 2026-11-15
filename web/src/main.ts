@@ -2,8 +2,11 @@
 // Generated with Claude, SI-assisted.
 import "./styles/tokens.css";
 import "./styles/base.css";
+import "./ui/motion.css";
+import { observeCounts, observeEnter, observeFlame } from "./ui/motion";
 import type { Ctx } from "./contract";
 import { createDataApi, loadData } from "./data/index";
+import { loadPictures } from "./data/pictures";
 import { mount as mountEngine } from "./engine/index";
 import { dicts, makeT } from "./i18n/index";
 import { mount as mountStage } from "./stage/index";
@@ -26,7 +29,13 @@ async function main(): Promise<void> {
     const ctx: Ctx = { api, store, dicts, t };
     mountStage(el("stage"), ctx);
     mountUi({ chrome: el("chrome"), panel: el("panel"), sheet: el("sheet"), overlay: el("overlay") }, ctx);
-    mountEngine(el("story"), ctx); // last: it sets the first beat, the others are already listening
+    mountEngine(el("story"), ctx, undefined, await loadPictures()); // last: it sets the first beat, the others are already listening
+    // R8: the script ran, so scroll-driven entrances may start hidden; without
+    // this mark every word stays visible (nothing hides if the script fails).
+    document.body.dataset["motion"] = "on";
+    observeEnter(document);
+    observeFlame(document);
+    observeCounts(document);
     status.remove();
   } catch (err) {
     status.textContent = `${t("ui.load-error")} ${(err as Error).message}`;
