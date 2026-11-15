@@ -6,28 +6,126 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["id", "investigations", "title", "voice", "core", "signature", "hook", "reveal", "bridge", "moments", "ai"],
+    "required": [
+      "id",
+      "investigations",
+      "title",
+      "voice",
+      "core",
+      "signature",
+      "hook",
+      "reveal",
+      "bridge",
+      "moments",
+      "ai"
+    ],
     "additionalProperties": false,
     "properties": {
-      "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-      "investigations": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^PSI-[0-9]+$" } },
-      "title": { "type": "string", "description": "the story title from the table in docs/STORY-LIBRARY.md" },
-      "voice": { "type": "string", "description": "the voice from the same table, e.g. 'the firefighter'" },
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "investigations": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string",
+          "pattern": "^PSI-[0-9]+$"
+        }
+      },
+      "title": {
+        "type": "string",
+        "description": "the story title from the table in docs/STORY-LIBRARY.md"
+      },
+      "voice": {
+        "type": "string",
+        "description": "the voice from the same table, e.g. 'the firefighter'"
+      },
       "core": {
-        "type": "object", "required": ["quote", "investigation"], "additionalProperties": false,
-        "properties": { "quote": { "type": "string" }, "investigation": { "type": "string", "pattern": "^PSI-[0-9]+$" } }
+        "type": "object",
+        "required": [
+          "quote",
+          "investigation"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "quote": {
+            "type": "string"
+          },
+          "investigation": {
+            "type": "string",
+            "pattern": "^PSI-[0-9]+$"
+          }
+        }
       },
       "signature": {
-        "enum": ["condition-map", "sample-wall", "outcome-strip", "size-histogram", "threshold-line", "paper-trail"],
+        "enum": [
+          "condition-map",
+          "sample-wall",
+          "outcome-strip",
+          "size-histogram",
+          "threshold-line",
+          "paper-trail"
+        ],
         "description": "the view the data can actually support: condition-map needs rows with oxygen and pressure; sample-wall lists the rows as cards; outcome-strip is one mark per row along the one recorded variable; paper-trail lists publications when there are no rows"
       },
-      "hook": { "type": "string", "description": "one or two plain sentences, no digits" },
-      "reveal": { "type": "string", "description": "what the tests did, in plain words, no digits" },
-      "bridge": { "type": "string", "description": "one line linking to the Moon-air question, or saying this one is about something else, no digits" },
-      "moments": { "type": "array", "items": { "type": "string", "pattern": "^PSI-[0-9]+\\.[a-z0-9-]+$" }, "description": "moment ids to show, the first is the story's climax; empty when the investigation has no rows" },
+      "hook": {
+        "type": "string",
+        "description": "one or two plain sentences, no digits"
+      },
+      "reveal": {
+        "type": "string",
+        "description": "what the tests did, in plain words, no digits"
+      },
+      "bridge": {
+        "type": "string",
+        "description": "one line linking to the Moon-air question, or saying this one is about something else, no digits"
+      },
+      "moments": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^PSI-[0-9]+\\.[a-z0-9-]+$"
+        },
+        "description": "moment ids to show, the first is the story's climax; empty when the investigation has no rows"
+      },
       "ai": {
-        "type": "object", "required": ["model", "made_at"], "additionalProperties": false,
-        "properties": { "model": { "type": "string" }, "made_at": { "type": "string" } }
+        "type": "object",
+        "required": [
+          "model",
+          "made_at"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "made_at": {
+            "type": "string"
+          }
+        }
+      },
+      "engineer": {
+        "type": "object",
+        "required": [
+          "text",
+          "quote",
+          "investigation"
+        ],
+        "additionalProperties": false,
+        "description": "Astronaut / engineer lens: one or two plain sentences on what this investigation means for crew fire safety, drafted by Meta Muse Spark ONLY from the investigation's own PSI text (research impact, applications, objective). No digits. quote is the verbatim PSI sentence it rests on (whitespace-normalised substring). Absent when the PSI text says nothing about safety or applications: never inferred.",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "investigation": {
+            "type": "string",
+            "pattern": "^PSI-[0-9]+$"
+          }
+        }
       }
     }
   }
