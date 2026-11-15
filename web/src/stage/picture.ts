@@ -34,28 +34,14 @@ const H = 560;
 const TOP = 28;
 const BOTTOM = 524;
 const AXIS_X = 56;
-/** The flame stands in its own zone left of the scale, never over a label or a mark
- *  (R2e): the viewBox extends left of the dial so the flame keeps its mark alignment.
- *  The tall Apollo flame is 176 wide, so its centre sits at -100 with room to spare. */
-export const FLAME_CX = -100;
+/** The flame is the oxygen handle: it stands in its own zone left of the scale, never over a
+ *  label or a mark (R2e), its right edge at FLAME_RIGHT. Constant size: two tick gaps tall. */
+export const FLAME_RIGHT = -8;
 const VIEW_X = -200;
 
 /** Where a marker sits as a fraction up from the dial's bottom edge (the flame stands there). */
 export function markerBottomFraction(v: number): number {
   return (H - y(v)) / H;
-}
-
-/** Flame height in viewBox units: small and calm with no marker, otherwise at least
- *  160 tall and growing with the mark. Pure. */
-export function flameHeight(mark: number | null): number {
-  return mark === null ? 110 : 160 + mark;
-}
-
-/** ViewBox units the flame rises above the dial top (0 when it fits): the layout pads
- *  the dial row by this much, scaled to the rendered dial. Pure. */
-export function flameOverhangUnits(mark: number | null): number {
-  if (mark === null) return 0;
-  return Math.max(0, TOP - (y(mark) - flameHeight(mark)));
 }
 
 /** ViewBox y for an oxygen percent on the dial scale. */
@@ -124,9 +110,6 @@ export function dialSVG(ctx: Ctx, shown: Incident[]): SVGSVGElement {
     mark.append(svg("title", {}, `${inc.name}: ${inc.oxygen}`));
     chart.append(mark);
   }
-  // the flame stands on the current mark (small on the ground with no marker): part of the dial
-  const mark = shown.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== undefined);
-  chart.append(flameSVG(mark === undefined ? null : mark));
   return chart as SVGSVGElement;
 }
 
@@ -151,24 +134,28 @@ export function dialHandleSVG(): { line: SVGElement; hit: SVGElement } {
   return { line, hit };
 }
 
-/** The flame guide, standing on the current mark inside the dial: small and calm on the
- *  ground with no marker, otherwise at least 160 tall and growing with the mark. */
-export function flameSVG(mark: number | null): SVGSVGElement {
-  const v = mark ?? 0;
-  const h = flameHeight(mark);
+/** Flame height in viewBox units: two tick gaps, the same at every oxygen value. */
+export const FLAME_UNITS = (2 * (BOTTOM - TOP)) / 10;
+/** Share of the flame's height above the marker line: the line meets the flame's body. */
+const FLAME_ABOVE = 0.7;
+
+/** The flame guide IS the oxygen marker: constant size, its body on the marker line.
+ *  The wrapper g carries the vertical position as a CSS transform (so it can glide);
+ *  setO2 moves it to the value the draggable marker uses. */
+export function flameHandleSVG(v: number): { g: SVGElement; flame: SVGSVGElement; setO2: (v: number) => void } {
+  const h = FLAME_UNITS;
   const w = (h * 100) / FLAME_H;
-  const f = svg("svg", {
-    class: `flame-guide ${mark === null ? "small" : "tall"}`,
-    viewBox: `0 0 100 ${FLAME_H}`,
-    x: FLAME_CX - w / 2,
-    y: y(v) - h,
-    width: w,
-    height: h,
-    "aria-hidden": "true",
-  });
-  const g = svg("g", { class: "flame-sway" });
-  for (const layer of FLAME_LAYERS) g.append(svg("path", { d: layer.d, fill: layer.fill }));
-  g.append(svg("ellipse", { cx: 50, cy: 118, rx: 7, ry: 9, fill: "var(--flame-core)" }));
-  f.append(g);
-  return f as SVGSVGElement;
+  const g = svg("g", { class: "flame-travel" });
+  const f = svg("svg", { class: "flame-guide", viewBox: `0 0 100 ${FLAME_H}`, x: FLAME_RIGHT - w, y: -FLAME_ABOVE * h, width: w, height: h, "aria-hidden": "true" });
+  const sway = svg("g", { class: "flame-sway" });
+  for (const layer of FLAME_LAYERS) sway.append(svg("path", { d: layer.d, fill: layer.fill }));
+  sway.append(svg("ellipse", { cx: 50, cy: 118, rx: 7, ry: 9, fill: "var(--flame-core)" }));
+  f.append(sway);
+  g.append(f);
+  const setO2 = (x: number): void => {
+    g.setAttribute("data-o2", String(x));
+    (g as unknown as HTMLElement).style.transform = `translateY(${dialY(x)}px)`;
+  };
+  setO2(v);
+  return { g, flame: f as SVGSVGElement, setO2 };
 }
