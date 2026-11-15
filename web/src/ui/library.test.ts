@@ -262,6 +262,17 @@ describe("library", () => {
     expect(root.querySelector(".library-card")).toBeNull();
   });
 
+  it("planned work reads as planned on the page (B14 redraft: bre, cld, s-flame)", () => {
+    // PSI-20, PSI-21 and PSI-23 describe proposed work; the review (B14) rewrote them in
+    // the future or planned tense. The page must show that wording, never past-tense telling.
+    const c = ctx();
+    for (const id of ["bre", "cld", "s-flame"]) {
+      const page = renderLibraryPage(story(id), moments, c);
+      const words = `${page.querySelector(".lib-hook")!.textContent} ${page.querySelector(".lib-reveal")!.textContent}`;
+      expect(words).toMatch(/will|plan|proposed|going to/);
+    }
+  });
+
   it("the list shows all 19 stories and opens the clicked one", () => {
     const c = ctx();
     let opened: string | null = null;
