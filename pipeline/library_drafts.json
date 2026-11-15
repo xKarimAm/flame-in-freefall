@@ -2,45 +2,45 @@
   "saffire": {
     "core_quote": "The objectives of SAFFIRE-II are to determine how rapidly a large scale fire grows in low-gravity and to investigate the low-g flammability limits compared to those obtained in NASA’s normal gravity material flammability screening test.",
     "core_investigation": "PSI-99",
-    "hook": "After leaving the station, a supply ship was turned into a brave lab where a large fire was lit on purpose.",
-    "reveal": "They placed fabric in a long duct where fans pulled air through, lit it, and watched with cameras and heat and air sensors as the flame moved and grew.",
-    "bridge": "Learning how fast a large fire grows with moving air helps us imagine how to keep Moon base air safe for people to breathe.",
+    "hook": "They lit a big fire in space on purpose to learn how fast it can grow.",
+    "reveal": "After leaving the station, Saffire set out to light samples inside a long duct where fans moved air past the flames, with cameras and heat sensors watching how fast fire grew, using Sibal fabric mixed with silicone and PMMA in flat and structure forms and with Nomex.",
+    "bridge": "Knowing how these fabrics and test samples burn in low gravity helps think about safer air for a Moon base.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:05:35Z"
+      "made_at": "2026-11-15T04:15:48Z"
     }
   },
   "bass": {
-    "core_quote": "The relation between these can be investigated by observing flames burning for the longer times available in flight.",
+    "core_quote": "Begin to bridge the gap between the normal gravity NASA-STD-6001 Test#1 method, ground-based microgravity tests, and actual material flammability in microgravity.",
     "core_investigation": "PSI-26",
-    "hook": "Can we really trust Earth tests to tell us how things burn up there. Bass checks whether our normal gravity test tells the truth in space.",
-    "reveal": "On the space station, fabric was lit at one end inside a glove box and air was blown with the flame or against it, while flame size, shape, color and spread were watched, and a gas like that used on station was tried to stop flames.",
-    "bridge": "This matters for a Moon base because learning what burns in space and how to put it out helps keep cabin air safe.",
+    "hook": "Could ground tests be missing how things really burn in space, so the team planned to begin to bridge the gap with longer burns in flight.",
+    "reveal": "The plan was to burn fabric and other shapes inside a glove box on the space station, lighting one end with a wire while a fan pushed air with or against the flame, and watch size, shape, color, spread and quenching.",
+    "bridge": "This work is not about Moon base air, but about how fabrics burn and how gas can put them out when air moves in space.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:06:14Z"
+      "made_at": "2026-11-15T04:13:14Z"
     }
   },
   "bass-ii": {
-    "core_quote": "BASS-II results contribute to the combustion computational models used in the design of fire detection and suppression systems in microgravity and on Earth.",
+    "core_quote": "Study the ignition, flame growth, flame spread, and extinction limits for solid fuels burning in low-velocity forced flows in microgravity.",
     "core_investigation": "PSI-25",
-    "hook": "In space, even a soft and gentle breeze can decide if a flame grows or fades away.",
-    "reveal": "Astronauts lit small pieces of fuel inside a tiny wind tunnel on the space station and watched the flames while changing the soft airflow and the amount of oxygen in the air.",
-    "bridge": "This matters for a Moon base because the air we choose to breathe also changes how a flame starts and spreads.",
+    "hook": "It might be surprising that air barely moving in weightlessness is worth studying, and scientists wanted to see how such gentle flows relate to flames starting, growing, and going out.",
+    "reveal": "Astronauts worked as lab partners with a small wind tunnel inside a glovebox on the space station, testing fuel samples in slow flows going with and against the flame while changing airflow and oxygen by adding nitrogen, and watching how flames looked and spread.",
+    "bridge": "Learning how slow air and oxygen levels relate to burning helps plan how to spot and stop fires in places like a Moon base where people live and breathe.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:54:51Z"
+      "made_at": "2026-11-15T04:13:40Z"
     }
   },
   "flex": {
     "core_quote": "The FLEX (Flame Extinguishment Experiment) investigation aims to map the flammability limits of liquid fuels in microgravity environments, measure the effectiveness of various gaseous fire suppressants such as CO2, He, and SF6, and develop reliable predictive models for combustion limits under reduced gravity conditions.",
     "core_investigation": "PSI-69",
-    "hook": "When I face a fire, I need to know what will put it out. In space, we test which gases can stop a burning drop of fuel.",
-    "reveal": "They lit drops of fuel floating free and watched them burn, then slowly lowered the air until the drops would not light, and tested suppressant gases and a soft drift to see how the flame going out changed.",
-    "bridge": "This matters for a Moon base because the air we choose to breathe changes how easily a fire starts and what will put it out.",
+    "hook": "Think like a firefighter learning to smother a floating fire. Flex will map when liquid fuel can burn and test gases meant to put flames out.",
+    "reveal": "The plan will light fuel droplets and watch how they burn and fade, then try again with lowered oxygen and with smothering gases nearby to map when flames can stay lit and when they go out.",
+    "bridge": "This matters for Moon-base air because knowing what oxygen lets fuel keep burning helps shape cabin air and rules for putting fires out.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:07:07Z"
+      "made_at": "2026-11-15T04:14:49Z"
     }
   },
   "flex-2": {
@@ -90,23 +90,23 @@
   "bre": {
     "core_quote": "The BRE flight program seeks to establish the burning conditions in a quiescent microgravity ambient in terms of material properties.",
     "core_investigation": "PSI-20",
-    "hook": "Think of a burner that acts as a stand-in for solid fuel. Scientists watch how it burns when the air around it stays perfectly still.",
-    "reveal": "The team sets the air in the chamber, starts the fuel flow and lights it. They watch the flame while the burner warms up, mapping how burning changes, until the flame goes out or the heat steadies, then they lower the flow to find where it dies.",
-    "bridge": "This matters for Moon-base air because the tests check space air mixes that crews might one day breathe.",
+    "hook": "I will stand in for solid fuel and will burn in still weightless air while watchers study how I act.",
+    "reveal": "The team will set the air in the chamber, will start fuel flow and will light it, then will watch the flame without changing flow while the burner will warm, until the flame will fade or the warmth will steady.",
+    "bridge": "This will help us think about fire safety in air made for crews living in a Moon base.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:09:51Z"
+      "made_at": "2026-11-15T04:14:01Z"
     }
   },
   "cld": {
     "core_quote": "Characterize the behavior of weak coflow diffusion flames of methane and ethylene, as a function of velocity and fuel dilution, through measurement of flame shape, lift-off heights, temperatures and extinction limits.",
     "core_investigation": "PSI-21",
-    "hook": "Come close and listen. Some flames whisper so softly they almost vanish, and we want to watch where they lift and fade.",
-    "reveal": "They made soft methane and ethylene flames with lots of thinning and watched shape and lift as they neared going out, and they watched soot glow to learn about heat in the flame.",
-    "bridge": "This work is not about Moon-base air, it is about understanding faint flames and soot to build better models.",
+    "hook": "Come close and listen, for they plan to light very faint flames and watch how they lift and fade.",
+    "reveal": "They plan to test thin methane and ethylene flames while changing flow and mix, and plan to measure shape, lift, warmth, and where flames go out, plus glow and warmth from soot in smoky flames.",
+    "bridge": "This study is about something else, as it plans to shape computer models of faint and smoky flames.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:10:23Z"
+      "made_at": "2026-11-15T04:14:24Z"
     }
   },
   "e-field": {
@@ -121,25 +121,25 @@
     }
   },
   "s-flame": {
-    "core_quote": "Determine the quasi-steady convective/chemical-kinetic extinction limits (low system Damköhler numbers) and radiative/chemical-kinetic extinction limits (high system Damköhler numbers) for mixtures of different H2/CH4/diluent ratios (soot-free) and different C2H4/diluent ratios (sooty).",
+    "core_quote": "to compare with detailed computational simulation to assess transport properties and detailed chemical kinetics (including chemiluminescence)",
     "core_investigation": "PSI-23",
-    "hook": "The benchmark for fire is a perfect sphere, the same in every direction and easy to compare with computer models.",
-    "reveal": "They sent hydrogen, methane or ethylene mixed with diluent gas out through a round porous burner and lit a round steady flame, then measured flame pictures, flame and burner heat, and radiated heat to check against computer simulations.",
-    "bridge": "This is not a test of Moon base air, but a clean benchmark for checking how flames move heat and chemicals.",
+    "hook": "Scientists plan to create round flames so they can compare what the flames look like and how they act with detailed computer models.",
+    "reveal": "They will feed fuel mixes through a round burner and light them, then will measure flame pictures, heat, and light energy to see how flame shape and going-out points match the models.",
+    "bridge": "This experiment is not about Moon-base air; it is about how round flames act so models can be checked.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:55:28Z"
+      "made_at": "2026-11-15T04:15:18Z"
     }
   },
   "slice": {
     "core_quote": "The objective of this investigation is to better understand the structure and stability of laminar diffusion flames in microgravity.",
     "core_investigation": "PSI-106",
-    "hook": "Picture a climber clinging to rock with fingertips, refusing to let go. A flame in weightlessness does the same at the edge of its burner.",
-    "reveal": "A fan pushed air past burner tubes that could be swapped out, with different fuels and mixes thinned with nitrogen, lit by hand, and lots of still photos with heat and flow readings alongside showed how shape linked to steadiness.",
-    "bridge": "This one is not about Moon-base air itself, but about how a calm flame holds on and stretches when gravity lets go.",
+    "hook": "Imagine a flame as a climber gripping near the base, trying to hold on while air streams by.",
+    "reveal": "They lit flames in a fan-blown duct with swap-out burner tubes, tried methane and ethylene and mixes thinned with nitrogen, took still pictures with flow and heat readings laid over them, and the data was analysed to correlate flame shape with steadiness and air motion and fuel type.",
+    "bridge": "This work is not about Moon-base air, but about how still flames hold on and give off soot and heat in weightlessness.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:12:01Z"
+      "made_at": "2026-11-15T04:16:36Z"
     }
   },
   "spice": {
@@ -156,12 +156,12 @@
   "same": {
     "core_quote": "One of the major goals of this investigation was to quantify the sizes that the liquid smoke particulate achieves in low gravity and to relate the droplet size distribution to the smoke generation and smoke transport conditions in the experiment.",
     "core_investigation": "PSI-102",
-    "hook": "The smoke left behind tiny clues, and the detectives on orbit were on the case to track how they grew and where they drifted.",
-    "reveal": "The crew set up boxes and cameras, heated test materials to make smoke, checked smoke detectors, caught soot bits to study under a microscope, and weighed what was left to learn how much had burned.",
-    "bridge": "This matters for Moon-base air because knowing how smoke grows helps crews spot a fire early and keep breathing air safe.",
+    "hook": "Something strange was in the air, and the clues were too small to see. The case was to track how big liquid smoke drops get in low gravity.",
+    "reveal": "The crew set up boxes and cameras to gather clues, made smoke from heated spacecraft material, caught soot for microscope study, and checked how detectors responded.",
+    "bridge": "For air in a Moon base, the piece of the puzzle here was measuring smoke size and how detectors responded.",
     "ai": {
       "model": "muse-spark-1.3-contributor",
-      "made_at": "2026-11-15T00:12:50Z"
+      "made_at": "2026-11-15T04:16:13Z"
     }
   },
   "ground-soot": {

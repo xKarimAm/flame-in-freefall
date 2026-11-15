@@ -118,7 +118,16 @@ def moments_for(investigations, moments):
 
 
 def validate_draft(spec, draft, psi_texts):
-    """Error strings for a draft answer; [] means it can be committed."""
+    """Error strings for a draft answer; [] means it can be committed.
+
+    Code-checked here: verbatim quote, no digits, under 320 characters, no
+    exclamation marks. Prompt-level rules (B14, checked by the prompt text in
+    draft_prompt plus a human reviewer reading the answer against the PSI
+    text, not by code): state no finding the source text does not state;
+    planned work in the future tense; no superlatives the source text does
+    not make. A regex cannot judge tense or whether a claim is stated, so a
+    code check would either miss real violations or flag honest wording.
+    """
     errors = []
     inv = draft.get("core_investigation")
     if inv not in spec["investigations"]:
@@ -141,8 +150,19 @@ def validate_draft(spec, draft, psi_texts):
     return errors
 
 
-def draft_prompt(spec, psi_texts):
-    """The prompt holds ONLY this story's PSI text, its title and its voice."""
+def draft_prompt(spec, psi_texts, objection=None):
+    """The prompt holds ONLY this story's PSI text, its title and its voice.
+
+    Standing rules (B14): state no finding the source text does not state
+    (describe what the experiment set out to test or measure, not what it
+    found, unless the source states the result); planned work in the future
+    tense (when the source says "proposed", "will be" or "we plan", write
+    hook and reveal as plans, never as done); no superlatives the source
+    text does not make (never call an experiment a benchmark, perfect, best,
+    first, only or the truth unless the source makes that exact claim).
+    `objection` is a reviewer's exact complaint about a previous draft; it
+    is passed to the model word for word on a re-draft.
+    """
     parts = []
     for inv in spec["investigations"]:
         t = psi_texts[inv]
@@ -151,7 +171,7 @@ def draft_prompt(spec, psi_texts):
             block += f"\nDescription: {t['description']}"
         parts.append(block)
     invs = ", ".join(spec["investigations"])
-    return (
+    prompt = (
         "You are writing one short library story for Firebreak, a public web page about NASA fire experiments in space.\n"
         f"Story title: {spec['title']}\n"
         f"Voice (a tone, never invented facts): {spec['voice']}\n"
@@ -168,8 +188,22 @@ def draft_prompt(spec, psi_texts):
         "\u2014 if it is not about habitat air \u2014 saying honestly in plain words that this experiment is about something else.\n"
         "Rules for hook, reveal and bridge: no digit characters 0-9 anywhere (not even in experiment names: "
         'write "Saffire", "Flex" or "Bass" without their numbers), under 320 characters each, no exclamation marks.\n'
+        "State no finding the source text does not state: describe what the experiment set out to test or "
+        "measure, not what it found, unless the source text states the result.\n"
+        "When the source text describes proposed or planned work (\"proposed\", \"will be\", \"we plan\"), "
+        "write hook and reveal in the future or planned tense; never narrate planned work as already done.\n"
+        "No superlatives in hook, reveal or bridge unless the source text makes that exact claim: never call "
+        "an experiment a benchmark, perfect, the best, the first, the only one, or the truth.\n"
         "Return ONLY the JSON object, no other text."
     )
+    if objection:
+        prompt += (
+            "\nThe previous draft was rejected for this exact reason "
+            "— fix exactly this while keeping every other rule above:\n"
+            + objection
+            + "\nReturn ONLY the JSON object, no other text."
+        )
+    return prompt
 
 
 def _post(prompt):
@@ -202,6 +236,19 @@ def _parse_reply(text):
         raise ValueError(f"API reply is not a JSON object: {exc}") from exc
 
 
+def _finish(draft):
+    """Validated raw draft -> committed draft entry (fresh AI tag)."""
+    return {
+        "core_quote": _norm(draft["core_quote"]),
+        "core_investigation": draft["core_investigation"],
+        "hook": draft["hook"].strip(),
+        "reveal": draft["reveal"].strip(),
+        "bridge": draft["bridge"].strip(),
+        "ai": {"model": MODEL,
+               "made_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")},
+    }
+
+
 def draft_all(psi_texts):
     """One API request per story, each answer validated, two retries per story."""
     drafts = {}
@@ -219,16 +266,36 @@ def draft_all(psi_texts):
                 break
         if errors:
             raise RuntimeError(f"draft for {spec['id']} failed validation after 3 attempts: {errors}")
-        drafts[spec["id"]] = {
-            "core_quote": _norm(draft["core_quote"]),
-            "core_investigation": draft["core_investigation"],
-            "hook": draft["hook"].strip(),
-            "reveal": draft["reveal"].strip(),
-            "bridge": draft["bridge"].strip(),
-            "ai": {"model": MODEL,
-                   "made_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")},
-        }
+        drafts[spec["id"]] = _finish(draft)
     return drafts
+
+
+def redraft_story(story_id, objection, psi_texts, post=None):
+    """Re-draft one story through the model, passing the exact objection.
+
+    Same validators and two retries as draft_all; `post` defaults to the
+    real API call and is a fake client in tests. Raises KeyError for an
+    unknown story id, RuntimeError when every attempt fails validation.
+    """
+    matches = [s for s in SPEC if s["id"] == story_id]
+    if not matches:
+        raise KeyError(f"no story {story_id!r} in SPEC")
+    spec = matches[0]
+    prompt = draft_prompt(spec, psi_texts, objection=objection)
+    post = post or _post
+    errors, draft = ["not attempted"], None
+    for _ in range(3):
+        try:
+            draft = post(prompt)
+        except Exception as exc:  # transient network or empty reply: retry
+            errors = [f"request failed: {type(exc).__name__}"]
+            continue
+        errors = validate_draft(spec, draft, psi_texts)
+        if not errors:
+            break
+    if errors:
+        raise RuntimeError(f"redraft for {story_id!r} failed validation after 3 attempts: {errors}")
+    return _finish(draft)
 
 
 def load_drafts(path=DRAFTS_PATH):
@@ -284,6 +351,20 @@ def main(argv):
         drafts = draft_all(psi_texts)
         _write_json(DRAFTS_PATH, drafts)
         print(f"wrote {DRAFTS_PATH} ({len(drafts)} stories)")
+        return
+    if "--redraft" in argv:
+        # B14: uv run python -m ffpipe.library --redraft pipeline/redraft_objections.json
+        # The JSON file maps story id -> reviewer objection; each story is
+        # re-drafted through the API with the exact objection in the prompt.
+        path = Path(argv[argv.index("--redraft") + 1])
+        objections = json.loads(path.read_text(encoding="utf-8"))
+        psi_texts = {t["id"]: t for t in json.loads((BUILD_DIR / "psi-text.json").read_text(encoding="utf-8"))}
+        drafts = load_drafts()
+        for story_id, objection in objections.items():
+            drafts[story_id] = redraft_story(story_id, objection, psi_texts)
+            print(f"redrafted {story_id}")
+        _write_json(DRAFTS_PATH, drafts)
+        print(f"wrote {DRAFTS_PATH} ({len(objections)} stories redrafted)")
         return
     from .build import SNAPSHOT, load_summaries
 
