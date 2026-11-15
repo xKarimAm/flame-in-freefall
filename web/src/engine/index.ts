@@ -7,6 +7,7 @@ import { DATA_URL_BASE } from "../data/index";
 import type { ChapterPicture } from "../data/pictures";
 import { safeHref } from "../ui/dom";
 import "./engine.css";
+import "./reveal.css";
 import { flattenBeats, stories } from "./stories";
 import { resolveText } from "./text";
 
@@ -30,6 +31,20 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?
 export const OPEN_OVERLAY_EVENT = "firebreak:open-overlay";
 /** The ending card's "See every experiment" opens the library, not the story list. */
 export const OPEN_LIBRARY_EVENT = "firebreak:open-library";
+
+/** Sentences for the picture-book entrance: split after . ! ? when whitespace follows
+ *  (so "0.5" and "ISS-1" stay whole). One sentence per span, each arriving in turn. */
+export function splitSentences(text: string): string[] {
+  return text.split(/(?<=[.!?])\s+/).filter((t) => t.length > 0);
+}
+
+/** Staggered parts: --i counts 0,1,2... and stops at 7, so 7 gaps of 110 ms plus the
+ *  320 ms fade-up stay under 1.2 s however many sentences a page has (see reveal.css). */
+const MAX_REVEAL_INDEX = 7;
+function setReveal(el: HTMLElement, i: number): void {
+  el.classList.add("rv");
+  el.style.setProperty("--i", String(Math.min(i, MAX_REVEAL_INDEX)));
+}
 
 function scrollCenter(el: Element | null): void {
   if (!el) return;
@@ -70,6 +85,8 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const steps: HTMLElement[] = [];
   const texts: HTMLElement[] = [];
   const pages: HTMLElement[] = []; // the "Page n of total" line of each step
+  const sourceLines: (HTMLElement | undefined)[] = [];
+  const cues: HTMLElement[] = []; // "Scroll to turn the page" (a button) or, on the last page, a plain line
   const headings: { section: HTMLElement; h2: HTMLElement; question: HTMLElement; key: string; act: number }[] = [];
   const sections = new Map<string, HTMLElement>();
 
@@ -126,7 +143,20 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
         line.append(a);
       });
       card.append(line);
-    }
+      sourceLines.push(line);
+    } else sourceLines.push(undefined);
+    // the cue: a real button to the next page; the last page gets a plain line instead
+    const last = steps.length === flat.length - 1;
+    const cue = last ? node("p", "step-cue is-last") : node("button", "step-cue");
+    if (cue instanceof HTMLButtonElement) {
+      cue.type = "button";
+      const at = steps.length; // this step's own index
+      cue.addEventListener("click", () => scrollCenter(steps[at + 1]));
+      cue.append(node("span", "cue-text"), node("span", "cue-chevron"));
+      cue.lastElementChild!.setAttribute("aria-hidden", "true");
+    } else cue.append(node("span", "cue-text"));
+    card.append(cue);
+    cues.push(cue);
     step.append(card);
     section.append(step);
     steps.push(step);
@@ -222,7 +252,21 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     libraryBtn.textContent = ctx.t("ui.ending.library");
     flat.forEach(({ beat }, i) => {
       pages[i].textContent = ctx.t("ui.engine.page", { n: i + 1, total: flat.length });
-      texts[i].textContent = resolveText(ctx.dicts, beat.text, lens, locale);
+      setReveal(pages[i], 0);
+      const sentences = splitSentences(resolveText(ctx.dicts, beat.text, lens, locale));
+      const spans = sentences.map((t, k) => {
+        const span = node("span", "sent", t);
+        setReveal(span, k + 1);
+        return span;
+      });
+      texts[i].replaceChildren(...spans.flatMap((sp, k) => (k ? [document.createTextNode(" "), sp] : [sp])));
+      let part = spans.length + 1;
+      const src = sourceLines[i];
+      if (src) setReveal(src, part++);
+      setReveal(cues[i], part);
+      cues[i].querySelector(".cue-text")!.textContent = ctx.t(i === flat.length - 1 ? "ui.engine.last-cue" : "ui.engine.next-cue");
+      // a lens or language change updates the words in place: the page already shown must not replay
+      if (steps[i].classList.contains("reveal")) steps[i].classList.add("reveal-done");
     });
     for (const { section, h2, question, key, act } of headings) {
       h2.textContent = ctx.t("ui.engine.chapterTitle", { n: act, title: ctx.t(key) });
@@ -263,9 +307,15 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   }
   window.addEventListener("keydown", onKey);
 
-  function activate(i: number): void {
+  /** `show` is false only for the silent first activation at mount: page 1 is below the cover,
+   *  so its entrance waits until the reader scrolls to it. */
+  function activate(i: number, show = true): void {
     const { story, scene, beat } = flat[i];
-    steps.forEach((s, j) => s.classList.toggle("is-active", j === i));
+    steps.forEach((s, j) => {
+      s.classList.toggle("is-active", j === i);
+      if (j !== i) s.classList.remove("reveal", "reveal-done"); // leaving a page: it will enter again next time
+      else if (show) s.classList.add("reveal"); // already active: no change, so no replay
+    });
     markDots(i);
     // sliders are (re)started only here, on entering a beat, so a user's moves survive while it stays active
     ctx.store.set({
@@ -292,5 +342,5 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   makeScroller()
     .setup({ step: steps, offset: 0.6 })
     .onStepEnter(({ index }) => activate(index)); // both directions: scrolling up restores that beat
-  activate(0);
+  activate(0, false);
 }
