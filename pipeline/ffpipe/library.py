@@ -214,7 +214,7 @@ def engineer_prompt(spec, psi_texts, objection=None):
             block += f"\nDescription: {t['description']}"
         parts.append(block)
     invs = ", ".join(spec["investigations"])
-    return (
+    prompt = (
         "You are writing one astronaut/engineer lens line for Firebreak, a public web page about NASA fire experiments in space.\n"
         f"Story title: {spec['title']}\n"
         f"This is the ONLY source text you may use (the PSI record for {invs}):\n\n"
@@ -536,6 +536,21 @@ def main(argv):
         _write_json(DRAFTS_PATH, drafts)
         kept = sum(1 for f in fragments.values() if f.get("engineer_text"))
         print(f"wrote {DRAFTS_PATH} ({kept} with engineer, {len(fragments) - kept} absent)")
+        return
+    if "--engineer-redraft" in argv:
+        # B22: uv run python -m ffpipe.library --engineer-redraft pipeline/redraft_objections_b22.json
+        # The JSON file maps story id -> reviewer objection; each story's
+        # engineer lens is re-drafted through the API with the exact
+        # objection in the prompt. Merges into library_drafts.json.
+        path = Path(argv[argv.index("--engineer-redraft") + 1])
+        objections = json.loads(path.read_text(encoding="utf-8"))
+        psi_texts = {t["id"]: t for t in json.loads((BUILD_DIR / "psi-text.json").read_text(encoding="utf-8"))}
+        drafts = load_drafts()
+        for story_id, objection in objections.items():
+            drafts[story_id].update(draft_engineer(story_id, psi_texts, objection=objection))
+            print(f"redrafted engineer for {story_id}")
+        _write_json(DRAFTS_PATH, drafts)
+        print(f"wrote {DRAFTS_PATH} ({len(objections)} engineer stories redrafted)")
         return
     from .build import SNAPSHOT, load_summaries
 

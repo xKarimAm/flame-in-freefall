@@ -2,36 +2,37 @@
   {
     "id": "heo-dm-1006",
     "pressure_kpa": 56.5,
-    "o2_pct": 36.85,
+    "o2_pct_min": 33.7,
+    "o2_pct_max": 40,
     "top": [
       {
         "investigation": "PSI-159",
         "acronym": "ACME CFI-G",
-        "d_min": 0.234,
-        "near": 20,
+        "d_min": 0.233,
+        "near": 29,
         "placed": 333,
         "tests": 333
       },
       {
-        "investigation": "PSI-69",
-        "acronym": "FLEX",
-        "d_min": 0.82,
-        "near": 9,
-        "placed": 273,
-        "tests": 274
-      },
-      {
         "investigation": "PSI-10",
         "acronym": "ACME/Flame Design",
-        "d_min": 0.846,
+        "d_min": 0.277,
         "near": 4,
         "placed": 296,
         "tests": 327
       },
       {
+        "investigation": "PSI-69",
+        "acronym": "FLEX",
+        "d_min": 0.589,
+        "near": 17,
+        "placed": 273,
+        "tests": 274
+      },
+      {
         "investigation": "PSI-39",
         "acronym": "CFI",
-        "d_min": 3.179,
+        "d_min": 2.551,
         "near": 0,
         "placed": 84,
         "tests": 87

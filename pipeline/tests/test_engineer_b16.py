@@ -101,6 +101,38 @@ def test_absent_engineer_is_valid_and_build_omits_it():
     assert "engineer" not in entry
 
 
+def test_fake_client_engineer_objection_reaches_model():
+    from ffpipe.library import draft_engineer
+
+    psi_texts = {
+        "PSI-25": {
+            "id": "PSI-25",
+            "objective": "BASS-II results contribute to the combustion computational "
+            "models used in the design of fire detection and suppression systems "
+            "in microgravity and on Earth.",
+            "approach": "Tests were performed aboard the space station.",
+            "description": "",
+        }
+    }
+    seen = []
+    objection = "match what the sentence states: results contribute, not set out to"
+
+    def fake_post(prompt):
+        seen.append(prompt)
+        return {
+            "engineer_text": "BASS-II results contribute to models used when planning "
+            "fire detection and suppression for crews.",
+            "engineer_quote": "BASS-II results contribute to the combustion computational "
+            "models used in the design of fire detection and suppression systems "
+            "in microgravity and on Earth.",
+            "engineer_investigation": "PSI-25",
+        }
+
+    draft_engineer("bass-ii", psi_texts, post=fake_post, objection=objection)
+    assert len(seen) == 1
+    assert objection in seen[0]
+
+
 def test_fake_client_absent_story_gets_no_engineer():
     from ffpipe.library import draft_engineer
 
