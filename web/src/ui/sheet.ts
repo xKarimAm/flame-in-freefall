@@ -1,11 +1,12 @@
 // Analyst sheet: all investigations, and the Moon-gravity margins from moon.json.
 // Generated with Claude, SI-assisted.
 import { FAMILIES, type Ctx, type Experiment, type Family, type Outcome, type PlottedFilter, type Publication, type StageState, type TestRun } from "../contract";
+import { renderCompare } from "../dash/compare";
 import { renderOverview } from "../dash/overview";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import { cite, h, num, numOrMissing, safeHref } from "./dom";
 
-type Tab = "overview" | "investigations" | "margins" | "tests";
+type Tab = "overview" | "compare" | "investigations" | "margins" | "tests";
 const tabFor = (s: StageState["analyst_sheet"]): Tab => (s === "lunar-margins" || s === "failing-materials" ? "margins" : "investigations");
 
 type SortKey = "acronym" | "title" | "family" | "tests" | "o2" | "pressure" | "outcomes" | "papers";
@@ -425,7 +426,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   /** The toolbar count mirrors the visible tab: coverage, filtered investigations, test rows or materials. */
   function updateCount(): void {
     if (!countEl) return;
-    if (tab === "overview") {
+    if (tab === "overview" || tab === "compare") {
       const { plotted, total } = api.coverage();
       countEl.textContent = t("ui.stage.coverage", { plotted, total });
       return;
@@ -442,18 +443,18 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     const next = [tab, sortKey, sortDir, testSortKey, testSortDir, store.get().family, f.fuel, f.outcome, f.plotted, f.search].join("|");
     if (sig !== next) {
       sig = next;
-      body.replaceChildren(tab === "overview" ? renderOverview(ctx) : tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins());
+      body.replaceChildren(tab === "overview" ? renderOverview(ctx) : tab === "compare" ? renderCompare(ctx) : tab === "investigations" ? investigations() : tab === "tests" ? testsTab() : margins());
       if (tab === "investigations" && selectedInv) selectRow(selectedInv, false);
     }
     updateCount();
   }
 
   function build(): void {
-    // the dashboard overview tab is first; the backend lane owns its content (web/src/dash/)
-    const order: Tab[] = ["overview", "investigations", "margins", "tests"];
+    // the dashboard tabs are first; the backend lane owns their content (web/src/dash/)
+    const order: Tab[] = ["overview", "compare", "investigations", "margins", "tests"];
     tabBtns = order.map((k) => {
-      const b = h("button", { type: "button", role: "tab", class: "btn tab", "data-tab": k },
-        t(k === "overview" ? "ui.dash.tab.overview" : `ui.sheet.tab.${k}`));
+      const label = k === "overview" ? "ui.dash.tab.overview" : k === "compare" ? "ui.dash.tab.compare" : `ui.sheet.tab.${k}`;
+      const b = h("button", { type: "button", role: "tab", class: "btn tab", "data-tab": k }, t(label));
       b.addEventListener("click", () => { tab = k; render(); });
       // ARIA tabs pattern: Left/Right move between tabs and activate the new one
       b.addEventListener("keydown", (e) => {

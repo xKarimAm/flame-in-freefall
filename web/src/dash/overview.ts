@@ -10,7 +10,7 @@ import { queryFromState } from "../store";
 import { cite, h } from "../ui/dom";
 import { nearestPlacedTest, rankForAir } from "./ranking";
 
-const TESTS_FILE = "data/tests.json";
+export const TESTS_FILE = "data/tests.json";
 const EXPERIMENTS_FILE = "data/experiments.json";
 const COVERAGE_FILE = "data/coverage.json";
 
@@ -35,7 +35,7 @@ function select(id: string): void {
  * Like linkedText, but the targets are data files: the hrefs stay relative so the
  * file the number was counted from opens. cite() would flatten them to "#".
  */
-function linkedFile(text: string, links: { text: string; file: string }[]): (Node | string)[] {
+export function linkedFile(text: string, links: { text: string; file: string }[]): (Node | string)[] {
   let parts: (Node | string)[] = [text];
   for (const { text: needle, file } of [...links].sort((a, b) => b.text.length - a.text.length)) {
     const next: (Node | string)[] = [];
@@ -119,7 +119,7 @@ const SVG_H = 140;
 const SVG_M = { l: 34, r: 8, t: 8, b: 20 };
 
 /** Shared pressure/oxygen domains across every multiple, from the placed tests. */
-function domains(ctx: Ctx): { x0: number; x1: number; y0: number; y1: number } {
+export function sharedDomains(ctx: Ctx): { x0: number; x1: number; y0: number; y1: number } {
   const placed = ctx.api.placed();
   return {
     x0: Math.min(...placed.map((p) => p.pressure_kpa)),
@@ -195,7 +195,7 @@ function miniChart(
 /** (d) small multiples: one mini chart per investigation with placed tests, same axes on all. */
 function multiplesSection(ctx: Ctx): HTMLElement {
   const { t, api } = ctx;
-  const d = domains(ctx);
+  const d = sharedDomains(ctx);
   const placedIds = new Set(api.placed().map((p) => p.investigation));
   const cards: HTMLElement[] = [];
   for (const e of api.data.experiments) {

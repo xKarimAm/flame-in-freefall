@@ -111,3 +111,124 @@
   color: var(--muted);
   margin: 0.25rem 0 0 0;
 }
+/* compare view (backend lane D4): two columns, one two-tone chart, fuel groups */
+.dash-compare-title,
+.dash-inside h3 {
+  font-size: var(--text-body);
+  margin: 0 0 var(--gap) 0;
+}
+.dash-compare-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+.dash-pick {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: var(--text-body);
+}
+.dash-pick select {
+  font: inherit;
+  max-width: 16rem;
+}
+.dash-pair-slot {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--gap);
+}
+.dash-compare-col {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--gap);
+  font-size: var(--text-body);
+}
+.dash-compare-name {
+  font-size: var(--text-body);
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
+.dash-compare-family {
+  font-size: var(--text-meta);
+  color: var(--muted);
+  margin: 0 0 var(--gap) 0;
+}
+.dash-label {
+  font-size: var(--text-meta);
+  color: var(--muted);
+  margin: var(--gap) 0 0.25rem 0;
+}
+.dash-objective {
+  margin: 0;
+  padding-left: var(--gap);
+  border-left: 2px solid var(--rule);
+  font-size: var(--text-body);
+}
+.dash-fuels,
+.dash-outcomes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-body);
+}
+.dash-fuels li,
+.dash-outcomes li {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.dash-range,
+.dash-share {
+  font-size: var(--text-body);
+  margin: 0.25rem 0;
+}
+.dash-compare-chart {
+  grid-column: 1 / -1;
+}
+.dash-compare-chart svg {
+  display: block;
+  width: 100%;
+  max-width: 40rem;
+  height: auto;
+}
+.dash-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  font-size: var(--text-meta);
+}
+.dash-swatch-a,
+.dash-swatch-b {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+.dash-swatch-a {
+  background: var(--data-on-light);
+}
+.dash-swatch-b {
+  background: var(--flame);
+}
+.dash-dot-a {
+  fill: var(--data-on-light);
+}
+.dash-dot-b {
+  fill: var(--flame);
+}
+.dash-inside {
+  margin-top: calc(var(--gap) * 2);
+}
+.dash-fuel-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--gap);
+}
+.dash-fuel-group {
+  border-top: 1px solid var(--rule);
+  padding-top: 0.5rem;
+  font-size: var(--text-body);
+}
+.dash-fuel-name {
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
