@@ -107,6 +107,9 @@ tr.detail td { padding: 12px 16px; background: var(--sheet-ground); }
 table.test-rows { margin-top: 12px; font-size: var(--text-body); }
 #sheet caption { text-align: left; color: var(--muted); padding-bottom: 6px; }
 #sheet th, #sheet td { text-align: left; vertical-align: top; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--rule); }
+/* task 47: numeric cells and their headers align right (figures are tabular sheet-wide) */
+#sheet td.num, #sheet th.num { text-align: right; }
+#sheet th.num button.sort { display: block; width: 100%; text-align: right; }
 #sheet th { font-weight: 700; }
 #sheet .sheet-body { overflow-x: auto; }
 #sheet .missing { color: var(--muted); }

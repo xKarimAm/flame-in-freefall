@@ -71,15 +71,15 @@ const fileSentence = (line: string, file: string): HTMLAnchorElement => fileLink
 
 function provTable(ctx: Ctx, e: ProvEntry): HTMLElement {
   const { t } = ctx;
-  const head = ["ui.dash.method.col.field", "ui.dash.method.col.parsed", "ui.dash.method.col.empty", "ui.dash.method.col.unparsable"];
+  const head: [string, boolean][] = [["ui.dash.method.col.field", false], ["ui.dash.method.col.parsed", true], ["ui.dash.method.col.empty", true], ["ui.dash.method.col.unparsable", true]];
   const body: HTMLElement[] = [];
   for (const [field, f] of Object.entries(e.fields)) {
     const column = e.units[field]?.column;
     body.push(h("tr", {},
       h("td", {}, fileLink(column ? `${field} (${column})` : field, PROV_FILE)),
-      h("td", {}, fileLink(String(f.parsed), PROV_FILE)),
-      h("td", {}, fileLink(String(f.empty), PROV_FILE)),
-      h("td", {}, fileLink(String(f.unparsable), PROV_FILE))));
+      h("td", { class: "num" }, fileLink(String(f.parsed), PROV_FILE)),
+      h("td", { class: "num" }, fileLink(String(f.empty), PROV_FILE)),
+      h("td", { class: "num" }, fileLink(String(f.unparsable), PROV_FILE))));
   }
   const lines: Node[] = [];
   for (const [field, u] of Object.entries(e.units)) {
@@ -97,23 +97,28 @@ function provTable(ctx: Ctx, e: ProvEntry): HTMLElement {
       { text: String(e.rows_read), file: PROV_FILE },
       { text: String(e.rows_mapped), file: PROV_FILE },
     ]));
+  const th = (key: string, num: boolean): HTMLElement =>
+    h("th", num ? { scope: "col", class: "num" } : { scope: "col" }, t(key));
   return h("div", {},
     h("table", { class: "dash-prov" }, caption,
-      h("thead", {}, h("tr", {}, ...head.map((k) => h("th", { scope: "col" }, t(k))))),
+      h("thead", {}, h("tr", {}, ...head.map(([k, num]) => th(k, num)))),
       h("tbody", {}, ...body)),
     ...lines);
 }
 
 function skippedTable(ctx: Ctx, entries: ProvEntry[]): HTMLElement {
   const { t } = ctx;
-  const head = ["ui.dash.method.col.file", "ui.dash.method.col.investigation", "ui.dash.method.col.rows", "ui.dash.method.col.reason"];
   return h("table", { class: "dash-prov" },
     h("caption", {}, t("ui.dash.method.skipped")),
-    h("thead", {}, h("tr", {}, ...head.map((k) => h("th", { scope: "col" }, t(k))))),
+    h("thead", {}, h("tr", {},
+      h("th", { scope: "col" }, t("ui.dash.method.col.file")),
+      h("th", { scope: "col" }, t("ui.dash.method.col.investigation")),
+      h("th", { scope: "col", class: "num" }, t("ui.dash.method.col.rows")),
+      h("th", { scope: "col" }, t("ui.dash.method.col.reason")))),
     h("tbody", {}, ...entries.map((e) => h("tr", {},
       h("td", {}, fileLink(e.file, PROV_FILE)),
       h("td", {}, cite(e.investigation, ctx.api.experiment(e.investigation)?.psi_url ?? "#")),
-      h("td", {}, fileLink(String(e.rows_read), PROV_FILE)),
+      h("td", { class: "num" }, fileLink(String(e.rows_read), PROV_FILE)),
       h("td", {}, fileSentence(e.reason ?? "", PROV_FILE))))));
 }
 
@@ -130,10 +135,10 @@ function coverageSection(ctx: Ctx, c: CovDoc): HTMLElement {
     h("table", { class: "dash-table" }, caption,
       h("thead", {}, h("tr", {},
         h("th", { scope: "col" }, t("ui.dash.method.col.reason")),
-        h("th", { scope: "col" }, t("ui.dash.method.col.tests")))),
+        h("th", { scope: "col", class: "num" }, t("ui.dash.method.col.tests")))),
       h("tbody", {}, ...Object.entries(c.by_reason).map(([reason, n]) => h("tr", {},
         h("td", {}, fileSentence(reason, COV_FILE)),
-        h("td", {}, fileLink(String(n), COV_FILE)))))));
+        h("td", { class: "num" }, fileLink(String(n), COV_FILE)))))));
 }
 
 /** How many digit runs the numbers audit looks at: every number in the story.* strings. */
@@ -234,10 +239,10 @@ function dictionarySection(ctx: Ctx, entries: DictEntry[]): HTMLElement {
     const full = es.filter((e) => e.non_null === e.records).length;
     return h("tr", {},
       h("td", {}, fileLink(file, `data/${file}`)),
-      h("td", {}, ...linkedFile(t("ui.dash.method.dict-fields", { n: es.length }), [
+      h("td", { class: "num" }, ...linkedFile(t("ui.dash.method.dict-fields", { n: es.length }), [
         { text: String(es.length), file: DICT_FILE },
       ])),
-      h("td", {}, ...linkedFile(t("ui.dash.method.dict-full", { n: full }), [
+      h("td", { class: "num" }, ...linkedFile(t("ui.dash.method.dict-full", { n: full }), [
         { text: String(full), file: DICT_FILE },
       ])));
   });
@@ -246,8 +251,8 @@ function dictionarySection(ctx: Ctx, entries: DictEntry[]): HTMLElement {
     h("table", { class: "dash-table" },
       h("thead", {}, h("tr", {},
         h("th", { scope: "col" }, t("ui.dash.method.col.file")),
-        h("th", { scope: "col" }, t("ui.dash.method.col.fields")),
-        h("th", { scope: "col" }, t("ui.dash.method.col.full")))),
+        h("th", { scope: "col", class: "num" }, t("ui.dash.method.col.fields")),
+        h("th", { scope: "col", class: "num" }, t("ui.dash.method.col.full")))),
       h("tbody", {}, ...rows)));
 }
 

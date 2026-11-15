@@ -190,6 +190,46 @@ describe("method coverage, checks, AI, dictionary, downloads", () => {
   });
 });
 
+describe("method numeric alignment (task 47)", () => {
+  const heads = (table: Element): string[] =>
+    [...table.querySelectorAll("thead th")].map((th) => th.textContent!);
+
+  it("marks every numeric column header and cell, and the CSS right-aligns them with tabular figures", async () => {
+    stubFetch();
+    const { element, loaded } = renderMethod(ctxFor());
+    document.body.append(element);
+    await loaded;
+    const byCaption = (text: string): Element =>
+      [...element.querySelectorAll("table.dash-prov")].find((t) => t.querySelector("caption")!.textContent!.includes(text))!;
+    // per-file tables: the three count columns and their cells
+    const first = byCaption("csv_69_34.csv");
+    expect(heads(first).filter((h) => ["Parsed", "Empty", "Not parsable"].includes(h))).toHaveLength(3);
+    for (const h of ["Parsed", "Empty", "Not parsable"]) {
+      const i = heads(first).indexOf(h);
+      expect(first.querySelector("thead th:nth-child(" + (i + 1) + ")")!.className).toContain("num");
+      for (const tr of first.querySelectorAll("tbody tr")) {
+        expect(tr.children[i]!.className).toContain("num");
+      }
+    }
+    // skipped, coverage and dictionary tables: their count columns
+    for (const table of element.querySelectorAll("table.dash-prov, table.dash-table")) {
+      const hs = heads(table);
+      const numeric = hs.filter((h) => ["Rows read", "Tests", "Fields", "Fully recorded", "Parsed", "Empty", "Not parsable"].includes(h));
+      for (const h of numeric) {
+        const i = hs.indexOf(h);
+        expect(table.querySelector(`thead th:nth-child(${i + 1})`)!.className, `${h} header`).toContain("num");
+        for (const tr of table.querySelectorAll("tbody tr")) {
+          expect(tr.children[i]!.className, `${h} cell`).toContain("num");
+        }
+      }
+    }
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "dash.css"), "utf8");
+    expect(css).toMatch(/\.dash-table[^{]*\.num[^{]*\{[^}]*text-align:\s*right/);
+    expect(css).toMatch(/font-variant-numeric:\s*tabular-nums/);
+    element.remove();
+  });
+});
+
 describe("method loading failures", () => {
   it("shows which file failed and still renders the rest", async () => {
     stubFetch(["data/dictionary.json"]);

@@ -271,6 +271,11 @@
   padding: 0.25rem 0.75rem 0.25rem 0;
   border-bottom: 1px solid var(--rule);
 }
+/* task 47: numeric cells and their headers align right, tabular figures */
+.dash-table td.num, .dash-table th.num, .dash-prov td.num, .dash-prov th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 .dash-units,
 .dash-raw {
   font-size: var(--text-meta);

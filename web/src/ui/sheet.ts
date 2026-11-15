@@ -32,11 +32,14 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   let plottedSelEl: HTMLSelectElement | null = null;
   let countEl: HTMLElement | null = null;
 
-  const table = (cls: string, caption: Node, head: string[], rows: Node[][]): HTMLElement =>
+  // task 47: columns whose index is in numCols get right-aligned numeric cells and headers
+  const table = (cls: string, caption: Node, head: string[], rows: Node[][], numCols: number[] = []): HTMLElement =>
     h("table", { class: cls },
       h("caption", {}, caption),
-      h("thead", {}, h("tr", {}, ...head.map((c) => h("th", { scope: "col" }, t(c))))),
-      h("tbody", {}, ...rows.map((r) => h("tr", {}, ...r.map((c) => h("td", {}, c))))));
+      h("thead", {}, h("tr", {}, ...head.map((c, i) =>
+        h("th", numCols.includes(i) ? { scope: "col", class: "num" } : { scope: "col" }, t(c))))),
+      h("tbody", {}, ...rows.map((r) => h("tr", {}, ...r.map((c, i) =>
+        h("td", numCols.includes(i) ? { class: "num" } : {}, c))))));
 
   function range(r: [number, number] | null | undefined, unit: string, href: string): Node {
     if (!r) return h("span", { class: "missing" }, t("ui.sheet.not-recorded"));
@@ -131,9 +134,13 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     next?.focus();
   }
 
+  /** task 47: sortable columns holding numbers get the numeric alignment */
+  const numSort: ReadonlySet<SortKey> = new Set(["tests", "o2", "pressure", "papers"]);
   function invHead(): HTMLElement {
     return h("thead", {}, h("tr", {}, ...cols.map((c) => {
-      const th = h("th", { scope: "col", "aria-sort": c.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none" });
+      const th = h("th", numSort.has(c.key)
+        ? { scope: "col", class: "num", "aria-sort": c.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none" }
+        : { scope: "col", "aria-sort": c.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none" });
       const b = h("button", { type: "button", class: "sort" }, t(c.label));
       b.addEventListener("click", () => {
         if (sortKey === c.key) sortDir = sortDir === 1 ? -1 : 1;
@@ -224,7 +231,8 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         numOrMissing(t, r.flow_cm_s ?? null, 1, "cm/s", r.source.url),
         h("span", {}, t(`ui.outcome.${r.outcome}`)),
         cite(r.id, r.source.url, "num"),
-      ]));
+      ]),
+      [1, 2, 3]);
   }
 
   function select(id: string, options: { value: string; text: string }[], current: string | null, onChange: (v: string | null) => void): HTMLSelectElement {
@@ -304,9 +312,13 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     { key: "placed", label: "ui.sheet.col.placed" },
   ];
 
+  /** task 47: test-row columns holding numbers get the numeric alignment */
+  const numTestSort: ReadonlySet<TestSortKey> = new Set(["o2", "pressure", "flow"]);
   function testHead(): HTMLElement {
     return h("thead", {}, h("tr", {}, ...testCols.map((c) => {
-      const th = h("th", { scope: "col", "aria-sort": c.key === testSortKey ? (testSortDir === 1 ? "ascending" : "descending") : "none" });
+      const th = h("th", numTestSort.has(c.key)
+        ? { scope: "col", class: "num", "aria-sort": c.key === testSortKey ? (testSortDir === 1 ? "ascending" : "descending") : "none" }
+        : { scope: "col", "aria-sort": c.key === testSortKey ? (testSortDir === 1 ? "ascending" : "descending") : "none" });
       const b = h("button", { type: "button", class: "sort" }, t(c.label));
       b.addEventListener("click", () => {
         if (testSortKey === c.key) testSortDir = testSortDir === 1 ? -1 : 1;
@@ -364,9 +376,9 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
           return h("tr", {},
             h("td", {}, sel),
             h("td", {}, r.fuel ? cite(r.fuel, r.source.url, "num fuel") : missing()),
-            h("td", {}, numOrMissing(t, r.o2_pct, 1, "%", r.source.url)),
-            h("td", {}, numOrMissing(t, r.pressure_kpa, 1, "kPa", r.source.url)),
-            h("td", {}, numOrMissing(t, r.flow_cm_s ?? null, 1, "cm/s", r.source.url)),
+            h("td", { class: "num" }, numOrMissing(t, r.o2_pct, 1, "%", r.source.url)),
+            h("td", { class: "num" }, numOrMissing(t, r.pressure_kpa, 1, "kPa", r.source.url)),
+            h("td", { class: "num" }, numOrMissing(t, r.flow_cm_s ?? null, 1, "cm/s", r.source.url)),
             h("td", {}, h("span", {}, t(`ui.outcome.${r.outcome}`))),
             h("td", {}, cite(r.id, r.source.url, "num")),
             h("td", {}, h("span", {}, t(placed.has(r.id) ? "ui.sheet.yes" : "ui.sheet.no"))));
@@ -384,11 +396,11 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
           h("td", {}, openButton(e)),
           h("td", {}, cite(e.title, e.psi_url, "plain")),
           h("td", {}, h("span", {}, t(`ui.family.${e.family}`))),
-          h("td", {}, num(e.test_count, 0, "", e.psi_url)),
-          h("td", {}, range(e.o2_pct_range, t("ui.panel.unit.pct"), e.psi_url)),
-          h("td", {}, range(e.pressure_kpa_range, t("ui.panel.unit.kpa"), e.psi_url)),
+          h("td", { class: "num" }, num(e.test_count, 0, "", e.psi_url)),
+          h("td", { class: "num" }, range(e.o2_pct_range, t("ui.panel.unit.pct"), e.psi_url)),
+          h("td", { class: "num" }, range(e.pressure_kpa_range, t("ui.panel.unit.kpa"), e.psi_url)),
           h("td", {}, h("span", {}, t(e.has_outcomes ? "ui.sheet.yes" : "ui.sheet.no"))),
-          h("td", {}, num(e.publications.length, 0, "", e.psi_url)),
+          h("td", { class: "num" }, num(e.publications.length, 0, "", e.psi_url)),
         )))),
       downloads());
   }
@@ -403,7 +415,8 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     return h("div", { class: "margins" },
       table("margin-table", h("span", {}, t("ui.sheet.tab.margins")),
         ["ui.sheet.col.material", "ui.sheet.col.delta"],
-        m.materials.map((x) => [cite(x.material, m.url, "plain"), num(x.delta_o2_pts, 2, "", m.url)])),
+        m.materials.map((x) => [cite(x.material, m.url, "plain"), num(x.delta_o2_pts, 2, "", m.url)]),
+        [1]),
       h("p", { class: "meaning" }, cite(m.meaning, m.url, "plain")),
       h("p", {}, `${t("ui.sheet.source")} `, cite(m.source, m.url)),
       h("h3", {}, t("ui.sheet.air-title")),

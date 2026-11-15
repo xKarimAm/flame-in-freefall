@@ -186,6 +186,49 @@ describe("ui", () => {
       expect(sheet.querySelector(".dash-detail")).not.toBeNull();
       expect(sheet.querySelector(".dash-open-story")).not.toBeNull();
     });
+
+    it("analyst tables right-align numeric cells and headers with tabular figures", () => {
+      const { store } = setup();
+      store.set({ lens: "analyst" });
+      const sheet = roots().sheet;
+      const colIndex = (table: Element, label: string): number =>
+        [...table.querySelectorAll("thead th")].findIndex((th) => th.textContent === label);
+      const checkCol = (table: Element, label: string): void => {
+        const i = colIndex(table, label);
+        expect(i, `${label} header`).toBeGreaterThanOrEqual(0);
+        expect(table.querySelector(`thead th:nth-child(${i + 1})`)!.className).toContain("num");
+        for (const tr of table.querySelectorAll("tbody tr")) {
+          if (tr.classList.contains("detail")) continue;
+          expect(tr.children[i]!.className, `${label} cell`).toContain("num");
+        }
+      };
+      // investigations table: counts and ranges, not names or yes/no words
+      const inv = sheet.querySelector("table.investigations")!;
+      for (const label of ["Tests", "Oxygen range", "Pressure range", "Papers"]) checkCol(inv, label);
+      expect(colIndex(inv, "Investigation")).toBeGreaterThanOrEqual(0);
+      expect(inv.querySelector("thead th:first-child")!.className).not.toContain("num");
+      // detail rows: oxygen, pressure, flow
+      (sheet.querySelector("button.row-open") as HTMLButtonElement).click();
+      const detail = sheet.querySelector("table.test-rows")!;
+      for (const label of ["Oxygen", "Pressure", "Flow"]) checkCol(detail, label);
+      // test rows tab
+      sheet.querySelector<HTMLButtonElement>("button.tab[data-tab=tests]")!.click();
+      const rows = sheet.querySelector("table.tests-table")!;
+      for (const label of ["Oxygen", "Pressure", "Flow"]) checkCol(rows, label);
+      // margins tab: the delta column
+      sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="margins"]')!.click();
+      const margins = sheet.querySelector("table.margin-table")!;
+      const deltaHeads = [...margins.querySelectorAll("thead th")].map((th) => th.textContent!);
+      const delta = deltaHeads.indexOf("Oxygen margin (percentage points)");
+      expect(delta, deltaHeads.join(" | ")).toBeGreaterThanOrEqual(0);
+      expect(margins.querySelector(`thead th:nth-child(${delta + 1})`)!.className).toContain("num");
+      for (const tr of margins.querySelectorAll("tbody tr")) {
+        expect(tr.children[delta]!.className).toContain("num");
+      }
+      // the CSS right-aligns numeric cells and headers with tabular figures
+      expect(css).toMatch(/#sheet\s+(td|th)\.num[^{]*\{[^}]*text-align:\s*right/);
+      expect(css).toMatch(/font-variant-numeric:\s*tabular-nums/);
+    });
   });
 
   describe("plain air names (task 22)", () => {
