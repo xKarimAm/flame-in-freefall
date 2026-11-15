@@ -40,7 +40,6 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const flat = flattenBeats(stories);
   const steps: HTMLElement[] = [];
   const texts: HTMLElement[] = [];
-  const labels: HTMLElement[] = []; // the "Sources" label of each step (a detached stub when the beat has no sources)
   const pages: HTMLElement[] = []; // the "Page n of total" line of each step
   const headings: { section: HTMLElement; h2: HTMLElement; question: HTMLElement; key: string; act: number }[] = [];
   const sections = new Map<string, HTMLElement>();
@@ -49,8 +48,11 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const cover = node("section", "cover");
   const coverTitle = node("h1", "cover-title");
   const coverLead = node("p", "cover-lead");
+  const coverAudience = node("p", "cover-audience");
+  const coverExplore = node("button", "btn primary cover-explore");
+  coverExplore.type = "button";
   const coverCue = node("p", "cover-cue");
-  cover.append(coverTitle, coverLead, coverCue);
+  cover.append(coverTitle, coverLead, coverAudience, coverExplore, coverCue);
   el.append(cover);
   for (const { story, scene, beat } of flat) {
     let section = sections.get(story.id);
@@ -76,26 +78,25 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     const page = node("p", "step-page");
     const text = node("p", "step-text");
     card.append(page, text);
-    const label = node("p", "step-sources-label");
+    // the sources ride on one small line after the card text
     if (beat.sources.length) {
-      const list = node("ul", "step-sources");
-      for (const s of beat.sources) {
+      const line = node("p", "step-sources");
+      line.append(document.createTextNode(`${ctx.t("ui.engine.sources")}: `));
+      beat.sources.forEach((s, i) => {
+        if (i > 0) line.append(document.createTextNode(", "));
         const a = node("a", undefined, s.label);
         a.href = safeHref(s.url);
         a.target = "_blank";
         a.rel = "noopener";
-        const li = node("li");
-        li.append(a);
-        list.append(li);
-      }
-      card.append(label, list);
+        line.append(a);
+      });
+      card.append(line);
     }
-      step.append(card);
+    step.append(card);
     section.append(step);
     steps.push(step);
     texts.push(text);
     pages.push(page);
-    labels.push(label);
   }
 
   // page dots: one per step, tracking the active one. First in DOM (keyboard users
@@ -116,12 +117,18 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   const endTitle = node("h2", "end-title");
   const endSummary = node("p", "end-summary");
   const endActions = node("div", "end-actions");
-  const retryBtn = node("button", "end-btn primary");
+  const exploreBtn = node("button", "end-btn primary");
+  exploreBtn.type = "button";
+  const retryBtn = node("button", "end-btn");
   retryBtn.type = "button";
   const libraryBtn = node("button", "end-btn");
   libraryBtn.type = "button";
-  const dataBtn = node("button", "end-btn");
-  dataBtn.type = "button";
+  const explore = (): void => {
+    ctx.store.set({ lens: "analyst" });
+    scrollCenter(document.getElementById("sheet"));
+  };
+  coverExplore.addEventListener("click", explore);
+  exploreBtn.addEventListener("click", explore);
   retryBtn.addEventListener("click", () =>
     scrollCenter(
       document.querySelector(`#story-${MOON_STORY_ID} .step[data-sliders="true"]`) ??
@@ -129,11 +136,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     ),
   );
   libraryBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent(OPEN_LIBRARY_EVENT, { detail: libraryBtn })));
-  dataBtn.addEventListener("click", () => {
-    ctx.store.set({ lens: "analyst" });
-    scrollCenter(document.getElementById("sheet"));
-  });
-  endActions.append(retryBtn, libraryBtn, dataBtn);
+  endActions.append(exploreBtn, retryBtn, libraryBtn);
   const endCard = node("div", "end-card");
   endCard.append(endTitle, endSummary, endActions);
   ending.append(endCard);
@@ -146,16 +149,15 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     });
   }
 
-  /** The stage hides while the cover or a chapter page fills the screen. */
+  /** The stage hides while a chapter page fills the screen; the cover keeps its live
+   *  stage behind the text, so only chapters hide it. */
   function updateStageHidden(): void {
     const vh = window.innerHeight;
     const inView = (n: Element): boolean => {
       const r = n.getBoundingClientRect();
       return r.top < vh / 2 && r.bottom > vh / 2;
     };
-    const cover = el.querySelector(".cover");
-    const chapter = [...el.querySelectorAll(".chapter")].some(inView);
-    document.body.dataset.stageHidden = cover && inView(cover) || chapter ? "true" : "false";
+    document.body.dataset.stageHidden = [...el.querySelectorAll(".chapter")].some(inView) ? "true" : "false";
   }
 
   function render(): void {
@@ -166,16 +168,17 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     dots.forEach((d, i) => d.setAttribute("aria-label", ctx.t("ui.engine.page", { n: i + 1, total: dots.length })));
     coverTitle.textContent = ctx.t("ui.cover.title");
     coverLead.textContent = ctx.t("ui.cover.lead");
+    coverAudience.textContent = ctx.t("ui.cover.audience");
+    coverExplore.textContent = ctx.t("ui.engine.explore");
     coverCue.textContent = ctx.t("ui.cover.cue");
     endTitle.textContent = ctx.t("ui.ending.title");
     endSummary.textContent = ctx.t("ui.ending.summary");
+    exploreBtn.textContent = ctx.t("ui.engine.explore");
     retryBtn.textContent = ctx.t("ui.ending.retry");
     libraryBtn.textContent = ctx.t("ui.ending.library");
-    dataBtn.textContent = ctx.t("ui.ending.data");
     flat.forEach(({ beat }, i) => {
       pages[i].textContent = ctx.t("ui.engine.page", { n: i + 1, total: flat.length });
       texts[i].textContent = resolveText(ctx.dicts, beat.text, lens, locale);
-      labels[i].textContent = ctx.t("ui.engine.sources");
     });
     for (const { section, h2, question, key, act } of headings) {
       h2.textContent = ctx.t("ui.engine.chapterTitle", { n: act, title: ctx.t(key) });

@@ -11,7 +11,7 @@ import type { Size } from "./layout";
 import type { Scales } from "./layout";
 import { chartPasses, dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
-import { DIAL_IDS, dialSVG, flameStandPad, flameSVG, incidentO2, markerBottomFraction } from "./picture";
+import { DIAL_IDS, dialSVG, flameOverhangUnits, incidentO2 } from "./picture";
 import { renderExplainers } from "./explain";
 import { renderParade } from "./parade";
 import { TILT_MS, lunarLabelFor, mountTilt, tiltAllowed, type TiltView } from "./tilt";
@@ -481,39 +481,38 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       return;
     }
     incidents.classList.add("public-picture");
+    const place = (side: HTMLElement, src: HTMLElement, overhangUnits: number, ...rest: Node[]): void => {
+      incidents.replaceChildren(side, src, ...rest);
+      // headroom above the dial for the flame's overhang, scaled to the rendered dial
+      // (jsdom reports no size: fall back to viewBox units, which match at full scale)
+      const dial = side.querySelector(".o2-dial") as SVGSVGElement | null;
+      const scale = (dial?.clientHeight || 560) / 560;
+      side.style.setProperty("--flame-overhang", `${Math.ceil(overhangUnits * scale)}px`);
+    };
     if (narrowStage()) {
       // the stage keeps the dial picture; the incident cards move into the active story card
       const beat = store.get().beat;
       const stepCard = beat ? document.querySelector(`#beat-${beat.story}-${beat.scene}-${beat.beat} .step-card`) : null;
-      const { side, src } = dialSide(pages);
-      incidents.replaceChildren(side, src);
+      const { side, src, overhangUnits } = dialSide(pages);
       if (stepCard) {
+        place(side, src, overhangUnits);
         stepCard.append(...cards);
         placedCards = cards;
       } else {
-        incidents.append(...cards);
+        place(side, src, overhangUnits, ...cards);
       }
       return;
     }
-    const { side, src } = dialSide(pages);
-    incidents.replaceChildren(side, src, ...cards);
+    const { side, src, overhangUnits } = dialSide(pages);
+    place(side, src, overhangUnits, ...cards);
   }
 
   /** The oxygen dial with its flame and source line (the public picture beside the cards). */
-  function dialSide(pages: Incident[]): { side: HTMLElement; src: HTMLElement } {
+  function dialSide(pages: Incident[]): { side: HTMLElement; src: HTMLElement; overhangUnits: number } {
     const side = html("div", "picture-side");
     const dial = dialSVG(ctx, pages);
-    // the flame stands with its base at the dial's current oxygen mark (the ground when there is none)
-    const mark = pages.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== null);
-    const flameWrap = html("span", "flame-at-mark");
-    flameWrap.style.bottom = `${((mark === undefined ? 0 : markerBottomFraction(mark)) * 100).toFixed(1).replace(/\.0$/, "")}%`;
-    flameWrap.append(flameSVG(mark !== undefined));
-    // the flame stands against the dial (its % height is the dial's); the side keeps
-    // headroom above the dial for the flame's overhang (wide screens only, via CSS)
-    const dialWrap = html("span", "dial-wrap");
-    dialWrap.append(dial, flameWrap);
-    side.style.setProperty("--flame-overhang", `${flameStandPad(mark, mark !== undefined)}px`);
-    side.append(dialWrap);
+    side.append(dial);
+    const overhangUnits = flameOverhangUnits(pages.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== undefined) ?? null);
     const seen = new Set<string>();
     const src = html("p", "dial-source");
     src.append(`${t("ui.stage.dial-source")}: `);
@@ -527,7 +526,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       link.rel = "noopener";
       src.append(link);
     }
-    return { side, src };
+    return { side, src, overhangUnits };
   }
 
   // ---------- wiring ----------

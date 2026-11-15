@@ -435,6 +435,11 @@ describe("ui", () => {
     expect(dl.textContent).toContain("no pressure recorded");
   });
 
+  it("the panel explainer has no nested box (task 44)", () => {
+    expect(css).not.toMatch(/\.panel-exp\s*\{[^}]*background/);
+    expect(css).not.toMatch(/\.panel-exp\s*\{[^}]*border-left/);
+  });
+
   it("the family filter is one label wrapping the select (task 44e)", () => {
     setup();
     const label = roots().panel.querySelector("label.family")!;
@@ -523,6 +528,61 @@ describe("ui", () => {
     expect(css).toMatch(/min-width:\s*1280px\)\s*\{.*?\.chrome-bar\s*\{\s*flex-wrap:\s*nowrap;\s*min-height:\s*53px/s);
   });
 
+  it("under 768 px the header is one row: mark, chapter numbers and a Menu holding the rest (task 46)", () => {
+    const prev = window.matchMedia;
+    let narrow = true;
+    const fires = new Set<() => void>();
+    window.matchMedia = ((query: string) => ({
+      get matches() { return narrow && query.includes("767"); },
+      media: query,
+      addEventListener(_type: string, fn: () => void) { fires.add(fn); },
+      removeEventListener(_type: string, fn: () => void) { fires.delete(fn); },
+    })) as unknown as typeof window.matchMedia;
+    try {
+      const { store } = setup(null, i18nDicts);
+      const bar = roots().chrome.querySelector(".chrome-bar")!;
+      // one row: the brand, the chapter rail with one number per chapter, the Menu
+      expect([...bar.children].map((c) => c.className)).toEqual(["brand", "rail", "chrome-menu"]);
+      const summary = bar.querySelector("details.chrome-menu > summary")!;
+      expect(summary.textContent).toBe(i18nDicts.en!["ui.chrome.menu"]);
+      expect(summary.textContent).toBe("Menu");
+      const chips = [...bar.querySelectorAll<HTMLButtonElement>(".rail .chip")];
+      expect(chips.length).toBe(stories.length);
+      for (const [i, c] of chips.entries()) expect(c.textContent).toContain(String(stories[i].act));
+      // everything else lives inside the Menu: the lens switch, Stories, Skip, the picker
+      const body = bar.querySelector("details.chrome-menu .menu-body")!;
+      expect(body.querySelectorAll(".lens-switch button[data-lens]").length).toBe(3);
+      expect(body.textContent).toContain(i18nDicts.en!["ui.chrome.stories"]);
+      expect(body.textContent).toContain(i18nDicts.en!["ui.chrome.skip"]);
+      const menuSelect = body.querySelector<HTMLSelectElement>("select.locale-select")!;
+      // the picker still works from inside the Menu and keeps focus
+      menuSelect.focus();
+      menuSelect.value = "es";
+      menuSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      expect(store.get().locale).toBe("es");
+      expect(document.activeElement).toBe(roots().chrome.querySelector(".locale-select"));
+      // back to wide: every control returns to the bar in order, Menu last
+      // (the locale change rebuilt the bar, so re-query the live node)
+      narrow = false;
+      fires.forEach((fn) => fn());
+      const wide = roots().chrome.querySelector(".chrome-bar")!;
+      expect([...wide.children].map((c) => c.className)).toEqual(
+        ["brand", "rail", "lens-switch", "btn", "btn primary", "locale-select", "chrome-menu"]);
+    } finally {
+      window.matchMedia = prev;
+    }
+  });
+
+  it("phone header CSS: one 56 px row, mark only, real Menu; dots hide under 1100 px (task 46)", () => {
+    expect(css).toMatch(/\.chrome-menu\s*\{[^}]*display:\s*none/);
+    expect(css).toMatch(/max-width:\s*767px\)[\s\S]*?\.chrome-bar\s*\{[^}]*flex-wrap:\s*nowrap/s);
+    expect(css).toMatch(/max-width:\s*767px\)[\s\S]*?\.chrome-bar\s*\{[^}]*height:\s*56px/s);
+    expect(css).toMatch(/\.brand-name,\s*\.brand-ug\s*\{[^}]*display:\s*none/);
+    expect(css).toMatch(/max-width:\s*767px\)[\s\S]*?\.chrome-menu\s*\{[^}]*display:\s*block/s);
+    const engine = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../engine/engine.css"), "utf8");
+    expect(engine).toMatch(/max-width:\s*1099px\)[\s\S]*?\.page-dots\s*\{[^}]*display:\s*none/s);
+  });
+
   it("the panel is a centered bottom sheet at every width (task 44l)", () => {
     const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
     expect(base).toMatch(/#panel\s*\{[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)[^}]*bottom:\s*var\(--gap\)/);
@@ -545,8 +605,9 @@ describe("ui", () => {
     expect(store.get().locale).toBe(target);
     // a locale change rebuilds the bar: re-query the live select
     const live = () => roots().chrome.querySelector<HTMLSelectElement>("select.locale-select")!;
-    // at the right end of the bar, after the Skip button
-    expect(roots().chrome.querySelector(".chrome-bar")!.lastElementChild).toBe(live());
+    // at the right end of the bar, after the Skip button, with only the Menu after it
+    expect(live().nextElementSibling!.tagName).toBe("DETAILS");
+    expect(roots().chrome.querySelector(".chrome-bar")!.lastElementChild!.className).toBe("chrome-menu");
     expect(live().value).toBe(target);
     // and it follows the store back
     store.set({ locale: "en" });

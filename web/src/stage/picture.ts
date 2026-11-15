@@ -40,18 +40,17 @@ export function markerBottomFraction(v: number): number {
   return (H - y(v)) / H;
 }
 
-/** Flame heights in flameSVG below: tall when a marker is shown, small and calm otherwise. */
-export const FLAME_H = { tall: 190, small: 110 } as const;
-/** Wide-screen dial width in stage.css: the dial art scales uniformly, so this is its height. */
-export const DIAL_WIDE_W = 120;
-export const dialWideH = (DIAL_WIDE_W * H) / W;
+/** Flame height in viewBox units: small and calm with no marker, otherwise at least
+ *  160 tall and growing with the mark. Pure. */
+export function flameHeight(mark: number | null): number {
+  return mark === null ? 110 : 160 + mark;
+}
 
-/** Headroom above the dial so a flame standing with its base at the mark never leaves the box:
- *  the flame's overhang past the dial top (0 when the mark sits low enough). Pure. */
-export function flameStandPad(mark: number | undefined, tall: boolean): number {
-  const flameH = tall ? FLAME_H.tall : FLAME_H.small;
-  const f = mark === undefined ? 0 : markerBottomFraction(mark);
-  return Math.max(0, Math.ceil(flameH - (1 - f) * dialWideH));
+/** ViewBox units the flame rises above the dial top (0 when it fits): the layout pads
+ *  the dial row by this much, scaled to the rendered dial. Pure. */
+export function flameOverhangUnits(mark: number | null): number {
+  if (mark === null) return 0;
+  return Math.max(0, TOP - (y(mark) - flameHeight(mark)));
 }
 
 const y = (v: number): number => BOTTOM - (v / 100) * (BOTTOM - TOP);
@@ -59,7 +58,7 @@ const y = (v: number): number => BOTTOM - (v / 100) * (BOTTOM - TOP);
 /** Tall vertical gauge, 0 to 100 % oxygen, with the atmosphere marks and one marker per numeric incident. */
 export function dialSVG(ctx: Ctx, shown: Incident[]): SVGSVGElement {
   const { api, t } = ctx;
-  const chart = svg("svg", { class: "o2-dial", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": t("ui.stage.dial-title") });
+  const chart = svg("svg", { class: "o2-dial", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": t("ui.stage.dial-title"), overflow: "visible" });
   chart.append(svg("title", {}, t("ui.stage.dial-title")));
   // frame and scale ticks every 10
   chart.append(svg("line", { class: "dial-frame", x1: AXIS_X, x2: AXIS_X, y1: y(0), y2: y(100) }));
@@ -80,12 +79,12 @@ export function dialSVG(ctx: Ctx, shown: Incident[]): SVGSVGElement {
     if (max !== null && max > a.o2_pct_min) {
       chart.append(svg("rect", { class: "dial-band", x: AXIS_X - 6, y: y(max), width: 12, height: y(a.o2_pct_min) - y(max), "data-atmosphere": id }));
       lines.forEach((line, i) =>
-        chart.append(svg("text", { class: "dial-mark", x: AXIS_X + 16, y: (y(a.o2_pct_min) + y(max)) / 2 + (i - (lines.length - 1) / 2) * 14, "text-anchor": "start" }, line)),
+        chart.append(svg("text", { class: "dial-mark", x: AXIS_X + 16, y: (y(a.o2_pct_min) + y(max)) / 2 + (i - (lines.length - 1) / 2) * 20, "text-anchor": "start" }, line)),
       );
     } else {
       chart.append(svg("circle", { class: "dial-point", cx: AXIS_X, cy: y(a.o2_pct_min), r: 4.5, "data-atmosphere": id }));
       lines.forEach((line, i) =>
-        chart.append(svg("text", { class: "dial-mark", x: AXIS_X + 16, y: y(a.o2_pct_min) + 4 + (i - (lines.length - 1) / 2) * 14, "text-anchor": "start" }, line)),
+        chart.append(svg("text", { class: "dial-mark", x: AXIS_X + 16, y: y(a.o2_pct_min) + 4 + (i - (lines.length - 1) / 2) * 20, "text-anchor": "start" }, line)),
       );
     }
   }
@@ -97,24 +96,37 @@ export function dialSVG(ctx: Ctx, shown: Incident[]): SVGSVGElement {
     mark.append(svg("title", {}, `${inc.name}: ${inc.oxygen}`));
     chart.append(mark);
   }
+  // the flame stands on the current mark (small on the ground with no marker): part of the dial
+  const mark = shown.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== undefined);
+  chart.append(flameSVG(mark === undefined ? null : mark));
   return chart as SVGSVGElement;
 }
 
 // Simplified flat layers of the Firebreak flame (web/src/ui/logo-mark.svg) in the brand fills:
 // outer danger red, mid flame orange, inner amber, pale core. Decorative: aria-hidden, never measured.
+// Lowest drawn point is the outer layer's bottom arc: it ends at y=108 with ry=40,
+// so the flame bottom is at y=148. The viewBox is cropped there so the viewport
+// bottom IS the flame bottom: standing the viewport on a mark stands the flame on it.
+// If these paths ever change, recheck FLAME_H against the new lowest drawn point.
+const FLAME_H = 148;
 const FLAME_LAYERS: { fill: string; d: string }[] = [
   { fill: "var(--danger)", d: "M50 8 C58 40 86 66 86 108 A36 40 0 1 1 14 108 C14 66 42 40 50 8 Z" },
   { fill: "var(--flame)", d: "M50 52 C54 68 70 82 70 104 A20 22 0 1 1 30 104 C30 82 46 68 50 52 Z" },
   { fill: "var(--flame-amber)", d: "M50 84 C52 94 60 100 60 112 A10 11 0 1 1 40 112 C40 100 48 94 50 84 Z" },
 ];
 
-/** The flame guide: tall in high-oxygen air (an incident marker is shown), small and calm otherwise. */
-export function flameSVG(tall: boolean): SVGSVGElement {
-  const h = tall ? FLAME_H.tall : FLAME_H.small;
+/** The flame guide, standing on the current mark inside the dial: small and calm on the
+ *  ground with no marker, otherwise at least 160 tall and growing with the mark. */
+export function flameSVG(mark: number | null): SVGSVGElement {
+  const v = mark ?? 0;
+  const h = flameHeight(mark);
+  const w = (h * 100) / FLAME_H;
   const f = svg("svg", {
-    class: `flame-guide ${tall ? "tall" : "small"}`,
-    viewBox: "0 0 100 160",
-    width: Math.round((h * 100) / 160),
+    class: `flame-guide ${mark === null ? "small" : "tall"}`,
+    viewBox: `0 0 100 ${FLAME_H}`,
+    x: AXIS_X - w / 2,
+    y: y(v) - h,
+    width: w,
     height: h,
     "aria-hidden": "true",
   });

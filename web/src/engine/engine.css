@@ -1,13 +1,12 @@
 /* Picture-book scroll story: cover, chapter pages, beat pages. Generated with Claude, SI-assisted. */
 
-/* cover: first page, opaque over the stage */
+/* cover: first page, text on the left over the live stage (never an opaque page) */
 .cover {
   min-height: calc(100vh - var(--chrome-h));
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 4vw;
-  background: var(--space-deep);
   color: var(--ink-dark);
   pointer-events: auto;
 }
@@ -35,6 +34,13 @@
   font-size: var(--text-card);
   line-height: 1.4;
 }
+.cover-audience {
+  max-width: 44ch;
+  margin: 16px 0 0;
+  color: var(--muted-dark);
+  font-size: var(--text-body);
+}
+.cover-explore { margin-top: 24px; align-self: flex-start; }
 .cover-cue { margin: 40px 0 0; color: var(--muted-dark); font-size: var(--text-meta); font-weight: 500; }
 
 /* chapter page: a full viewport tall electric-blue field between acts */
@@ -66,13 +72,17 @@
 }
 #story .story:last-child .step:last-child { margin-bottom: 40vh; }
 /* cards are opaque: nothing shows through them. Inactive cards dim by text colour. */
+/* lighter cards: the 4 px bar stays, the box fill goes, 24 px padding.
+   Under 1100 px the fill stays: cards scroll behind the pinned stage and must disappear behind it. */
 .step-card {
   width: min(30rem, 92vw);
   margin-left: 4vw;
-  padding: 28px;
-  background: var(--space-black);
+  padding: 24px;
   color: var(--muted-dark);
   border-left: 4px solid var(--data-on-dark);
+}
+@media (max-width: 1099px) {
+  #story .step-card { background: var(--space-black); }
 }
 .step[data-kind="hook"] .step-card,
 .step[data-kind="takeaway"] .step-card { border-left-color: var(--flame); }
@@ -91,8 +101,7 @@
 }
 #story[data-lens="astronaut"] .step-text,
 #story[data-lens="analyst"] .step-text { font-size: var(--text-body); line-height: 1.5; font-weight: 400; }
-.step-sources-label { margin: 12px 0 4px; font-size: var(--text-meta); font-weight: 500; color: var(--muted-dark); }
-.step-sources { margin: 0; padding-left: 1.2em; font-size: var(--text-meta); overflow-wrap: anywhere; } /* long PSI URLs must not widen the page */
+.step-sources { margin: 12px 0 0; font-size: var(--text-meta); color: var(--muted-dark); overflow-wrap: anywhere; } /* long PSI URLs must not widen the page */
 .step-sources a { color: var(--muted-dark); text-decoration: underline; }
 
 /* ending card: what the visitor just saw, and three ways to go on */
@@ -138,7 +147,8 @@ html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) +
 }
 .page-dot[aria-current="true"] { background: var(--ink-dark); border-color: var(--ink-dark); }
 @media (max-width: 1099px) {
-  .page-dots { left: 50%; top: calc(var(--chrome-h) + 6px); transform: translateX(-50%); flex-direction: row; }
+  /* the card already says "Page n of 18": dots stay only on wide screens */
+  .page-dots { display: none; }
 }
 
 /* narrow screens: cards sit at the bottom so the chart above stays readable */

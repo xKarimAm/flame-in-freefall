@@ -77,37 +77,100 @@ describe("library", () => {
     }
   });
 
-  it("one template renders every story: title, voice, quote with PSI link, hook, reveal, moments, bridge, AI tag", () => {
+  it("public lens: signature first, then hook, one moment as a large number, then bridge (task 53)", () => {
     for (const s of stories) {
       const c = ctx();
       const page = renderLibraryPage(s, moments, c);
       expect(page.querySelector("h3.lib-title")!.textContent).toContain(s.title);
       expect(page.querySelector(".lib-voice")!.textContent).toContain(s.voice);
-      const quote = page.querySelector("blockquote.lib-quote")!;
-      expect(quote.textContent).toContain(s.core.quote);
-      const psiUrl = c.api.experiment(s.core.investigation)!.psi_url;
-      expect(quote.querySelector(`a[href="${psiUrl}"]`)).not.toBeNull();
+      const order = [...page.children].map((el) => el.className);
+      const at = (sel: string): number => order.findIndex((k) => k.split(" ").some((w) => w === sel));
+      expect(at("lib-sig")).toBeGreaterThanOrEqual(0); // the story's own signature view, first
+      expect(at("lib-hook")).toBeGreaterThan(at("lib-sig"));
+      expect(at("lib-bridge")).toBeGreaterThan(at("lib-hook"));
+      expect(at("lib-ai")).toBeGreaterThan(at("lib-bridge"));
       expect(page.textContent).toContain(s.hook);
-      expect(page.textContent).toContain(s.reveal);
       expect(page.textContent).toContain(s.bridge);
+      expect(page.textContent).not.toContain(s.reveal);
+      expect(page.querySelector("blockquote.lib-quote")).toBeNull();
+      expect(page.querySelectorAll(".lib-moment").length).toBe(0);
+      if (!s.moments.length) {
+        expect(page.querySelector(".lib-bignum")).toBeNull(); // no moments, no large number
+      } else {
+        const m = mom(s.moments[0]);
+        const big = page.querySelector(".lib-bignum")!;
+        expect(at("lib-bignum")).toBeGreaterThan(at("lib-hook"));
+        expect(at("lib-bignum")).toBeLessThan(at("lib-bridge"));
+        expect(big.textContent).toContain(m.label);
+        const link = big.querySelector(`a[href="${m.url}"]`)!;
+        expect(link.textContent).toContain(fmtCheck(m.value));
+        if (m.value_max != null) expect(link.textContent).toContain(fmtCheck(m.value_max));
+      }
       const ai = page.querySelector(".lib-ai")!;
       expect(ai.textContent).toContain("AI summary");
       expect(ai.textContent).toContain(s.ai.model);
       expect(ai.textContent).toContain(s.ai.made_at);
-      const items = [...page.querySelectorAll(".lib-moment")];
-      expect(items.length).toBe(s.moments.length);
-      for (const id of s.moments) {
-        const m = mom(id);
-        const li = items.find((el) => el.textContent!.startsWith(`${m.label}: `))!;
-        expect(li).not.toBeUndefined();
-        const link = li.querySelector(`a[href="${m.url}"]`)!;
-        expect(link).not.toBeNull();
-        expect(link.textContent).toContain(m.label);
-        expect(link.textContent).toContain(fmtCheck(m.value));
-        if (m.value_max != null) expect(link.textContent).toContain(fmtCheck(m.value_max));
-      }
       expect(unlinkedDataNumbers(page)).toEqual([]);
     }
+  });
+
+  it("astronaut lens is a crew briefing: the PSI sentence, a conditions table, the gaps, the PSI link (task 53)", () => {
+    const c = ctx();
+    c.store.set({ lens: "astronaut" });
+    const s = story("flex");
+    const eng = { text: "Crew relevance in plain words.", quote: "A quoted PSI sentence." };
+    const page = renderLibraryPage({ ...s, engineer: eng }, moments, c);
+    expect(page.querySelector("h3.lib-title")!.textContent).toContain(s.title);
+    expect(page.querySelector(".lib-voice")!.textContent).toContain(s.voice);
+    expect(page.querySelector(".lib-crew")!.textContent).toBe("What it means for a crew");
+    expect(page.textContent).toContain(eng.text);
+    const quote = page.querySelector("blockquote.lib-quote")!;
+    expect(quote.textContent).toContain(eng.quote);
+    const rows = [...page.querySelectorAll("table.lib-conditions tbody tr")];
+    expect(rows.length).toBe(s.moments.length);
+    for (const [i, row] of rows.entries()) {
+      const m = mom(s.moments[i]);
+      const th = row.querySelector("th")!;
+      expect(th.getAttribute("scope")).toBe("row");
+      expect(th.textContent).toBe(m.label);
+      expect(th.querySelector(`a[href="${m.url}"]`)).not.toBeNull(); // the condition links too
+      const link = row.querySelector(`td a[href="${m.url}"]`)!;
+      expect(link.textContent).toContain(fmtCheck(m.value));
+    }
+    const psiUrl = c.api.experiment(s.core.investigation)!.psi_url;
+    expect(page.querySelector(`a[href="${psiUrl}"]`)).not.toBeNull();
+    expect(page.querySelector(".lib-sig")).toBeNull(); // a briefing, not the chart
+    expect(unlinkedDataNumbers(page)).toEqual([]);
+  });
+
+  it("astronaut lens without engineer text says the PSI record is silent (task 53)", () => {
+    const c = ctx();
+    c.store.set({ lens: "astronaut" });
+    for (const s of stories) {
+      expect(s.engineer).toBeNull(); // the backend has no engineer text yet
+      const page = renderLibraryPage(s, moments, c);
+      expect(page.textContent).toContain("The PSI record does not state a safety application.");
+      expect(page.querySelector(".lib-conditions")).not.toBeNull(); // the table still shows
+    }
+  });
+
+  it("analyst lens: the test rows, then the signature view (task 53)", () => {
+    const c = ctx();
+    c.store.set({ lens: "analyst" });
+    const s = story("flex"); // condition-map signature: rows and chart are distinct nodes
+    const page = renderLibraryPage(s, moments, c);
+    expect(page.querySelector("h3.lib-title")!.textContent).toContain(s.title);
+    expect(page.querySelector(".lib-voice")!.textContent).toContain(s.voice);
+    const rows = c.api.data.tests.filter((t) => s.investigations.includes(t.investigation));
+    expect(rows.length).toBeGreaterThan(100);
+    expect(page.querySelectorAll(".lib-card").length).toBe(rows.length);
+    const order = [...page.children].map((el) => el.className);
+    const cardsAt = order.findIndex((k) => k === "lib-sig" && page.children[order.indexOf(k)]?.querySelector(".lib-cards"));
+    const sigAt = order.findIndex((k, i) => k === "lib-sig" && i !== cardsAt);
+    expect(cardsAt).toBeGreaterThanOrEqual(0);
+    expect(sigAt).toBeGreaterThan(cardsAt);
+    expect(page.querySelector("svg.lib-map")).not.toBeNull();
+    expect(page.textContent).not.toContain(s.hook);
   });
 
   it("signature charts are labelled for screen readers", () => {
@@ -239,15 +302,26 @@ describe("library", () => {
     expect(root.querySelector<HTMLButtonElement>(".library-back")).not.toBeNull(); // the way back stays
   });
 
-  it("stories with no moments show no numbers heading (task 38)", () => {
+  it("stories with no moments show no large number; the first moment leads otherwise (tasks 38, 53)", () => {
     const c = ctx();
     const bare = renderLibraryPage(story("bre"), moments, c);
     expect(story("bre").moments).toEqual([]);
     expect(bare.querySelector(".lib-moments-title")).toBeNull();
-    expect(bare.querySelectorAll(".lib-moment").length).toBe(0);
+    expect(bare.querySelector(".lib-bignum")).toBeNull();
     const full = renderLibraryPage(story("flex"), moments, c);
-    expect(full.querySelector(".lib-moments-title")).not.toBeNull();
-    expect(full.querySelectorAll(".lib-moment").length).toBe(story("flex").moments.length);
+    const m = mom(story("flex").moments[0]);
+    expect(full.querySelector(".lib-bignum")!.textContent).toContain(m.label);
+  });
+
+  it("engineer text is optional, shape-checked and survives a round trip (task 53)", () => {
+    const raw = read("../../../data/build/library.json");
+    expect(parseLibrary(raw)[0].engineer).toBeNull();
+    const eng = { text: "Crew relevance.", quote: "A quoted PSI sentence." };
+    expect(parseLibrary([{ ...raw[0], engineer: eng }])[0].engineer).toEqual(eng);
+    const back = parseLibrary(parseLibrary([{ ...raw[0], engineer: eng }]));
+    expect(back[0].engineer).toEqual(eng);
+    expect(() => parseLibrary([{ ...raw[0], engineer: { text: "no quote" } }])).toThrow();
+    expect(() => parseLibrary([{ ...raw[0], engineer: "engineer" }])).toThrow();
   });
 
   it("a failed library load does not poison the next open (task 38)", async () => {
@@ -310,7 +384,7 @@ describe("library", () => {
     const c = ctx();
     for (const id of ["bre", "cld", "s-flame"]) {
       const page = renderLibraryPage(story(id), moments, c);
-      const words = `${page.querySelector(".lib-hook")!.textContent} ${page.querySelector(".lib-reveal")!.textContent}`;
+      const words = page.querySelector(".lib-hook")!.textContent!;
       expect(words).toMatch(/will|plan|proposed|going to/);
     }
   });

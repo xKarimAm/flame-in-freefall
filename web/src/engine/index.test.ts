@@ -67,7 +67,7 @@ describe("engine mount", () => {
     expect(links[0].target).toBe("_blank");
     expect(links[0].rel).toBe("noopener");
     expect(step.textContent).toContain(dicts.en!["ui.engine.sources"]);
-    expect(steps.every((s) => s.querySelector("ul.step-sources"))).toBe(true); // every beat lists a source
+    expect(steps.every((s) => s.querySelector("p.step-sources"))).toBe(true); // every beat lists a source
   });
 
   it("puts the page dots first in DOM order, ahead of the cover", () => {
@@ -134,11 +134,21 @@ describe("engine mount", () => {
     expect(covers[0].querySelector(".cover-cue")!.textContent).toBe(dicts.en!["ui.cover.cue"]);
   });
 
+  it("sources ride on one small line after the card text (task 44)", () => {
+    const { steps } = setup();
+    const card = steps[hook].querySelector(".step-card")!;
+    expect(card.querySelector("ul.step-sources")).toBeNull();
+    const line = card.querySelector("p.step-sources")!;
+    expect(line.textContent).toMatch(/^Sources: /);
+    expect(line.querySelectorAll("a").length).toBeGreaterThan(0);
+    expect(line.textContent).toContain(", ");
+  });
+
   it("story text is a paragraph in a 30rem card, never a heading (task 43)", () => {
     const { steps } = setup();
     for (const s of steps) {
       expect(s.querySelector(".step-text")!.tagName).toBe("P");
-      expect(s.querySelector(".step-card .step-sources-label")!.tagName).toBe("P");
+      expect(s.querySelector(".step-card .step-sources")).not.toBeNull();
     }
     expect(css).toMatch(/\.step-card\s*\{[^}]*width:\s*min\(30rem/);
   });
@@ -217,11 +227,30 @@ describe("engine mount", () => {
     expect(endings[0]!.querySelector(".end-summary")!.textContent).toBe(dicts.en!["ui.ending.summary"]);
     const btns = [...endings[0]!.querySelectorAll("button")];
     expect(btns.map((b) => b.textContent)).toEqual([
+      dicts.en!["ui.engine.explore"],
       dicts.en!["ui.ending.retry"],
       dicts.en!["ui.ending.library"],
-      dicts.en!["ui.ending.data"],
     ]);
     expect(btns[0]!.classList.contains("primary")).toBe(true);
+  });
+
+  it("the cover names its audience and offers the dashboard; the ending leads with it (task 52)", () => {
+    const { el, store } = setup();
+    const cover = el.querySelector(".cover")!;
+    expect([...cover.children].map((c) => c.className)).toEqual([
+      "cover-title",
+      "cover-lead",
+      "cover-audience",
+      "btn primary cover-explore",
+      "cover-cue",
+    ]);
+    expect(cover.querySelector(".cover-audience")!.textContent).toBe(dicts.en!["ui.cover.audience"]);
+    expect(cover.querySelector(".cover-audience")!.textContent).toContain("students");
+    const explore = cover.querySelector<HTMLButtonElement>(".cover-explore")!;
+    expect(explore.textContent).toBe(dicts.en!["ui.engine.explore"]);
+    expect(explore.textContent).toBe("Explore the dashboard");
+    explore.click();
+    expect(store.get().lens).toBe("analyst");
   });
 
   const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "engine.css"), "utf8");
@@ -334,6 +363,15 @@ describe("engine mount", () => {
     }
   });
 
+  it("cards stay light: bar but no box fill, 24px padding (task 44)", () => {
+    expect(css).toMatch(/\.step-card\s*\{[^}]*border-left:\s*4px/);
+    const first = css.slice(css.indexOf(".step-card {"), css.indexOf("}", css.indexOf(".step-card {")));
+    expect(first).not.toContain("background");
+    expect(first).toContain("padding: 24px");
+    // narrow exception: cards scroll behind the pinned stage and must disappear behind it
+    expect(css).toMatch(/@media\s*\(max-width:\s*1099px\)[\s\S]*?#story \.step-card\s*\{[^}]*background:\s*var\(--space-black\)/);
+  });
+
   it("columns never share space and the stage hides behind covers and chapters (task 41)", () => {
     expect(css).toMatch(/\.chapter\s*\{[^}]*min-height:\s*100vh/);
     // inactive cards dim by text colour; nothing is translucent enough to show through
@@ -342,7 +380,11 @@ describe("engine mount", () => {
     expect(css).toMatch(/\.step\.is-active \.step-card\s*\{\s*color:\s*var\(--ink-dark\)/);
   });
 
-  it("hides the stage while the cover or a chapter page is on screen (task 41c)", () => {
+  it("the cover is text on the left over the live stage, chapters hide it (task 45)", () => {
+    expect(css).not.toMatch(/\.cover\s*\{[^}]*background/);
+  });
+
+  it("hides the stage while a chapter page is on screen, never on the cover (task 41c, 45)", () => {
     const { el } = setup();
     Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
     const cover = el.querySelector(".cover")!;
@@ -353,7 +395,7 @@ describe("engine mount", () => {
       cover.getBoundingClientRect = () => rect(0, 800);
       chapter.getBoundingClientRect = () => rect(2000, 400);
       window.dispatchEvent(new Event("scroll"));
-      expect(document.body.dataset.stageHidden).toBe("true");
+      expect(document.body.dataset.stageHidden).toBe("false"); // cover shows the live dial
       cover.getBoundingClientRect = () => rect(-900, 800);
       chapter.getBoundingClientRect = () => rect(2000, 400);
       window.dispatchEvent(new Event("scroll"));
@@ -383,16 +425,16 @@ describe("engine mount", () => {
     expect(css).toMatch(/\.step-sources\s*\{[^}]*overflow-wrap:\s*anywhere/);
   });
 
-  it("the ending buttons retry the sliders, open the library and switch to the data", () => {
+  it("the ending buttons explore the dashboard, retry the sliders and open the library", () => {
     const { store, el } = setup();
     const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
-    const [retry, library, data] = [...el.querySelectorAll<HTMLButtonElement>(".ending button")];
+    const [explore, retry, library] = [...el.querySelectorAll<HTMLButtonElement>(".ending button")];
     const opened: Event[] = [];
     window.addEventListener("firebreak:open-library", (e) => opened.push(e));
     library!.click();
     expect(opened).toHaveLength(1);
     expect((opened[0] as CustomEvent).detail).toBe(library);
-    data!.click();
+    explore!.click();
     expect(store.get().lens).toBe("analyst");
     retry!.click();
     expect(scroll.mock.contexts.at(-1)).toBe(document.getElementById("beat-moon-air-moon-air-main-interactive"));
