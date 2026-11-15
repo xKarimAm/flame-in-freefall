@@ -263,6 +263,18 @@ describe("what is drawn", () => {
     expect(layer("tests").querySelector('[data-id="PSI-69#2"]')).toBe(first);
   });
 
+  it("R8a: the same dot nodes survive a beat change, sliding instead of rebuilding", () => {
+    const { layer } = setup({ view: "micro-g", show_families: ["droplets", "gas jets"] });
+    const before = new Map(
+      [...layer("tests").querySelectorAll("circle")].map((c) => [c.getAttribute("data-id")!, c]),
+    );
+    expect(before.size).toBe(2);
+    window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: "PSI-159" } }));
+    const after = layer("tests").querySelectorAll("circle");
+    expect(after.length).toBe(before.size);
+    for (const c of after) expect(c).toBe(before.get(c.getAttribute("data-id")!));
+  });
+
   it("draws the Moon box at its data values", () => {
     const { host, layer } = setup({ view: "micro-g", show_families: allFamilies, reference: ["heo-dm-1006"] });
     const atm = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
@@ -1155,6 +1167,14 @@ describe("tilt label placement (task 28)", () => {
     } finally {
       view.dispose();
     }
+  });
+
+  it("R9: tilt labels cannot leave the stage box (lunar sentence ran to the window edge at 1440 px)", () => {
+    expect(css).toMatch(/\.tilt-label\s*\{[^}]*max-width:\s*100%/);
+    expect(css).toMatch(/\.tilt-label\s*\{[^}]*box-sizing:\s*border-box/);
+    expect(css).toMatch(/\.tilt-label\s*\{[^}]*overflow-wrap:\s*break-word/);
+    expect(css).toMatch(/\.stage-tilt\s*\{[^}]*overflow:\s*hidden/);
+    expect(css).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*white-space:\s*normal/);
   });
 
   it("the Moon box uses exactly the micro-plane mapping for the moon.json values", () => {

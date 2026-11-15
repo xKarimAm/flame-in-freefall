@@ -1,0 +1,136 @@
+/* R8 motion and softness: the page moves as one continuous picture. Every move uses
+   transform and opacity only, settles in 300 to 600 ms on one ease-out curve, and
+   control feedback answers faster (120 ms tones, 150 ms tab fade). Nothing is hidden
+   before the script runs: the start states below only apply once the script marks
+   the page ready, and everything stops under prefers-reduced-motion.
+   Generated with Muse Spark, SI-assisted. */
+
+:root { --motion-ease: cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* ---------- R8b: cards and chapter pages enter in parts ---------- */
+/* The engine marks the scrolled-to step .is-active; page, sentence and sources
+   rise 16 to 24 px with opacity, staggered, and settle back on scroll back. */
+.step-card .step-page,
+.step-card .step-text,
+.step-card .step-sources {
+  transition: transform 0.45s var(--motion-ease), opacity 0.45s var(--motion-ease);
+}
+body[data-motion="on"] .step:not(.is-active) .step-card .step-page {
+  opacity: 0.25; transform: translateY(16px); transition-delay: 0s;
+}
+body[data-motion="on"] .step:not(.is-active) .step-card .step-text {
+  opacity: 0.25; transform: translateY(20px); transition-delay: 0s;
+}
+body[data-motion="on"] .step:not(.is-active) .step-card .step-sources {
+  opacity: 0.25; transform: translateY(24px); transition-delay: 0s;
+}
+.step.is-active .step-card .step-page { transition-delay: 0s; }
+.step.is-active .step-card .step-text { transition-delay: 0.08s; }
+.step.is-active .step-card .step-sources { transition-delay: 0.16s; }
+/* Chapter titles slide in from the left when first seen; questions follow. */
+.chapter .story-title,
+.chapter .chapter-question {
+  transition: transform 0.5s var(--motion-ease), opacity 0.5s var(--motion-ease);
+}
+body[data-motion="on"] .chapter:not(.is-seen) .story-title {
+  opacity: 0.25; transform: translateX(-24px);
+}
+body[data-motion="on"] .chapter:not(.is-seen) .chapter-question {
+  opacity: 0.25; transform: translateX(-16px); transition-delay: 0.08s;
+}
+/* Cover and ending arrive once, in parts, on load: pure CSS so a script failure
+   still shows the whole page. */
+.cover-title { animation: rise-in 0.5s var(--motion-ease) both; }
+.cover-lead { animation: rise-in 0.5s var(--motion-ease) 0.08s both; }
+.cover-audience { animation: rise-in 0.5s var(--motion-ease) 0.16s both; }
+.cover-explore { animation: rise-in 0.5s var(--motion-ease) 0.24s both; }
+.end-card { animation: rise-in 0.5s var(--motion-ease) both; }
+/* Incident cards arrive stacked in parts; later cards trail by 60 to 90 ms. */
+.stage-incidents .incident-card { animation: rise-in 0.45s var(--motion-ease) both; }
+.stage-incidents .incident-card:nth-child(2) { animation-delay: 0.075s; }
+.stage-incidents .incident-card:nth-child(3) { animation-delay: 0.15s; }
+
+/* ---------- R8a: continuity on the stage ---------- */
+/* Dots keep their nodes across beats (see stage/index.ts) and slide on cx/cy;
+   the stagger below is set per dot from its index (60 to 90 ms apart). */
+[data-layer="tests"] .dot {
+  transition: transform 0.45s var(--motion-ease), opacity 0.45s var(--motion-ease);
+}
+/* The Moon box draws itself the first time it appears. */
+.refs-first .ref.moon-box { animation: moon-draw 0.6s var(--motion-ease) both; }
+/* Axes ease to a new domain instead of cutting. */
+.axes-swap { animation: axes-ease 0.45s var(--motion-ease); }
+/* Plane and tilt labels cross-fade as the view changes. */
+.tilt-label { transition: opacity 0.4s var(--motion-ease), transform 0.4s var(--motion-ease); }
+.stage-svg .plane-label,
+.stage-svg .caption { transition: opacity 0.4s var(--motion-ease); }
+
+/* ---------- R8c: the flame is alive ---------- */
+/* Slow two-frame sway (kept from the stage) plus a gentle scale breathing at rest. */
+.flame-guide {
+  transform-box: fill-box; transform-origin: 50% 90%;
+  animation: flame-breathe 3.2s ease-in-out infinite alternate;
+  transition: transform 0.45s var(--motion-ease), opacity 0.45s var(--motion-ease);
+}
+/* The flame reacts when the dial or a slider moves: the script adds .flame-pulse. */
+.flame-guide.flame-pulse { animation: flame-pop 0.45s var(--motion-ease); }
+/* The dial handle follows the pointer with no lag (paint is synchronous) and its
+   halo settles with a short ease. */
+.o2-dial .dial-you { transition: opacity 0.18s ease-out; }
+/* Slider thumbs answer at once and settle with a short ease. */
+.slider input[type="range"] { transition: opacity 0.3s var(--motion-ease); }
+.slider input[type="range"]::-webkit-slider-thumb { transition: transform 0.18s ease-out; }
+.slider input[type="range"]::-moz-range-thumb { transition: transform 0.18s ease-out; }
+
+/* ---------- R8d: feedback on every control ---------- */
+.btn,
+.end-btn { transition: background-color 0.12s ease-out, border-color 0.12s ease-out, color 0.12s ease-out, transform 0.3s var(--motion-ease); }
+.btn:active, .end-btn:active { transform: translateY(1px); }
+.chip,
+.lens,
+.tab,
+.fam,
+.plane,
+.page-dot,
+.dash-name,
+.row-open,
+.row-toggle,
+.presets button,
+.story-card,
+.library-card { transition: background-color 0.12s ease-out, border-color 0.12s ease-out, color 0.12s ease-out, transform 0.3s var(--motion-ease), opacity 0.3s var(--motion-ease); }
+.page-dot:hover { transform: scale(1.25); }
+.sheet-toolbar select,
+.sheet-toolbar input[type="search"],
+.locale-select,
+.sort-samples,
+label.family select { transition: background-color 0.12s ease-out, border-color 0.12s ease-out, opacity 0.3s var(--motion-ease); }
+/* Table, legend and map rows answer hover and press within 120 ms. */
+#sheet tbody tr,
+.stage-legend li,
+.dash-map-row { transition: background-color 0.12s ease-out, opacity 0.3s var(--motion-ease); }
+/* The active tab's content cross-fades in 150 ms. */
+.sheet-body > * { animation: tab-in 0.15s ease-out; }
+/* The ranking list re-orders by sliding rows to their new places (FLIP in motion.ts). */
+.dash-ranked-row { transition: transform 0.45s var(--motion-ease), opacity 0.45s var(--motion-ease), background-color 0.12s ease-out; }
+
+/* ---------- R8e: numbers arrive, bars draw from their baseline ---------- */
+.dash-figure .dash-num,
+.parade-num { transition: opacity 0.45s var(--motion-ease); }
+[data-counted="true"] { animation: num-in 0.45s var(--motion-ease); }
+.dash-bar-fill { transform-box: fill-box; transform-origin: left center; animation: bar-grow 0.5s var(--motion-ease) both; }
+.dash-multiple svg, .lib-map, .lib-strip { animation: tab-in 0.45s var(--motion-ease); }
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes slide-in-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+@keyframes tab-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes num-in { from { opacity: 0.3; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes flame-breathe { from { transform: scale(1); } to { transform: scale(1.035); } }
+@keyframes flame-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes moon-draw { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes axes-ease { from { opacity: 0.4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Reduced motion keeps every word and number and drops all travel. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

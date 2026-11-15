@@ -45,15 +45,24 @@
   margin: 0;
   padding: 0;
 }
+/* R8f: rows separated by air, not rules; hover is a background-tone step. */
+.dash-ranked-list {
+  display: grid;
+  gap: 8px;
+}
 .dash-ranked-row,
 .dash-unranked-row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--rule);
+  padding: 12px 16px;
   font-size: var(--text-body);
+}
+.dash-ranked-row:hover,
+.dash-map-row:hover,
+.dash-multiple:hover {
+  background-color: var(--sheet-ground);
 }
 .dash-name {
   font: inherit;
@@ -78,12 +87,11 @@
 .dash-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: var(--gap);
+  gap: calc(var(--gap) * 2);
 }
 .dash-multiple,
 .dash-missing {
-  padding: var(--gap) 0;
-  border-top: 1px solid var(--rule);
+  padding: 24px;
   font-size: var(--text-body);
 }
 .dash-multiple svg {
@@ -139,8 +147,7 @@
   gap: var(--gap);
 }
 .dash-compare-col {
-  border-top: 1px solid var(--rule);
-  padding-top: var(--gap);
+  padding: 24px 0 0;
   font-size: var(--text-body);
 }
 .dash-compare-name {
@@ -224,7 +231,6 @@
   gap: var(--gap);
 }
 .dash-fuel-group {
-  border-top: 1px solid var(--rule);
   padding-top: 0.5rem;
   font-size: var(--text-body);
 }
@@ -288,9 +294,11 @@
   padding: 0;
 }
 .dash-check-list li {
-  border-top: 1px solid var(--rule);
-  padding: 0.5rem 0;
+  padding: 12px 16px;
   font-size: var(--text-body);
+}
+.dash-check-list li:hover {
+  background-color: var(--sheet-ground);
 }
 .dash-check-name {
   font-weight: 700;
@@ -358,8 +366,7 @@
   fill: var(--rule);
 }
 .dash-detail {
-  border-top: 1px solid var(--rule);
-  padding-top: var(--gap);
+  padding-top: calc(var(--gap) * 2);
   font-size: var(--text-body);
 }
 .dash-detail-acronym {
@@ -389,8 +396,10 @@
   margin-bottom: var(--gap);
 }
 .dash-tile {
-  border-top: 1px solid var(--rule);
-  padding-top: 0.25rem;
+  padding: 12px 16px;
+}
+.dash-tile:hover {
+  background-color: var(--sheet-ground);
 }
 .dash-tile-label {
   font-size: var(--text-meta);

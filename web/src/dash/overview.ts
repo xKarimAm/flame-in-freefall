@@ -8,7 +8,9 @@ import type { Atmosphere, Ctx, NearestQuery } from "../contract";
 import { SELECT_INVESTIGATION } from "../stage/index";
 import { queryFromState } from "../store";
 import { cite, h } from "../ui/dom";
+import { flipAround, observeCounts, patchKeyedList } from "../ui/motion";
 import { nearestPlacedTest, rankForAir } from "./ranking";
+import type { RankedInvestigation } from "./ranking";
 
 export const TESTS_FILE = "data/tests.json";
 const EXPERIMENTS_FILE = "data/experiments.json";
@@ -59,8 +61,9 @@ function nameButton(id: string, acronym: string): HTMLButtonElement {
 }
 
 function figure(label: string, value: number, file: string): HTMLElement {
+  // R8e: the five numbers count up once from zero when first seen.
   return h("figure", { class: "dash-figure" },
-    h("a", { class: "dash-num", href: file }, String(value)),
+    h("a", { class: "dash-num", href: file, "data-count-to": String(value) }, String(value)),
     h("figcaption", {}, label));
 }
 
@@ -102,27 +105,36 @@ function airTitle(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null):
   return kids;
 }
 
+/** The numbers beside a ranked investigation, rebuilt from the live query. */
+function rankedNums(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null, r: RankedInvestigation): HTMLElement {
+  const { t, api } = ctx;
+  const near = nearestPlacedTest(api, r.investigation, query, atmosphere)!;
+  const onChart = t("ui.dash.ranked.on-chart", { placed: r.placed, tests: r.tests });
+  return h("span", { class: "dash-nums" },
+    cite(`d ${r.d_min}`, near.url, "dash-d"),
+    " · ",
+    ...linkedFile(t("ui.dash.ranked.near", { n: r.near }), [{ text: String(r.near), file: TESTS_FILE }]),
+    " · ",
+    ...linkedFile(onChart, [
+      { text: String(r.placed), file: TESTS_FILE },
+      { text: String(r.tests), file: TESTS_FILE },
+    ]));
+}
+
+/** One ranked row, keyed by investigation so a re-rank slides it instead of rebuilding it (R8d). */
+function rankedRow(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null, r: RankedInvestigation): HTMLElement {
+  const exp = ctx.api.experiment(r.investigation)!;
+  return h("li", { class: "dash-ranked-row", "data-key": r.investigation },
+    nameButton(r.investigation, r.acronym),
+    h("span", { class: "dash-id" }, cite(r.investigation, exp.psi_url, "dash-acronym")),
+    rankedNums(ctx, query, atmosphere, r));
+}
+
 /** (c) "Ranked for this air": every ranked investigation with its numbers, then the rest. */
 function rankingSection(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null): HTMLElement {
   const { t, api } = ctx;
   const { ranked, unrankable } = rankForAir(api, query, atmosphere);
-  const rows = ranked.map((r) => {
-    const exp = api.experiment(r.investigation)!;
-    const near = nearestPlacedTest(api, r.investigation, query, atmosphere)!;
-    const onChart = t("ui.dash.ranked.on-chart", { placed: r.placed, tests: r.tests });
-    return h("li", { class: "dash-ranked-row" },
-      nameButton(r.investigation, r.acronym),
-      h("span", { class: "dash-id" }, cite(r.investigation, exp.psi_url, "dash-acronym")),
-      h("span", { class: "dash-nums" },
-        cite(`d ${r.d_min}`, near.url, "dash-d"),
-        " · ",
-        ...linkedFile(t("ui.dash.ranked.near", { n: r.near }), [{ text: String(r.near), file: TESTS_FILE }]),
-        " · ",
-        ...linkedFile(onChart, [
-          { text: String(r.placed), file: TESTS_FILE },
-          { text: String(r.tests), file: TESTS_FILE },
-        ])));
-  });
+  const rows = ranked.map((r) => rankedRow(ctx, query, atmosphere, r));
   const rest = unrankable.map((r) => {
     const exp = api.experiment(r.investigation)!;
     const link = cite(exp.id, exp.psi_url, "dash-acronym");
@@ -133,8 +145,32 @@ function rankingSection(ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | 
     h("h3", { id: "dash-ranked-title" }, `${t("ui.dash.ranked.title")}: `, ...airTitle(ctx, query, atmosphere)),
     // the rule's fixed scales are contract constants, marked data-own like the panel weighting
     h("p", { class: "dash-rule", "data-own": true }, t("ui.dash.ranked.rule")),
-    h("ol", {}, ...rows),
+    h("ol", { class: "dash-ranked-list" }, ...rows),
     h("ul", { class: "dash-unranked" }, ...rest));
+}
+
+/**
+ * Re-rank in place (R8d): the rows keep their nodes and slide to their new
+ * places with refreshed numbers. The unranked list never depends on the query.
+ */
+function patchRanking(slot: HTMLElement, ctx: Ctx, query: NearestQuery, atmosphere: Atmosphere | null): void {
+  const ol = slot.querySelector("ol.dash-ranked-list");
+  if (!(ol instanceof HTMLElement)) {
+    slot.replaceChildren(rankingSection(ctx, query, atmosphere));
+    return;
+  }
+  const { ranked } = rankForAir(ctx.api, query, atmosphere);
+  flipAround(ol, () =>
+    patchKeyedList(
+      ol,
+      ranked,
+      (r) => r.investigation,
+      (r) => rankedRow(ctx, query, atmosphere, r),
+      (node, r) => node.querySelector(".dash-nums")?.replaceWith(rankedNums(ctx, query, atmosphere, r)),
+    ),
+  );
+  const title = slot.querySelector("#dash-ranked-title");
+  if (title) title.replaceChildren(`${ctx.t("ui.dash.ranked.title")}: `, ...airTitle(ctx, query, atmosphere));
 }
 
 const SVG_W = 220;
@@ -267,9 +303,10 @@ export function renderOverview(ctx: Ctx): HTMLElement {
     const sig = JSON.stringify(next.query);
     if (sig !== lastQuery) {
       lastQuery = sig;
-      rankSlot.replaceChildren(rankingSection(ctx, next.query, next.atmosphere));
+      patchRanking(rankSlot, ctx, next.query, next.atmosphere);
     }
   });
   root.append(numbersSection(ctx), rankSlot, multiplesSection(ctx));
+  observeCounts(root);
   return root;
 }

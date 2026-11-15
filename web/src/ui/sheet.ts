@@ -140,8 +140,11 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
   const numSort: ReadonlySet<SortKey> = new Set(["tests", "o2", "pressure", "papers"]);
   function invHead(): HTMLElement {
     return h("thead", {}, h("tr", {}, ...cols.map((c) => {
-      const th = h("th", numSort.has(c.key)
-        ? { scope: "col", class: "num", "aria-sort": c.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none" }
+      // the title column keeps 16 rem: under table-layout fixed the first-row
+      // cell sets the column width (min-width on body cells is ignored) (R9).
+      const cls = numSort.has(c.key) ? "num" : c.key === "title" ? "title" : undefined;
+      const th = h("th", cls
+        ? { scope: "col", class: cls, "aria-sort": c.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none" }
         : { scope: "col", "aria-sort": c.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none" });
       const b = h("button", { type: "button", class: "sort" }, t(c.label));
       b.addEventListener("click", () => {

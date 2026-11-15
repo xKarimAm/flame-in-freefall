@@ -132,5 +132,9 @@ export function renderParade(el: HTMLElement, ctx: Ctx): void {
   }
   frag.append(list);
   el.replaceChildren(frag);
+  // R8e: arrive once per value: a re-render with the same target keeps the
+  // arrived number instead of replaying the count from zero.
+  const key = String(target);
+  if (num.dataset["count"] === key && num.textContent === key) return;
   countUp(num, target);
 }

@@ -5,7 +5,7 @@ import "./stage.css";
 import { SLIDER_RANGE } from "../contract";
 import type { AppState, AtmosphereId, Ctx, Family, Incident, NearestRow, NotPlacedRow, PlacedTest } from "../contract";
 import { queryFromState } from "../store";
-import { airName, cite, dataLink, safeHref } from "../ui/dom";
+import { airName, cite, dataLink, prefersReducedMotion, safeHref } from "../ui/dom";
 import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartHeight, chartScales, niceRange, wrap } from "./layout";
 import type { Size } from "./layout";
 import type { Scales } from "./layout";
@@ -104,6 +104,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   let refs: RefPlan = { bands: [], paper: [] };
   // pressures of nearest tests that fell outside the axis; the axis widens to keep every one on the chart
   let extra: number[] = [];
+  // R8a: the axes ease to a new domain instead of cutting (axes-swap replays the
+  // ease only when the domain actually changed); the Moon box draws itself once.
+  let prevDom: { min: number; max: number } | null = null;
+  let refsDrawn = false;
 
   function nearestRows(state: AppState): NearestRow[] {
     const query = queryFromState(state);
@@ -217,6 +221,9 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const bandH = lunar ? 28 + noteLines.length * LINE_PX + 10 : 0;
     scales = chartScales(size, dom, { bandH, headH, strip: strip.length > 0 });
     const { plot, x, y } = scales;
+    // R8a: remember the domain so the axes ease only when it really changed.
+    const domChanged = prevDom === null || prevDom.min !== dom.min || prevDom.max !== dom.max;
+    prevDom = { min: dom.min, max: dom.max };
 
     // the three.js tilt replaces the SVG chart on the lunar-gravity pages when it can run;
     // otherwise the SVG lunar band below stays the chart (and the accessible version).
@@ -282,6 +289,12 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     gAxes.append(
       svg("text", { class: "axis-title", transform: `translate(14 ${(plot.y0 + plot.y1) / 2}) rotate(-90)`, "text-anchor": "middle" }, t("ui.stage.y-axis")),
     );
+    // R8a: the chart axes ease to a new domain instead of cutting between beats.
+    gAxes.classList.remove("axes-swap");
+    if (domChanged && !prefersReducedMotion()) {
+      gAxes.getBoundingClientRect();
+      gAxes.classList.add("axes-swap");
+    }
 
     gHead.replaceChildren();
     gBand.replaceChildren();
@@ -310,13 +323,16 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       gBand.append(textBlock(plot.x0 + 8, top + 26, "start", noteLines, "lunar-note"));
     }
 
-    // dots, one circle per drawn test; the highlight colours only the ones it names
-    for (const test of wanted) {
+    // dots, one circle per drawn test; the highlight colours only the ones it names.
+    // Circles keep their nodes across beats (stable keys, R8a): an arriving dot
+    // slides from its old place, and new dots arrive staggered 60 to 90 ms apart.
+    for (const [i, test] of wanted.entries()) {
       const kind = dotKind(test, hl);
       let c = dots.get(test.id);
       if (!c) {
         c = svg("circle", { "data-id": test.id });
         selectable(c, test.investigation);
+        c.style.animationDelay = `${Math.min(i * 0.075, 0.9).toFixed(3)}s`;
         dots.set(test.id, c);
         gTests.append(c);
       }
@@ -357,6 +373,10 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   }
   function drawRefs(annotations: NonNullable<AppState["stage"]["annotation"]>): void {
     const s = scales!;
+    if (!refsDrawn) {
+      refsDrawn = true;
+      gRefs.classList.add("refs-first");
+    }
     for (const r of layoutRefs(refs, s, annotations, t)) {
       if (r.shape === "paper") {
         refs.paper.forEach((p) => {

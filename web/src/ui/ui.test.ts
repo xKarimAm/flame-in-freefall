@@ -153,6 +153,21 @@ describe("ui", () => {
       expect(seen).toHaveLength(1);
     });
 
+    it("a re-rank slides the same row nodes to their new places (R8d)", () => {
+      const { store } = setup({ pressure_kpa: 101, o2_pct: 21 });
+      store.set({ lens: "analyst" });
+      (overviewTab() as HTMLButtonElement).click();
+      const ol = () => roots().sheet.querySelector("ol.dash-ranked-list")!;
+      expect(ol().children.length).toBeGreaterThan(0);
+      const before = new Map(
+        [...ol().children].map((li) => [(li as HTMLElement).dataset["key"]!, li]),
+      );
+      store.set({ sliders: { pressure_kpa: 56.5, o2_pct: 34 } });
+      const after = [...ol().children] as HTMLElement[];
+      expect(after.length).toBe(before.size);
+      for (const li of after) expect(li).toBe(before.get(li.dataset["key"]!));
+    });
+
     it("the compare tab pairs two investigations with a two-tone chart and fuel groups", () => {
       const { store } = setup();
       store.set({ lens: "analyst" });
@@ -548,6 +563,8 @@ describe("ui", () => {
     expect(css).toMatch(/#sheet (th|td)[^{]*\{[^}]*word-break:\s*normal/);
     expect(css).not.toMatch(/#sheet (th|td)[^{]*\{[^}]*overflow-wrap:\s*anywhere/);
     expect(css).toMatch(/#sheet td\.title\s*\{[^}]*min-width:\s*16rem/);
+    // table-layout: fixed ignores min-width on body cells: the first-row header cell sets the column width (R9).
+    expect(css).toMatch(/#sheet th\.title\s*\{[^}]*width:\s*16rem/);
   });
 
   it("tables scroll sideways inside the panel only below 900 px (R2g)", () => {
@@ -561,6 +578,13 @@ describe("ui", () => {
     roots().sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
     const cells = [...roots().sheet.querySelectorAll("table.investigations tbody td.title")];
     expect(cells.length).toBe(experiments.length);
+  });
+
+  it("the investigations title header cell carries the wide-column class (R9)", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    roots().sheet.querySelector<HTMLButtonElement>('button.tab[data-tab="investigations"]')!.click();
+    expect(roots().sheet.querySelector("table.investigations thead th.title")).not.toBeNull();
   });
 
   it("analyst workspace: no side columns, the sheet is full width and the stage hides (R2f)", () => {
