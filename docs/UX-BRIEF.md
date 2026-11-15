@@ -48,3 +48,6 @@ Same pages, denser text, the slider panel always available from act 3 on, the "u
 
 ## AI text safety (Meta Spark output)
 Every AI-written string is validated in code before it is committed (quotes are word-for-word substrings of the PSI text; library text has no digits), reviewed by a Sonnet QA agent against the PSI text for claims the text does not make, tagged with model and time, and labelled "AI summary" in the UI. Keys stay in `.env`, are never printed or committed.
+
+## Art reference (Karim, 02:54)
+The Space Apps Boston poster: deep blue space, a warm orange planet limb, bold white type, one bright object in the middle. Use it as mood only: the dark blue ground, orange for fire, white display type at large sizes, one focal thing per screen. Do not copy the picture, do not use its logos, and keep the flat-colour rules (no gradients, no glows).

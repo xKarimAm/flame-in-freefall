@@ -1,6 +1,6 @@
 # STATE (build session 1: 2026-11-15 01:25 to 02:00, on Karim's go-ahead: "Go ahead and build Firebreak. This is my approval to start coding now.")
 
-## Check-in (max 10 lines), build session 2, written 02:45
+## Check-in (max 10 lines), build session 2, written 02:41
 - **On `main`, green (45 pipeline, 94 web tests):** T1-T8, T12, `moments.json` (#11), cover + chapter pages + book pages (#9), Firebreak mark + rail + layout + investigation detail (#10), chart follow-up (#13).
 - **Not merged:** PR #12 (T10, the four acts). QA found 4 engine tests to repoint and a missing bridge page; its fixer died on the Claude limit. It is task 0 of the web night lane.
 - **Running unattended (Muse Spark, Karim 02:37):** lane web on `night/web` (`docs/NIGHT-QUEUE.md`, 18 tasks: acts, public picture book, slider sentence, ending card, analyst workspace, search/sort/filter, explainer boxes, three.js tilt, library pages, languages, README) and lane backend on `night/backend` (`docs/NIGHT-QUEUE-BACKEND.md`, 7 tasks: library.json with Spark text, number and AI-text audits, coverage.json, search.json, translations, docs).
