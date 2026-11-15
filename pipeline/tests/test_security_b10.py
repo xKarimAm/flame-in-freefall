@@ -22,8 +22,11 @@ SKIP_DIRS = {
     "__pycache__",
     ".venv",
 }
+# B15: the leading boundary is a lookbehind for alphanumerics, not \b, so a
+# prefixed name like META_API_KEY still matches (the "_" before "API" is a
+# word character, which is why \b failed there).
 SECRET_NEAR_KEY = re.compile(
-    r"(?i)\b(api[_-]?key|token|secret|bearer)\b.{0,60}?[=:]\s*[\"']?([A-Za-z0-9_\-+/=]{40,})"
+    r"(?i)(?<![A-Za-z0-9])(api[_-]?key|token|secret|bearer)\b.{0,60}?[=:]\s*[\"']?([A-Za-z0-9_\-+/=]{40,})"
 )
 BEARER_VALUE = re.compile(r"Bearer\s+[A-Za-z0-9_\-]{20,}")
 
@@ -48,6 +51,15 @@ def test_no_secret_looking_tokens_in_repo():
         for match in BEARER_VALUE.finditer(text):
             hits.append(f"{path.relative_to(ROOT)}:bearer:{len(match.group(0))}")
     assert hits == [], f"secret-looking tokens: {hits}"
+
+
+def test_project_key_name_is_caught():
+    # B15: SECRET_NEAR_KEY must catch this project's own key name. The dummy
+    # value is built inside the test; it is not a real key.
+    line = "META_API_KEY=" + "A" * 48
+    match = SECRET_NEAR_KEY.search(line)
+    assert match is not None, f"pattern misses META_API_KEY line: {line[:14]}..."
+    assert len(match.group(2)) == 48
 
 
 def test_env_file_is_git_ignored():
