@@ -20,36 +20,52 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
   let famSel: HTMLSelectElement, list: HTMLElement, answerBox: HTMLElement;
   let presetBtns: { btn: HTMLButtonElement; id: AtmosphereId }[] = [];
   let lastKey = "";
-  let detailsOpen = false;
   let expBox: HTMLElement;
 
   const family = (f: Family | null): string => (f ? t(`ui.family.${f}`) : t("ui.nearest.family-unknown"));
-  const kv = (labelKey: string, value: Node): HTMLElement =>
-    h("span", { class: "kv" }, h("span", { class: "k" }, `${t(labelKey)} `), value);
 
-  function rowBody(r: NearestRow): Node[] {
+  /** One row names who burned: fuel, family and one linked investigation id. */
+  function whoLine(r: NearestRow): (Node | string)[] {
     const acr = api.experiment(r.investigation)?.acronym ?? r.investigation;
     return [
-      h("span", { class: "who" },
-        r.fuel ? cite(r.fuel, r.url, "num fuel") : h("span", { class: "missing" }, t("ui.nearest.fuel-unknown")),
-        ` ${family(r.family)}, `,
-        cite(acr, api.experiment(r.investigation)?.psi_url ?? r.url, "num id"),
-      ),
-      h("span", { class: "vals" },
-        kv("ui.nearest.oxygen", num(r.o2_pct, 1, "%", r.url)),
-        kv("ui.nearest.pressure", num(r.pressure_kpa, 1, "kPa", r.url)),
-        kv("ui.nearest.ppo2", num(r.ppo2_kpa, 1, "kPa", r.url)),
-        kv("ui.nearest.flow", numOrMissing(t, r.flow_cm_s, 1, "cm/s", r.url)),
-        kv("ui.nearest.outcome", h("span", {}, t(`ui.outcome.${r.outcome}`))),
-        h("span", { class: "kv" }, t("ui.nearest.gravity")),
-        kv("ui.nearest.distance", num(r.d, 3, "", r.url)),
-      ),
+      r.fuel ? cite(r.fuel, r.url, "num fuel") : h("span", { class: "missing" }, t("ui.nearest.fuel-unknown")),
+      ` ${family(r.family)}, `,
+      cite(acr, api.experiment(r.investigation)?.psi_url ?? r.url, "num id"),
     ];
+  }
+
+  /** The row's numbers live behind its own toggle, each a link to the row's source. */
+  function detailLine(r: NearestRow): (Node | string)[] {
+    return [
+      num(r.o2_pct, 1, "%", r.url), ", ",
+      num(r.pressure_kpa, 1, "kPa", r.url), ", ",
+      num(r.ppo2_kpa, 1, "kPa", r.url), ", ",
+      numOrMissing(t, r.flow_cm_s, 1, "cm/s", r.url), ", ",
+      cite(t(`ui.outcome.${r.outcome}`), r.url, "num outcome"), ", ",
+      h("span", {}, t("ui.nearest.gravity")), ", ",
+      num(r.d, 3, "", r.url),
+    ];
+  }
+
+  function nearestRow(r: NearestRow): HTMLElement {
+    const li = h("li", {});
+    const btn = h("button", { type: "button", class: "row-toggle", "aria-expanded": "false" }, t("ui.panel.show-details"));
+    const det = h("div", { class: "row-details", hidden: "" }, ...detailLine(r));
+    btn.addEventListener("click", () => {
+      const open = det.hasAttribute("hidden");
+      if (open) det.removeAttribute("hidden");
+      else det.setAttribute("hidden", "");
+      btn.textContent = t(open ? "ui.panel.hide-details" : "ui.panel.show-details");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.focus();
+    });
+    li.append(h("span", { class: "who" }, ...whoLine(r)), btn, det);
+    return li;
   }
 
   function extreme(labelKey: string, row: NearestRow | null, cls: string): HTMLElement {
     return h("p", { class: `extreme ${cls}` }, h("strong", {}, `${t(labelKey)}: `),
-      ...(row ? rowBody(row) : [h("span", {}, t("ui.nearest.none"))]));
+      ...(row ? whoLine(row) : [h("span", {}, t("ui.nearest.none"))]));
   }
 
   /** One sentence from the nearest row; placeholders keep word order localizable.
@@ -86,7 +102,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
         h("p", { class: "weighting", "data-own": true }, t("ui.nearest.weighting")),
         h("p", { class: "mix", "data-own": true }, mix),
         res.rows.length
-          ? h("ol", { class: "nearest" }, ...res.rows.map((r) => h("li", {}, ...rowBody(r))))
+          ? h("ol", { class: "nearest" }, ...res.rows.map(nearestRow))
           : h("p", {}, t("ui.nearest.empty")),
         extreme("ui.nearest.burned", res.nearestBurned, "burned"),
         extreme("ui.nearest.went-out", res.nearestWentOut, "went-out"),
@@ -95,20 +111,24 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     // SAFFIRE: large fabric, the most cabin-like tests; no pressure recorded, so never on the chart
     const saffire = api.notPlaced("large-scale solids");
     const others = api.notPlaced().length - saffire.length;
+    const dl = h("dl", { class: "not-placed" });
+    for (const r of saffire) {
+      const group = h("div", { class: "np-row" });
+      group.append(
+        h("dt", {}, r.fuel ? cite(r.fuel, r.url, "num fuel") : h("span", { class: "missing" }, t("ui.nearest.fuel-unknown"))),
+        h("dd", {}, numOrMissing(t, r.o2_pct, 1, "%", r.url)),
+        h("dd", {}, cite(t(`ui.outcome.${r.outcome}`), r.url, "num outcome")),
+        h("dd", { class: "reason" }, r.reason),
+      );
+      dl.append(group);
+    }
     full.push(
       h("h3", {}, t("ui.nearest.not-placed.title")),
       h("p", {}, t("ui.nearest.not-placed.intro")),
-      h("ul", { class: "not-placed" }, ...saffire.map((r) =>
-        h("li", {},
-          r.fuel ? cite(r.fuel, r.url, "num fuel") : h("span", { class: "missing" }, t("ui.nearest.fuel-unknown")),
-          " ",
-          kv("ui.nearest.oxygen", numOrMissing(t, r.o2_pct, 1, "%", r.url)),
-          kv("ui.nearest.outcome", h("span", {}, t(`ui.outcome.${r.outcome}`))),
-          h("span", { class: "kv" }, `${r.reason}`),
-        ))),
+      dl,
       h("p", { "data-own": true }, t("ui.nearest.not-placed.others", { n: Math.max(0, others) })),
     );
-    // Public lens: one sentence first, the full list behind a button. Other lenses keep the list.
+    // Public lens: one sentence first, then the list with per-row toggles. Other lenses keep the list.
     if (s.lens !== "public") {
       answerBox.replaceChildren();
       answerBox.hidden = true;
@@ -117,20 +137,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     }
     answerBox.hidden = false;
     answerBox.replaceChildren(first ? answer(first) : h("p", { class: "answer" }, t("ui.nearest.empty")));
-    const kids: Node[] = [];
-    const btn = h("button", { type: "button", class: "btn", "aria-expanded": detailsOpen ? "true" : "false" },
-      t(detailsOpen ? "ui.panel.hide-details" : "ui.panel.show-details"));
-    // renderList rebuilds the toggle: put focus back on the new button
-    btn.addEventListener("click", () => {
-      detailsOpen = !detailsOpen;
-      renderList();
-      list.querySelector<HTMLButtonElement>(":scope > button")?.focus();
-    });
-    const details = h("div", { class: "nearest-details" });
-    if (!detailsOpen) details.setAttribute("hidden", "");
-    details.append(...full);
-    kids.push(btn, details);
-    list.replaceChildren(...kids);
+    list.replaceChildren(...full);
   }
 
   function slider(id: string, labelKey: string, r: { min: number; max: number; step: number }) {
@@ -151,8 +158,9 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     for (const id of PRESETS) {
       let a;
       try { a = api.atmosphere(id); } catch { continue; }
-      // data-own: the label is a curated atmosphere name; the values it sets show in the readouts
-      const b = h("button", { type: "button", class: "btn", "data-own": true }, airName(store.get().lens, a, t));
+      // plain buttons: no box styles. data-own: the label is a curated atmosphere name;
+      // the values it sets show in the readouts
+      const b = h("button", { type: "button", "data-own": true }, airName(store.get().lens, a, t));
       b.addEventListener("click", () =>
         store.set({ sliders: { pressure_kpa: clamp(a.pressure_kpa, SLIDER_RANGE.pressure_kpa), o2_pct: clamp(a.o2_pct_min, SLIDER_RANGE.o2_pct) } }));
       presetBtns.push({ btn: b, id });
@@ -163,6 +171,8 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     famSel = h("select", { id: "family-filter" },
       h("option", { value: "" }, t("ui.panel.family-all")),
       ...FAMILIES.filter((f) => placedFamilies.has(f)).map((f) => h("option", { value: f }, family(f))));
+    // one label wraps the select; the filtering happens in the store
+    const famLabel = h("label", { class: "family", for: "family-filter" }, t("ui.panel.family"), famSel);
     famSel.addEventListener("change", () => store.set({ family: (famSel.value || null) as Family | null }));
 
     expBox = h("div", { class: "panel-exp" },
@@ -177,7 +187,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
       h("div", { class: "sliders" }, p.row, o.row),
       h("p", { class: "presets-label" }, t("ui.panel.presets")),
       presets,
-      h("div", { class: "family" }, h("label", { for: "family-filter" }, t("ui.panel.family")), famSel),
+      famLabel,
       expBox,
       list,
     );

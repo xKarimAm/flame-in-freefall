@@ -56,7 +56,7 @@ export function dataLink(text: string): HTMLAnchorElement {
   return a;
 }
 
-/** Same, but null shows a dash and the words "not recorded" (never 0). */
+/** Same, but null names the unit and says "not recorded" (never 0). */
 export function numOrMissing(
   t: (key: string) => string,
   value: number | null | undefined,
@@ -64,7 +64,7 @@ export function numOrMissing(
   unit: string,
   href: string,
 ): HTMLElement {
-  if (value == null) return h("span", { class: "missing" }, `\u2013 ${t("ui.nearest.not-recorded")}`);
+  if (value == null) return h("span", { class: "missing" }, `\u2013 ${unit} ${t("ui.nearest.not-recorded")}`);
   return num(value, digits, unit, href);
 }
 

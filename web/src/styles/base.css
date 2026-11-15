@@ -8,7 +8,7 @@ body {
   background: var(--space-deep);
   color: var(--ink-dark);
   font-family: var(--font);
-  font-size: 17px;
+  font-size: var(--text-body);
   line-height: 1.5;
 }
 a { color: inherit; }
@@ -50,19 +50,17 @@ a { color: inherit; }
 /* while the cover or a chapter page is on screen the stage hides instead of peeking out */
 body[data-stage-hidden="true"] #stage { visibility: hidden; }
 
-/* slider panel + nearest list (right side; the UI hides it while sliders are locked) */
+/* slider panel + nearest list: a bottom sheet like the analyst sheet, same width, centered */
 #panel {
   position: fixed; z-index: 20;
-  top: calc(var(--chrome-h) + var(--gap)); right: var(--gap); bottom: var(--gap);
-  width: var(--panel-w); max-width: calc(100vw - 2 * var(--gap));
-  overflow: auto;
+  left: 50%; right: auto; transform: translateX(-50%); bottom: var(--gap);
+  width: min(420px, calc(100vw - 2 * var(--gap)));
+  max-height: 45vh; overflow: auto;
 }
 #panel[hidden], #sheet[hidden], #overlay[hidden] { display: none; }
 
-/* wide screens: the panel floats on the right, so the chart keeps clear of it */
-@media (min-width: 1100px) {
-  body:has(#panel:not([hidden])) #stage { padding-right: calc(var(--panel-w) + 2 * var(--gap)); }
-}
+/* tabular numbers everywhere a number can move (slider readouts already have it) */
+body { font-variant-numeric: tabular-nums; }
 
 /* analyst sheet: a light sheet over the dark story */
 #sheet {
@@ -93,10 +91,7 @@ body[data-lens="analyst"] main { display: block; }
 
 #status { position: fixed; z-index: 50; left: var(--gap); bottom: var(--gap); color: var(--muted-dark); }
 
-/* below 1100px the panel is a bottom sheet and the chart keeps the full width */
-@media (max-width: 1099px) {
-  #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: 45vh; }
-}
+/* the panel is a bottom sheet at every width, so the chart always keeps the full width */
 
 /* narrow screens: the header wraps to two rows; this is the first-paint guess, chrome.ts then measures it */
 @media (max-width: 767px) {

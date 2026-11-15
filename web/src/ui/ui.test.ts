@@ -147,7 +147,7 @@ describe("ui", () => {
     });
     it("slider presets speak plain words in Public and engineering names after a lens switch", () => {
       const { store } = setup(); // public
-      const labels = () => [...roots().panel.querySelectorAll(".presets .btn")].map((b) => b.textContent);
+      const labels = () => [...roots().panel.querySelectorAll(".presets button")].map((b) => b.textContent);
       expect(labels()).toEqual(["Planned Moon-base air", "A second planned exploration air", "Earth air (and the space station)"]);
       store.set({ lens: "astronaut" });
       expect(labels()).toEqual(
@@ -209,12 +209,13 @@ describe("ui", () => {
 
   it("shows a null flow as 'not recorded', never 0", () => {
     setup({ pressure_kpa: p69.pressure_kpa!, o2_pct: p69.o2_pct! });
-    const li = roots().panel.querySelector("ol.nearest li")!;
-    expect(li.textContent).toContain(p69.fuel!);
-    expect(li.textContent).toMatch(/Flow\s+\S*\s*not recorded/);
+    const li = [...roots().panel.querySelectorAll("ol.nearest li")].find((r) => r.textContent!.includes(p69.fuel!))!;
+    const det = li.querySelector(".row-details")!;
+    expect(det.textContent).toContain("not recorded");
+    expect(det.textContent).not.toMatch(/0\s*cm\/s/);
   });
 
-  it("the Public lens leads with one answer sentence and the details behind a button", () => {
+  it("the Public lens leads with one answer sentence", () => {
     const { ctx } = setup(); // public
     const panel = roots().panel;
     expect(unlinkedNumbers(panel)).toEqual([]);
@@ -232,16 +233,7 @@ describe("ui", () => {
     expect(o2.textContent).toContain(String(Number(first.o2_pct.toFixed(1))));
     expect(pressure.textContent).toContain(String(Number(first.pressure_kpa.toFixed(1))));
     expect(ans.textContent).toContain(ctx.t(`ui.outcome.${first.outcome}`));
-    const btnText = (label: string) => [...panel.querySelectorAll("button")].find((b) => b.textContent === label)!;
-    const details = () => panel.querySelector(".nearest-details")!;
-    expect(btnText("Show the details").getAttribute("aria-expanded")).toBe("false");
-    expect(details().hasAttribute("hidden")).toBe(true);
-    btnText("Show the details").click();
-    expect(details().hasAttribute("hidden")).toBe(false);
-    expect(btnText("Hide the details").getAttribute("aria-expanded")).toBe("true");
     expect(panel.querySelector("ol.nearest")).not.toBeNull();
-    btnText("Hide the details").click();
-    expect(details().hasAttribute("hidden")).toBe(true);
   });
 
   it("the answer says tested, with plain words for a missing fuel or outcome (task 34)", () => {
@@ -287,18 +279,62 @@ describe("ui", () => {
     expect(noIgnition).not.toContain("burned");
   });
 
-  it("the Public panel leads with the answer in large type, then sliders, presets, Show the details", () => {
+  it("the Public panel leads with the answer in large type, then sliders, presets, family (task 44c)", () => {
     setup(); // public, sliders live
     const panel = roots().panel;
     const order = [...panel.children].map((el) => el.className);
-    // answer first, then the sliders block, the presets, the family filter, the details toggle last
     expect(order[0]).toBe("answer-wrap");
     expect(order.indexOf("sliders")).toBeGreaterThan(0);
     expect(order.indexOf("presets")).toBeGreaterThan(order.indexOf("sliders"));
-    const btn = [...panel.querySelectorAll("button")].find((b) => b.textContent === "Show the details")!;
-    expect(btn).toBeTruthy();
-    expect(order.indexOf("nearest-wrap")).toBeGreaterThan(order.indexOf("presets"));
+    expect(order.indexOf("family")).toBeGreaterThan(order.indexOf("presets"));
+    expect(order.indexOf("nearest-wrap")).toBeGreaterThan(order.indexOf("family"));
     expect(panel.querySelector(".answer-wrap .answer")).not.toBeNull();
+    const presetBtn = panel.querySelector(".presets button")!;
+    expect(presetBtn.classList.contains("btn")).toBe(false); // presets are plain buttons (task 44d)
+  });
+
+  it("each nearest row shows who, and its numbers live behind its own toggle (task 44f)", () => {
+    setup();
+    const panel = roots().panel;
+    const rows = [...panel.querySelectorAll("ol.nearest li")];
+    expect(rows.length).toBeGreaterThan(1);
+    for (const li of rows.slice(0, 2)) {
+      const who = li.querySelector(":scope > .who")!;
+      expect(who.textContent).toContain(",");
+      const toggle = li.querySelector<HTMLButtonElement>(":scope > button.row-toggle")!;
+      expect(toggle.textContent).toBe("Show the details");
+      expect(toggle.getAttribute("aria-expanded")).toBe("false");
+      const det = li.querySelector(":scope > .row-details")!;
+      expect(det.hasAttribute("hidden")).toBe(true);
+      const links = [...det.querySelectorAll<HTMLAnchorElement>("a")];
+      expect(links.length).toBeGreaterThanOrEqual(5); // oxygen, pressure, ppo2, flow, outcome, distance all linked
+      for (const a of links) expect(a.getAttribute("href")).toMatch(/^https:\/\//);
+      const text = det.textContent!;
+      for (const unit of ["%", "kPa", "cm/s"]) expect(text).toContain(unit); // units, not just digits
+      toggle.click();
+      expect(det.hasAttribute("hidden")).toBe(false);
+      expect(toggle.textContent).toBe("Hide the details");
+      expect(toggle.getAttribute("aria-expanded")).toBe("true");
+      expect(document.activeElement).toBe(toggle); // focus stays on the toggle (task 36c)
+    }
+  });
+
+  it("the not-placed list is a data list of linked values (task 44h)", () => {
+    setup();
+    const panel = roots().panel;
+    expect(panel.querySelector("ul.not-placed")).toBeNull();
+    const dl = panel.querySelector("dl.not-placed")!;
+    expect(dl.querySelectorAll("dt").length).toBeGreaterThan(0);
+    for (const a of [...dl.querySelectorAll("a")]) expect(a.getAttribute("href")).toMatch(/^https:\/\//);
+    expect(dl.textContent).toContain("SIBAL Fabric");
+    expect(dl.textContent).toContain("no pressure recorded");
+  });
+
+  it("the family filter is one label wrapping the select (task 44e)", () => {
+    setup();
+    const label = roots().panel.querySelector("label.family")!;
+    expect(label.querySelector("select#family-filter")).not.toBeNull();
+    expect(roots().panel.querySelector("div.family")).toBeNull();
   });
 
   it("the coverage box names air pressure or oxygen, never bare air (task 40b)", () => {
@@ -382,10 +418,10 @@ describe("ui", () => {
     expect(css).toMatch(/min-width:\s*1280px\)\s*\{.*?\.chrome-bar\s*\{\s*flex-wrap:\s*nowrap;\s*min-height:\s*53px/s);
   });
 
-  it("the panel is a bottom sheet under 1100px", () => {
+  it("the panel is a centered bottom sheet at every width (task 44l)", () => {
     const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
-    expect(base).toMatch(/@media\s*\(max-width:\s*1099px\)\s*\{[^}]*#panel\s*\{[^}]*bottom:\s*0/);
-    expect(base).toMatch(/@media\s*\(max-width:\s*1099px\)\s*\{[^}]*#panel\s*\{[^}]*max-height:\s*45vh/);
+    expect(base).toMatch(/#panel\s*\{[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)[^}]*bottom:\s*var\(--gap\)/);
+    expect(base).toMatch(/#panel\s*\{[^}]*width:\s*min\(420px,[^}]*max-height:\s*45vh/);
   });
 
   it("the language picker is one compact select at the right end and switches the store locale", () => {
@@ -424,6 +460,7 @@ describe("ui", () => {
     expect(after.textContent).toBe("Title");
     expect(after.closest("table.investigations")).not.toBeNull();
     store.set({ lens: "public" });
+    // the first row's own toggle now: focusing it is trivially kept, pin it anyway
     const toggle = [...roots().panel.querySelectorAll("button")].find((b) => b.textContent === "Show the details")!;
     toggle.click();
     expect((document.activeElement as HTMLButtonElement).textContent).toBe("Hide the details");
@@ -459,6 +496,14 @@ describe("ui", () => {
       }
     }
     expect(bad).toEqual([]);
+  });
+
+  it("drops the per-value panel labels that nothing renders any more (task 44i)", () => {
+    // oxygen/pressure/flow/outcome stay: the analyst sheet labels its controls with them.
+    // gravity stays too: the details still name it in words. ppo2 and distance lose their labels.
+    for (const key of ["ui.nearest.ppo2", "ui.nearest.distance"]) {
+      expect(i18nDicts.en![key as keyof typeof i18nDicts.en]).toBeUndefined();
+    }
   });
 
   it("the five type tokens carry the house scale (task 43)", () => {
