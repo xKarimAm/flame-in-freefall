@@ -41,6 +41,12 @@ describe("motion helpers (R8)", () => {
     expect(text).toContain("@keyframes flame-breathe");
   });
 
+  it("chapter pictures enter with the chapter title (R13)", () => {
+    const text = css();
+    expect(text).toMatch(/\.chapter \.chapter-picture\s*\{[^}]*transition:\s*transform[^;]*opacity/);
+    expect(text).toMatch(/body\[data-motion="on"\] \.chapter:not\(\.is-seen\) \.chapter-picture\s*\{[^}]*transform:\s*translateX\(-24px\)/);
+  });
+
   it("countUp writes the value once and respects reduced motion", () => {
     const el = document.createElement("span");
     el.textContent = "0";

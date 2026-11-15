@@ -490,6 +490,11 @@ describe("ui", () => {
     expect(base).toMatch(/body\[data-stage-hidden="true"\] #stage\s*\{\s*visibility:\s*hidden/);
   });
 
+  it("padding stays inside widths everywhere, so 100vw pages cannot bleed (R9b)", () => {
+    const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
+    expect(base).toMatch(/\*\s*,\s*\*::before\s*,\s*\*::after\s*\{[^}]*box-sizing:\s*border-box/);
+  });
+
   it("small screens read the story over the pinned stage, never under it (R7)", () => {
     const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
     // the story paints above the stage (z 10 over the stage's single digit),

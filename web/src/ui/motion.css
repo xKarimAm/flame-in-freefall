@@ -27,9 +27,10 @@ body[data-motion="on"] .step:not(.is-active) .step-card .step-sources {
 .step.is-active .step-card .step-page { transition-delay: 0s; }
 .step.is-active .step-card .step-text { transition-delay: 0.08s; }
 .step.is-active .step-card .step-sources { transition-delay: 0.16s; }
-/* Chapter titles slide in from the left when first seen; questions follow. */
+/* Chapter titles slide in from the left when first seen; questions follow, then the photograph. */
 .chapter .story-title,
-.chapter .chapter-question {
+.chapter .chapter-question,
+.chapter .chapter-picture {
   transition: transform 0.5s var(--motion-ease), opacity 0.5s var(--motion-ease);
 }
 body[data-motion="on"] .chapter:not(.is-seen) .story-title {
@@ -37,6 +38,9 @@ body[data-motion="on"] .chapter:not(.is-seen) .story-title {
 }
 body[data-motion="on"] .chapter:not(.is-seen) .chapter-question {
   opacity: 0.25; transform: translateX(-16px); transition-delay: 0.08s;
+}
+body[data-motion="on"] .chapter:not(.is-seen) .chapter-picture {
+  opacity: 0.25; transform: translateX(-24px); transition-delay: 0.16s;
 }
 /* Cover and ending arrive once, in parts, on load: pure CSS so a script failure
    still shows the whole page. */

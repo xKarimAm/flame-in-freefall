@@ -5,14 +5,17 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppState, Ctx, DataApi } from "../contract";
+import { parsePictures, type ChapterPicture } from "../data/pictures";
 import { dicts, makeT } from "../i18n/index";
 import { createStore } from "../store";
 import { mount, type Scroller } from "./index";
 import { flattenBeats, stories } from "./stories";
 
+const curatedPictures = parsePictures(JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../data/curated/pictures.json"), "utf8")));
+
 type Enter = (r: { element: HTMLElement; index: number; direction: "up" | "down" }) => void;
 
-function setup() {
+function setup(pictures: ChapterPicture[] = []) {
   document.body.innerHTML = '<div id="story"></div>';
   const el = document.getElementById("story")!;
   const store = createStore();
@@ -25,7 +28,7 @@ function setup() {
     destroy: () => {},
   };
   const seen: AppState[] = [];
-  mount(el, ctx, () => scroller);
+  mount(el, ctx, () => scroller, pictures);
   store.subscribe((s) => seen.push(s)); // after the first activation: only scroll-driven changes
   const steps = [...el.querySelectorAll<HTMLElement>(".step")];
   const fire = (index: number, direction: "up" | "down") => enter({ element: steps[index], index, direction });
@@ -255,6 +258,67 @@ describe("engine mount", () => {
 
   const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "engine.css"), "utf8");
 
+  describe("chapter pictures (R13)", () => {
+    const headerFor = (el: HTMLElement, act: number): HTMLElement =>
+      el.querySelector(`section[data-act="${act}"] header.chapter`) as HTMLElement;
+
+    it("chapters 1 to 3 render one figure each with the data's alt, caption and link", () => {
+      const { el } = setup(curatedPictures);
+      for (const act of [1, 2, 3]) {
+        const pic = curatedPictures.find((p) => p.chapter === act)!;
+        const fig = headerFor(el, act).querySelector("figure.chapter-picture");
+        expect(fig, `chapter ${act} figure`).not.toBeNull();
+        expect(fig!.querySelectorAll("figure").length).toBe(0);
+        const img = fig!.querySelector("img")!;
+        expect(img.getAttribute("src")).toBe(`data/${pic.file}`);
+        expect(img.getAttribute("alt")).toBe(pic.alt);
+        expect(img.getAttribute("loading")).toBe("lazy");
+        const cap = fig!.querySelector("figcaption")!;
+        expect(cap.textContent).toContain(pic.caption);
+        const a = cap.querySelector("a")!;
+        expect(a.getAttribute("href")).toBe(pic.url);
+        expect(a.textContent).toBe(pic.credit);
+        expect(cap.textContent).toContain(`${dicts.en!["ui.engine.pictureImage"]}: ${pic.credit}`);
+      }
+    });
+
+    it("chapter 4 renders no figure, and the figure sits after the question", () => {
+      const { el } = setup(curatedPictures);
+      expect(headerFor(el, 4).querySelector("figure.chapter-picture")).toBeNull();
+      const header = headerFor(el, 1);
+      const kids = [...header.children].map((c) => c.className);
+      expect(kids[0]).toBe("story-title");
+      expect(kids[kids.length - 1]).toBe("chapter-picture");
+    });
+
+    it("the edit note renders word for word when the record carries one", () => {
+      const { el } = setup(curatedPictures);
+      const pic = curatedPictures.find((p) => p.edit)!;
+      const cap = headerFor(el, pic.chapter).querySelector("figcaption")!;
+      expect(pic.edit!.length).toBeGreaterThan(0);
+      expect(cap.textContent).toContain(pic.edit!);
+    });
+
+    it("missing pictures render no figures and throw nothing", () => {
+      const { el } = setup([]);
+      expect(el.querySelectorAll("figure.chapter-picture").length).toBe(0);
+      for (const act of [1, 2, 3, 4]) expect(headerFor(el, act).querySelector("h2")!.textContent).toContain(`Chapter ${act}.`);
+    });
+
+    it("chapter figures sit on the right half from 1100 px, full width below it (R13d)", () => {
+      // desktop: title and question left, the figure on the right half, vertically centred
+      expect(css).toMatch(/@media\s*\(min-width:\s*1100px\)[\s\S]*?\.chapter\s*\{[^}]*grid-template-columns:[^}]*1fr 1fr/s);
+      expect(css).toMatch(/\.chapter-picture\s*\{[^}]*max-width:\s*44vw/);
+      expect(css).toMatch(/\.chapter-picture img\s*\{[^}]*max-height:\s*60vh/);
+      expect(css).toMatch(/\.chapter-picture img\s*\{[^}]*object-fit:\s*contain/);
+      expect(css).toMatch(/\.chapter-picture figcaption\s*\{[^}]*font-size:\s*var\(--text-meta\)/);
+      // narrow: the figure goes below the question at full width inside the 16 px margins
+      expect(css).toMatch(/\.chapter-picture\s*\{[^}]*margin:\s*0/);
+      expect(css).toMatch(/\.chapter-picture img\s*\{[^}]*max-height:\s*40vh/);
+      expect(css).toMatch(/@media\s*\(min-width:\s*1100px\)[\s\S]*?\.chapter-picture img\s*\{[^}]*max-height:\s*60vh/s);
+    });
+  });
+
   it("page dots track the active step and jump on click", () => {
     const { el, fire, steps } = setup();
     const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
@@ -452,6 +516,26 @@ describe("engine mount", () => {
     expect(css).toMatch(/\.chapter-question\s*\{[^}]*font-size:\s*var\(--text-card\)/);
     expect(css).not.toMatch(/text-transform:\s*uppercase/);
     expect(css).not.toMatch(/letter-spacing/);
+  });
+
+  it("the phone title rule stands after the base rule so it wins (R9b)", () => {
+    // the 32 px rule once stood before the base 44 px rule and lost: headlines stayed 44 px
+    const baseAt = css.indexOf(".story-title {");
+    expect(baseAt).toBeGreaterThan(-1);
+    const after = css.slice(baseAt);
+    expect(after).toMatch(/@media\s*\(max-width:\s*767px\)\s*\{\s*\.story-title\s*\{\s*font-size:\s*32px/);
+  });
+
+  it("the chapter page keeps its padding inside the viewport width (R9b)", () => {
+    expect(css).toMatch(/\.chapter\s*\{[^}]*width:\s*100vw/);
+    expect(css).toMatch(/\.chapter\s*\{[^}]*box-sizing:\s*border-box/);
+  });
+
+  it("chapter questions keep the 16 px page margin (R9b)", () => {
+    // the question rides inside the chapter padding, which never drops below 16 px (R7);
+    // it carries no left offset of its own
+    expect(css).toMatch(/\.chapter\s*\{[^}]*padding:\s*max\(4vw,\s*16px\)/);
+    expect(css).not.toMatch(/\.chapter-question\s*\{[^}]*margin-left/);
   });
 
   it("pages snap gently and dots sit outside the cards", () => {

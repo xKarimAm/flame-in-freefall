@@ -3,6 +3,8 @@
 import scrollama from "scrollama";
 import { MOON_STORY_ID } from "../contract";
 import type { Ctx } from "../contract";
+import { DATA_URL_BASE } from "../data/index";
+import type { ChapterPicture } from "../data/pictures";
 import { safeHref } from "../ui/dom";
 import "./engine.css";
 import { flattenBeats, stories } from "./stories";
@@ -36,7 +38,31 @@ function scrollCenter(el: Element | null): void {
   (el as HTMLElement).scrollIntoView({ block: "center", behavior });
 }
 
-export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = scrollama): void {
+/** A chapter page's NASA photograph (R13): the figure for the chapter number, with the
+ *  record's own caption, credit link and edit note. No picture fact is typed here. */
+export function chapterFigure(pic: ChapterPicture, imageWord: string): HTMLElement {
+  const figure = node("figure", "chapter-picture");
+  const img = node("img");
+  img.src = `${DATA_URL_BASE}/${pic.file}`;
+  img.alt = pic.alt;
+  img.setAttribute("loading", "lazy");
+  const cap = node("figcaption");
+  cap.append(node("span", "chapter-caption", pic.caption));
+  cap.append(document.createTextNode(`${imageWord}: `));
+  const a = node("a", undefined, pic.credit);
+  a.href = safeHref(pic.url);
+  a.target = "_blank";
+  a.rel = "noopener";
+  cap.append(a);
+  if (pic.edit) {
+    cap.append(document.createTextNode(" "));
+    cap.append(node("span", "chapter-edit", pic.edit));
+  }
+  figure.append(img, cap);
+  return figure;
+}
+
+export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = scrollama, pictures: ChapterPicture[] = []): void {
   const flat = flattenBeats(stories);
   const steps: HTMLElement[] = [];
   const texts: HTMLElement[] = [];
@@ -65,6 +91,8 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
       const h2 = node("h2", "story-title");
       const question = node("p", "chapter-question"); // attached in render() only when the dictionary has the key
       header.append(h2);
+      const pic = pictures.find((p) => p.chapter === story.act);
+      if (pic) header.append(chapterFigure(pic, ctx.t("ui.engine.pictureImage")));
       section.append(header);
       headings.push({ section, h2, question, key: story.title_key, act: story.act });
       sections.set(story.id, section);

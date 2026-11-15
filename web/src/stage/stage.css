@@ -22,12 +22,19 @@
    The lunar label wraps at the plot edge on narrow pages instead of leaving the box. */
 .tilt-label.plane-micro, .tilt-label.plane-lunar, .tilt-label.plane-earth { font-size: var(--text-card); font-weight: 700; color: var(--ink-dark); }
 .tilt-label.plane-lunar { max-width: 100%; white-space: normal; }
-/* R11: every label is capped at its plane's drawn width (about 26rem on desktop),
-   so the lunar sentence wraps onto two lines centred over its plane instead of
-   running past the plane to the window edge. Narrow screens keep the 100 % cap. */
-@media (min-width: 1100px) {
+/* R11/R12: from 1100 to 1279 px every label is capped at its plane's drawn width
+   (about 26rem), so the lunar sentence wraps onto two centred lines instead of
+   running past the plane to the window edge; the centred box hangs below its
+   plane's top edge (JS lunarBelow), never over the plane above. From 1280 px up
+   the sentence fits on one 644 px line in the 864 px stage: no cap, no wrap,
+   centred on its plane's centre above the plane. Narrow screens keep the 100 % cap. */
+@media (min-width: 1100px) and (max-width: 1279px) {
   .tilt-label { max-width: 26rem; }
   .tilt-label.plane-lunar { max-width: 26rem; text-align: center; }
+}
+@media (min-width: 1280px) {
+  .tilt-label { max-width: 26rem; }
+  .tilt-label.plane-lunar { max-width: none; white-space: nowrap; text-align: center; }
 }
 .tilt-label.you { color: var(--ink-dark); }
 .stage-svg text { fill: var(--muted-dark); font-size: var(--text-meta); }
@@ -162,6 +169,14 @@ body[data-cover="true"] .stage-incidents .incident-card { display: none; }
 /* chapter 4's plane step: three gravity buttons and the count they hold */
 .plane-step { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
 .plane-step[hidden] { display: none; }
+/* narrow screens: the button rows and the parade counter keep the 16 px page margin,
+   and the parade rides at the top of the pinned stage box so the scrolling cards
+   never cover the counter (R9b) */
+@media (max-width: 1099px) {
+  .family-pick { padding: 0 16px; }
+  .plane-step { padding: 0 16px; }
+  .stage-parade { order: -1; }
+}
 .plane-step .plane-result { flex-basis: 100%; margin: 0; font-size: var(--text-body); color: var(--ink-dark); }
 .picture-side .dial-result { margin: 8px 0 0; font-size: var(--text-body); color: var(--ink-dark); }
 .flame-guide { display: block; height: auto; }

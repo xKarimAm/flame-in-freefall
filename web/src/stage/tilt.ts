@@ -102,15 +102,16 @@ export interface TiltAnchor {
   local: [number, number, number];
 }
 
-/** Plane-local label anchors, the single source for the scene and the tests. Plane labels sit
- *  at their own plane's top-left corner; the axis titles sit on the front edges (oxygen down
- *  the micro plane's left edge, pressure along the Earth strip's front edge), each with its own
- *  place so no title is drawn over a label. The your-air label has no fixed anchor: it follows
- *  the slider mark. */
+/** Plane-local label anchors, the single source for the scene and the tests. The micro and
+ *  Earth labels sit at their own plane's top-left corner; the lunar label sits at its plane's
+ *  top centre (R12: one centred line from 1280 px up); the axis titles sit on the front edges
+ *  (oxygen down the micro plane's left edge, pressure along the Earth strip's front edge),
+ *  each with its own place so no title is drawn over a label. The your-air label has no fixed
+ *  anchor: it follows the slider mark. */
 export function tiltLabelAnchors(): Record<TiltFixedLabelId, TiltAnchor> {
   return {
     micro: { group: "micro", local: [-TILT_W / 2, TILT_H / 2, 0.05] },
-    lunar: { group: "lunar", local: [-TILT_W / 2, TILT_H / 2, 0.05] },
+    lunar: { group: "lunar", local: [0, TILT_H / 2, 0.05] },
     earth: { group: "earth", local: [-TILT_W / 2, EARTH_H / 2, 0.05] },
     x: { group: "earth", local: [0, -EARTH_H / 2, 0.05] },
     y: { group: "micro", local: [-TILT_W / 2, 0, 0.05] },
@@ -134,13 +135,22 @@ export interface TiltLabelBox {
   h: number;
 }
 
+/** The lunar label hangs below its plane's top edge on viewports under 1280 px, where two
+ *  lines cannot fit the gap to the plane above; from 1280 px up it is one centred line above
+ *  it. Missing matchMedia (tests, SSR) keeps the above-plane placement. */
+export function lunarLabelBelow(): boolean {
+  return typeof matchMedia === "function" && !matchMedia("(min-width: 1280px)").matches;
+}
+
 /** Put every tilt label at its own place inside the frame: plane labels above their plane's
- *  top-left corner, the pressure title centred below the Earth strip's front edge, the oxygen
- *  title left of the micro plane's middle, the your-air label centred above its crosshair.
+ *  top corner (the lunar label centred on its plane's top centre), the pressure title centred
+ *  below the Earth strip's front edge, the oxygen title left of the micro plane's middle, the
+ *  your-air label centred above its crosshair. With lunarBelow the lunar box hangs below its
+ *  plane's top edge instead, over its own (empty) plane, so it never touches the plane above.
  *  Boxes are clamped into the frame and each label nudges down past the ones before it, so no
  *  box leaves the frame and no two overlap — unless the frame cannot hold them all, when the
  *  last ones stack along the bottom edge (documented, never the case on a story page). Pure. */
-export function tiltLabelBoxes(frame: { w: number; h: number }, items: TiltLabelSpec[]): TiltLabelBox[] {
+export function tiltLabelBoxes(frame: { w: number; h: number }, items: TiltLabelSpec[], opts?: { lunarBelow?: boolean }): TiltLabelBox[] {
   const order: TiltLabelId[] = ["micro", "lunar", "earth", "x", "y", "you"];
   const byId = new Map(items.map((i) => [i.id, i]));
   const placed: TiltLabelBox[] = [];
@@ -154,6 +164,8 @@ export function tiltLabelBoxes(frame: { w: number; h: number }, items: TiltLabel
     if (id === "x") { x = item.anchor.x - item.w / 2; y = item.anchor.y + 4; }
     else if (id === "y") { x = item.anchor.x - item.w - 6; y = item.anchor.y - item.h / 2; }
     else if (id === "you") { x = item.anchor.x - item.w / 2; y = item.anchor.y - item.h - 6; }
+    else if (id === "lunar" && opts?.lunarBelow) { x = item.anchor.x - item.w / 2; y = item.anchor.y + 4; }
+    else if (id === "lunar") { x = item.anchor.x - item.w / 2; y = item.anchor.y - item.h - 4; }
     else { x = item.anchor.x; y = item.anchor.y - item.h - 4; }
     x = Math.min(Math.max(x, 0), Math.max(0, frame.w - item.w));
     y = Math.min(Math.max(y, 0), Math.max(0, frame.h - item.h));
@@ -392,7 +404,7 @@ export function buildTiltScene(colors: TiltColors, initial: TiltLabels): TiltSce
     } else {
       labelEls.you.hidden = true;
     }
-    for (const box of tiltLabelBoxes(frame, specs)) {
+    for (const box of tiltLabelBoxes(frame, specs, { lunarBelow: lunarLabelBelow() })) {
       const el = elOf(box.id);
       el.hidden = false;
       el.style.left = `${box.x.toFixed(1)}px`;

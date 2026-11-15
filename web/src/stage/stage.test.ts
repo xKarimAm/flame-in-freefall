@@ -10,7 +10,7 @@ import { createStore, initialState } from "../store";
 import { mountSheet } from "../ui/sheet";
 import { SELECT_INVESTIGATION, mount } from "./index";
 import * as THREE from "three";
-import { TILT_H, TILT_MS, TILT_W, TILT_Y, TILT_Z, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltLabelAnchors, tiltLabelBoxes, tiltPlaneGeometry, tiltPose, tiltProgress, tokenDefaults } from "./tilt";
+import { TILT_H, TILT_MS, TILT_W, TILT_Y, TILT_Z, buildTiltScene, chartToWorld, dotFill, dotSizePx, easeOutCubic, lunarLabelBelow, lunarLabelFor, moonBoxWorld, mountTilt, tiltAllowed, tiltCamera, tiltLabelAnchors, tiltLabelBoxes, tiltPlaneGeometry, tiltPose, tiltProgress, tokenDefaults } from "./tilt";
 import type { TiltColors, TiltFixedLabelId, TiltLabelId, TiltLabelSpec, TiltLabels } from "./tilt";
 import { CHART_RESERVE_PX, chartHeight, chartScales, niceRange, overlaps, wrap } from "./layout";
 import type { Rect } from "./layout";
@@ -1183,6 +1183,100 @@ describe("tilt label placement (task 28)", () => {
     expect(wide).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*max-width:\s*26rem/);
     expect(wide).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*text-align:\s*center/);
     expect(css).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*white-space:\s*normal/);
+  });
+
+  it("R12: from 1280 px up the lunar sentence is one centred line; 1100-1279 keeps two lines", () => {
+    const blocks = css.split("@media").slice(1);
+    const mid = blocks.filter((b) => /min-width:\s*1100px/.test(b) && /max-width:\s*1279px/.test(b)).join("\n");
+    const wide = blocks.filter((b) => /min-width:\s*1280px/.test(b)).join("\n");
+    expect(mid, "1100-1279 block").not.toBe("");
+    expect(wide, "1280 block").not.toBe("");
+    // two lines, capped at the plane width, centred (R11 kept for the narrow band)
+    expect(mid).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*max-width:\s*26rem/);
+    expect(mid).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*text-align:\s*center/);
+    // one line from 1280 up: no cap, no wrap, centred on the plane (R12)
+    expect(wide).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*white-space:\s*nowrap/);
+    expect(wide).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*max-width:\s*none/);
+    expect(wide).toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*text-align:\s*center/);
+    expect(wide).not.toMatch(/\.tilt-label\.plane-lunar\s*\{[^}]*26rem/);
+  });
+
+  it("R12: the lunar label centres on its plane's top-centre anchor, above its plane", () => {
+    // supervisor's 1440 px measurement: one line is 644 px in an 864 px stage,
+    // the plane's centre near x 1010 on the page (434 in the stage box)
+    const frame = { w: 864, h: 600 };
+    const anchor = { x: 434, y: 375 };
+    const boxes = tiltLabelBoxes(frame, [
+      { id: "micro", anchor: { x: 100, y: 100 }, w: 360, h: 30 },
+      { id: "lunar", anchor, w: 644, h: 34 },
+    ]);
+    const box = boxes.find((b) => b.id === "lunar")!;
+    expect(box.x + box.w / 2).toBeCloseTo(anchor.x, 5);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.w).toBeLessThanOrEqual(frame.w);
+    expect(box.y).toBe(anchor.y - 34 - 4);
+    expect(box.y + box.h).toBeLessThanOrEqual(anchor.y);
+  });
+
+  it("R12: below its plane's top edge the lunar box hangs over its own plane (1100-1279)", () => {
+    const frame = { w: 720, h: 600 };
+    const anchor = { x: 360, y: 340 };
+    const boxes = tiltLabelBoxes(
+      frame,
+      [
+        { id: "micro", anchor: { x: 80, y: 90 }, w: 360, h: 30 },
+        { id: "lunar", anchor, w: 416, h: 68 },
+      ],
+      { lunarBelow: true },
+    );
+    const box = boxes.find((b) => b.id === "lunar")!;
+    expect(box.x + box.w / 2).toBeCloseTo(anchor.x, 5);
+    // the top sits below the plane's top edge: the plane above is untouched
+    expect(box.y).toBe(anchor.y + 4);
+    expect(box.y).toBeGreaterThanOrEqual(anchor.y);
+  });
+
+  it("R12: the lunar label hangs below its plane on viewports under 1280 px", () => {
+    const real = (window as unknown as Record<string, unknown>)["matchMedia"];
+    try {
+      (window as unknown as Record<string, unknown>)["matchMedia"] = () => ({ matches: true });
+      expect(lunarLabelBelow()).toBe(false);
+      (window as unknown as Record<string, unknown>)["matchMedia"] = () => ({ matches: false });
+      expect(lunarLabelBelow()).toBe(true);
+    } finally {
+      if (real !== undefined) (window as unknown as Record<string, unknown>)["matchMedia"] = real;
+      else delete (window as unknown as Record<string, unknown>)["matchMedia"];
+    }
+    expect(lunarLabelBelow()).toBe(false);
+  });
+
+  it("R9b: under 1100 px the family and plane buttons keep the 16 px page margin", () => {
+    const narrow = css.split("@media").filter((b) => /max-width:\s*1099px/.test(b)).join("\n");
+    expect(narrow, "1099 block").not.toBe("");
+    expect(narrow).toMatch(/\.family-pick\s*\{[^}]*padding:[^;}]*16px/);
+    expect(narrow).toMatch(/\.plane-step\s*\{[^}]*padding:[^;}]*16px/);
+  });
+
+  it("R9b: under 1100 px the parade counter rides at the top of the pinned stage", () => {
+    // the 44 px number sat at the bottom of the 45vh box, under the scrolling cards;
+    // first in flow it stays in the visible part
+    const narrow = css.split("@media").filter((b) => /max-width:\s*1099px/.test(b)).join("\n");
+    expect(narrow).toMatch(/\.stage-parade\s*\{[^}]*order:\s*-1/);
+  });
+
+  it("R12: at a desktop frame the centred one-line lunar box fits clear of the micro label", () => {
+    const frame = { w: 864, h: 600 };
+    const defs = tiltLabelAnchors();
+    // the lunar anchor is the plane's top centre now, not its top-left corner
+    expect(defs.lunar.local[0]).toBe(0);
+    const anchor = projectAt(frame.w, frame.h)(defs.lunar.group, defs.lunar.local);
+    const boxes = tiltLabelBoxes(frame, specsFor(projectAt(frame.w, frame.h), frame.w));
+    const lunar = boxes.find((b) => b.id === "lunar")!;
+    expect(lunar.x + lunar.w / 2).toBeCloseTo(anchor.x, 0);
+    expect(lunar.y + lunar.h).toBeLessThanOrEqual(anchor.y);
+    for (const b of boxes) expect(inside(frame, b)).toBe(true);
+    for (let i = 0; i < boxes.length; i++)
+      for (let j = i + 1; j < boxes.length; j++) expect(disjoint(boxes[i]!, boxes[j]!)).toBe(true);
   });
 
   it("the Moon box uses exactly the micro-plane mapping for the moon.json values", () => {
