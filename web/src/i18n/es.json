@@ -13,7 +13,6 @@
   "ui.stage.x-axis": "Presión del aire (kPa)",
   "ui.stage.y-axis": "Oxígeno en el aire (%)",
   "ui.stage.coverage": "Mostradas {plotted} de {total} pruebas",
-  "ui.stage.microg-plane": "Microgravedad: donde se hicieron todas las pruebas de fuego de NASA PSI",
   "ui.stage.lunar-plane": "Gravedad de la Luna (1/6 g)",
   "ui.stage.your-air": "Tu aire",
   "ui.stage.legend.other": "Una prueba real",

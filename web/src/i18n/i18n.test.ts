@@ -30,6 +30,20 @@ describe("i18n dictionaries", () => {
     expect(dicts.en![BEAT_KEY]).toBeTypeOf("string");
   });
 
+  it("the chart labels name the recorded-air subset, never every test (task 30)", () => {
+    // the planes draw 986 of 1,883 tests: only the ones with the air recorded
+    expect(dicts.en!["ui.stage.tilt.micro"]).toBe("NASA tests with the air recorded");
+    expect(dicts.en!["ui.stage.microg-plane"]).toContain("air recorded");
+    expect(dicts.en!["ui.stage.microg-plane"]).not.toMatch(/every/i);
+  });
+
+  it("no string reintroduces the every-test chart claim (task 30 audit)", () => {
+    const banned = ["Every NASA test so far", "where every NASA PSI fire test ran"];
+    for (const [key, value] of Object.entries(dicts.en!)) {
+      for (const old of banned) expect(value, key).not.toContain(old);
+    }
+  });
+
   it("chrome text falls back from the locale to en, then to the key", () => {
     for (const locale of Object.keys(dicts) as Locale[]) {
       const t = makeT(() => locale);

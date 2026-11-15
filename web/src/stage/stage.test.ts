@@ -891,7 +891,7 @@ describe("tilt label placement (task 28)", () => {
   const specsFor = (project: (group: "micro" | "lunar" | "earth", local: readonly [number, number, number]) => { x: number; y: number }): TiltLabelSpec[] => {
     const defs = tiltLabelAnchors();
     const words: Record<TiltLabelId, { text: string; w: number; h: number }> = {
-      micro: { text: "Every NASA test so far", w: 250, h: 30 },
+      micro: { text: "NASA tests with the air recorded", w: 360, h: 30 },
       lunar: { text: "No fire test has run in Moon gravity.", w: 400, h: 30 },
       earth: { text: "Earth gravity (1 g)", w: 200, h: 30 },
       x: { text: "Air pressure (kPa)", w: 130, h: 22 },

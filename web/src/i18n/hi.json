@@ -13,7 +13,6 @@
   "ui.stage.x-axis": "हवा का दबाव (kPa)",
   "ui.stage.y-axis": "हवा में ऑक्सीजन (%)",
   "ui.stage.coverage": "{total} टेस्ट में से {plotted} दिखाए गए",
-  "ui.stage.microg-plane": "बिना गुरुत्व: जहाँ NASA PSI के सारे आग के टेस्ट हुए",
   "ui.stage.lunar-plane": "चाँद का गुरुत्व (1/6 g)",
   "ui.stage.your-air": "आपकी हवा",
   "ui.stage.legend.other": "एक असली टेस्ट",
