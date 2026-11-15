@@ -41,6 +41,11 @@
 ol.nearest, ul.not-placed { list-style: none; margin: 8px 0; padding: 0; }
 .answer { font-size: 18px; line-height: 1.5; margin: 12px 0; }
 .answer a { color: var(--ink-dark); }
+.panel-exp { font-size: 14px; line-height: 1.45; margin: 0 0 12px; padding: 10px 12px; background: var(--space-deep); border-left: 3px solid var(--data-on-dark); }
+.panel-exp[hidden] { display: none; }
+.panel-exp h4 { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: var(--ink-dark); }
+.panel-exp p { margin: 0; color: var(--muted-dark); }
+.panel-exp .exp-why { margin-top: 4px; color: var(--ink-dark); }
 .nearest-details[hidden] { display: none; }
 .nearest-details { margin-top: 12px; }
 ol.nearest li, ul.not-placed li, .extreme { padding: 8px 0 8px 10px; border-left: 3px solid var(--data-on-dark); border-bottom: 1px solid var(--rule); }

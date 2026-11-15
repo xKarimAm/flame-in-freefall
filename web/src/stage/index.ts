@@ -11,6 +11,7 @@ import type { Scales } from "./layout";
 import { dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
 import { dialSVG, flameSVG, incidentO2 } from "./picture";
+import { renderExplainers } from "./explain";
 import { renderParade } from "./parade";
 import { DIAMOND, layoutRefs } from "./refs";
 
@@ -72,7 +73,9 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
   const legend = html("ul", "stage-legend");
   const parade = html("div", "stage-parade");
   parade.hidden = true;
-  root.append(plotBox, legend, parade);
+  const explainers = html("div", "stage-explainers");
+  explainers.hidden = true;
+  root.append(plotBox, legend, parade, explainers);
   const incidents = html("div", "stage-incidents");
   incidents.hidden = true;
   el.append(root, incidents);
@@ -107,6 +110,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     const state = store.get();
     const stage = state.stage;
     renderParade(parade, ctx);
+    renderExplainers(explainers, ctx);
     const chartView = stage.view === "micro-g" || stage.view === "tilt-lunar" || stage.view === "empty";
     root.hidden = !chartView;
     incidents.hidden = chartView;

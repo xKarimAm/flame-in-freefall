@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import type { AtmosphereId, DataApi, Experiment, Family, IncidentsData, Lens, MoonData, NearestQuery, NotPlacedRow, PlacedTest, StageState, Story, TestRun } from "../contract";
+import type { AppState, AtmosphereId, DataApi, Experiment, Family, IncidentsData, Lens, MoonData, NearestQuery, NotPlacedRow, PlacedTest, StageState, Story, TestRun } from "../contract";
 import { dicts, makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
 import { SELECT_INVESTIGATION, mount } from "./index";
@@ -72,9 +72,9 @@ function fakeApi(extra: Extra = {}): DataApi & { nearestSpy: ReturnType<typeof v
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "stage.css"), "utf8");
 const SIZE = { w: 688, h: 700 }; // the SVG fills #stage's content box; this stands in for it
-function setup(stage = initialState.stage, sliders = initialState.sliders, extra: Extra = {}, size = SIZE, lens: Lens = "public") {
+function setup(stage = initialState.stage, sliders = initialState.sliders, extra: Extra = {}, size = SIZE, lens: Lens = "public", beat: AppState["beat"] = null) {
   const api = fakeApi(extra);
-  const store = createStore({ ...initialState, stage, sliders, lens });
+  const store = createStore({ ...initialState, stage, sliders, lens, beat });
   const host = document.createElement("div");
   document.body.append(host);
   mount(host, { api, store, dicts, t: makeT(() => "en") }, { size });
@@ -554,6 +554,51 @@ describe("family filter", () => {
     expect(dots.every((d) => ids.has(d.getAttribute("data-id")!))).toBe(true);
     store.set({ family: null });
     expect(host.querySelectorAll('[data-layer="tests"] circle').length).toBe(api.placed().length);
+  });
+});
+
+describe("explainer boxes", () => {
+  const whyStage: StageState = { view: "micro-g", show_families: ["droplets"], coverage: true };
+  const whyBeat = { story: "what-nasa-tested", scene: "what-nasa-tested-main", beat: "why-test", kind: "hook" as const };
+  const revealStage: StageState = { view: "micro-g", show_families: allFamilies, reference: ["iss-air", "heo-dm-1006"] };
+  const revealBeat = { story: "moon-air", scene: "moon-air-main", beat: "reveal", kind: "reveal" as const };
+
+  it("explains the axes, a dot and the coverage once on the introducing page", () => {
+    const { host, api } = setup(whyStage, initialState.sliders, {}, SIZE, "public", whyBeat);
+    const boxes = [...host.querySelectorAll(".stage-explainers .exp")];
+    expect(boxes.map((b) => b.getAttribute("data-for"))).toEqual(["axis", "dot", "coverage"]);
+    const text = host.querySelector(".stage-explainers")!.textContent!;
+    const { plotted, total } = api.coverage();
+    expect(text).toContain(`${plotted} of ${total} tests`);
+    for (const b of boxes) {
+      expect(b.querySelector("h4")!.textContent!.length).toBeGreaterThan(0);
+      expect(b.querySelectorAll("p").length).toBe(2);
+    }
+  });
+
+  it("explains the Moon box and Earth air with moon.json numbers on the reveal", () => {
+    const { host } = setup(revealStage, initialState.sliders, {}, SIZE, "public", revealBeat);
+    const boxes = [...host.querySelectorAll(".stage-explainers .exp")];
+    expect(boxes.map((b) => b.getAttribute("data-for"))).toEqual(["moon-box", "iss-air"]);
+    const heo = moon.atmospheres.find((a) => a.id === "heo-dm-1006")!;
+    const iss = moon.atmospheres.find((a) => a.id === "iss-air")!;
+    const text = host.querySelector(".stage-explainers")!.textContent!;
+    for (const v of [heo.pressure_kpa, heo.o2_pct_min, heo.o2_pct_max!, iss.pressure_kpa, iss.o2_pct_min]) {
+      expect(text).toContain(String(v));
+    }
+  });
+
+  it("stays silent on other pages and lenses", () => {
+    const otherBeat = { story: "what-nasa-tested", scene: "what-nasa-tested-main", beat: "droplets", kind: "reveal" as const };
+    for (const [stage, beat, lens] of [
+      [whyStage, otherBeat, "public"],
+      [whyStage, whyBeat, "astronaut"],
+      [revealStage, revealBeat, "analyst"],
+    ] as const) {
+      const { host } = setup(stage, initialState.sliders, {}, SIZE, lens, beat);
+      expect(host.querySelector(".stage-explainers")!.hasAttribute("hidden")).toBe(true);
+      expect(host.querySelectorAll(".stage-explainers .exp").length).toBe(0);
+    }
   });
 });
 

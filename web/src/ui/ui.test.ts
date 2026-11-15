@@ -301,6 +301,21 @@ describe("ui", () => {
     expect(unlinkedNumbers(roots().sheet)).toEqual([]);
   });
 
+  it("the Public lens explains the sliders once on the interactive page", () => {
+    const { store } = setup();
+    const panel = roots().panel;
+    expect(panel.querySelector<HTMLElement>(".panel-exp")!.hidden).toBe(true);
+    store.set({
+      sliders: { pressure_kpa: 56.5, o2_pct: 34 },
+      beat: { story: "moon-air", scene: "moon-air-main", beat: "interactive", kind: "interactive" },
+    });
+    const box = panel.querySelector<HTMLElement>(".panel-exp")!;
+    expect(box.hidden).toBe(false);
+    expect(box.textContent).toContain("sliders");
+    store.set({ lens: "astronaut" });
+    expect(panel.querySelector<HTMLElement>(".panel-exp")!.hidden).toBe(true);
+  });
+
   it("selecting a row dispatches for the chart; an incoming selection opens the row", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });

@@ -20,6 +20,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
   let famSel: HTMLSelectElement, list: HTMLElement;
   let lastKey = "";
   let detailsOpen = false;
+  let expBox: HTMLElement;
 
   const family = (f: Family | null): string => (f ? t(`ui.family.${f}`) : t("ui.nearest.family-unknown"));
   const kv = (labelKey: string, value: Node): HTMLElement =>
@@ -148,8 +149,14 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
       ...FAMILIES.filter((f) => placedFamilies.has(f)).map((f) => h("option", { value: f }, family(f))));
     famSel.addEventListener("change", () => store.set({ family: (famSel.value || null) as Family | null }));
 
+    expBox = h("div", { class: "panel-exp" },
+      h("h4", {}, t("ui.panel.exp.slider.title")),
+      h("p", {}, t("ui.panel.exp.slider.what")),
+      h("p", { class: "exp-why" }, t("ui.panel.exp.slider.why")));
+    expBox.hidden = true;
     list = h("div", { class: "nearest-wrap" });
     root.replaceChildren(
+      expBox,
       h("div", { class: "sliders" }, p.row, o.row),
       h("p", { class: "presets-label" }, t("ui.panel.presets")),
       presets,
@@ -163,6 +170,7 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
   function sync(): void {
     const s = store.get();
     root.hidden = s.sliders === null;
+    expBox.hidden = !(s.lens === "public" && s.sliders !== null && s.beat?.story === "moon-air" && s.beat?.beat === "interactive");
     if (!s.sliders) return;
     const set = (el: HTMLInputElement, v: number) => { if (Number(el.value) !== v) el.value = String(v); };
     set(pIn, s.sliders.pressure_kpa);

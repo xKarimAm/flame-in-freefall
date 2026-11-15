@@ -108,3 +108,11 @@
 .parade-families svg { width: 26px; height: 26px; flex: none; }
 .parade-name { color: var(--ink-dark); }
 .parade-n { color: var(--muted-dark); font-family: var(--font-id); }
+
+/* explainer boxes: small labelled cards for the page that first shows a thing */
+.stage-explainers { display: flex; flex: none; flex-wrap: wrap; gap: 8px 16px; padding: 4px 16px 12px 52px; color: var(--ink-dark); font-family: var(--font); }
+.stage-explainers[hidden] { display: none; }
+.exp { max-width: 26rem; padding: 10px 12px; background: var(--space-black); border-left: 3px solid var(--data-on-dark); }
+.exp h4 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+.exp p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted-dark); }
+.exp .exp-why { margin-top: 4px; color: var(--ink-dark); }
