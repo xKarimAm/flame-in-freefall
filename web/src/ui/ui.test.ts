@@ -11,7 +11,7 @@ import { createDataApi } from "../data/index";
 import { stories } from "../engine/stories";
 import { makeT } from "../i18n/index";
 import { createStore, initialState } from "../store";
-import { airName } from "./dom";
+import { airName, cite, safeHref } from "./dom";
 import { mount } from "./index";
 
 const read = (rel: string): any => JSON.parse(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8"));
@@ -104,6 +104,15 @@ describe("ui", () => {
     const d = document.createElement("div");
     d.innerHTML = `<p>56 kPa</p><p data-own>5</p><a href="https://x.test/">7</a><a href="http://x.test/">8</a>`;
     expect(unlinkedNumbers(d)).toEqual(["56 kPa", "8"]);
+  });
+
+  it("safeHref keeps only https: links, and cite uses it (task 39)", () => {
+    expect(safeHref("https://ntrs.nasa.gov/citations/20220006612")).toBe("https://ntrs.nasa.gov/citations/20220006612");
+    expect(safeHref("javascript:alert(1)")).toBe("#");
+    expect(safeHref("http://example.com/x")).toBe("#");
+    expect(safeHref("10.1016/j.fuel.2013.02.025")).toBe("#");
+    expect(cite("x", "javascript:alert(1)").getAttribute("href")).toBe("#");
+    expect(cite("x", "https://example.com").getAttribute("href")).toBe("https://example.com");
   });
 
   it("every number in the panel and the sheet is linked to its source or marked data-own", () => {

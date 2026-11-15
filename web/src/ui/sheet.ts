@@ -2,7 +2,7 @@
 // Generated with Claude, SI-assisted.
 import { FAMILIES, type Ctx, type Experiment, type Family, type Outcome, type PlottedFilter, type Publication, type StageState, type TestRun } from "../contract";
 import { SELECT_INVESTIGATION } from "../stage/index";
-import { cite, h, num, numOrMissing } from "./dom";
+import { cite, h, num, numOrMissing, safeHref } from "./dom";
 
 type Tab = "investigations" | "margins" | "tests";
 const tabFor = (s: StageState["analyst_sheet"]): Tab => (s === "lunar-margins" || s === "failing-materials" ? "margins" : "investigations");
@@ -40,7 +40,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     return cite(t("ui.sheet.range", { lo: f(r[0]), hi: f(r[1]), unit }), href);
   }
 
-  const doiUrl = (doi: string): string => `https://doi.org/${doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "")}`;
+  const doiUrl = (doi: string): string => safeHref(`https://doi.org/${doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "")}`);
   const missing = (): HTMLElement => h("span", { class: "missing" }, t("ui.sheet.not-recorded"));
 
   function paper(p: Publication, psiUrl: string): HTMLElement {

@@ -3,6 +3,7 @@
 import scrollama from "scrollama";
 import { MOON_STORY_ID } from "../contract";
 import type { Ctx } from "../contract";
+import { safeHref } from "../ui/dom";
 import "./engine.css";
 import { flattenBeats, stories } from "./stories";
 import { resolveText } from "./text";
@@ -81,7 +82,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
       const list = node("ul", "step-sources");
       for (const s of beat.sources) {
         const a = node("a", undefined, s.label);
-        a.href = s.url;
+        a.href = safeHref(s.url);
         a.target = "_blank";
         a.rel = "noopener";
         const li = node("li");

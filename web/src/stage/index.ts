@@ -5,7 +5,7 @@ import "./stage.css";
 import { SLIDER_RANGE } from "../contract";
 import type { AppState, Ctx, Incident, NearestRow, NotPlacedRow, PlacedTest } from "../contract";
 import { queryFromState } from "../store";
-import { dataLink } from "../ui/dom";
+import { dataLink, safeHref } from "../ui/dom";
 import { CHAR_PX, LINE_PX, MARGIN, STRIP_W, chartHeight, chartScales, niceRange, wrap } from "./layout";
 import type { Size } from "./layout";
 import type { Scales } from "./layout";
@@ -448,7 +448,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       return p;
     };
     const link = html("a", undefined, i.source);
-    link.href = i.url;
+    link.href = safeHref(i.url);
     link.rel = "noopener";
     const src = html("p", "incident-source");
     src.append(link);
@@ -494,7 +494,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       seen.add(a.url);
       if (src.querySelectorAll("a").length) src.append(", ");
       const link = html("a", undefined, a.source);
-      link.href = a.url;
+      link.href = safeHref(a.url);
       link.rel = "noopener";
       src.append(link);
     }

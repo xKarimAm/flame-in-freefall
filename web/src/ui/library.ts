@@ -2,7 +2,7 @@
 // Generated with Muse Spark, SI-assisted.
 import type { Ctx } from "../contract";
 import { DATA_URL_BASE } from "../data/index";
-import { cite, h, numOrMissing } from "./dom";
+import { cite, dataLink, h, numOrMissing, safeHref } from "./dom";
 
 export type Signature = "condition-map" | "sample-wall" | "outcome-strip" | "paper-trail";
 
@@ -127,6 +127,13 @@ function svgEl(tag: string, attrs: Record<string, string> = {}, text?: string): 
   return el;
 }
 
+/** A count caption linked to the built tests file (a download, never a data URL). */
+function countCaption(text: string): HTMLAnchorElement {
+  const a = dataLink(text);
+  a.className = "num";
+  return a;
+}
+
 function momentById(moments: LibraryMoment[], id: string): LibraryMoment {
   const m = moments.find((x) => x.id === id);
   if (!m) throw new Error(`library story cites unknown moment ${id}`);
@@ -184,7 +191,7 @@ function conditionMap(story: LibraryStory, ctx: Ctx): HTMLElement {
     svg.append(c);
   }
   wrap.append(svg);
-  wrap.append(h("p", { class: "lib-sig-caption" }, cite(t("ui.stage.parade.plotted", { n: pts.length }), "data/tests.json")));
+  wrap.append(h("p", { class: "lib-sig-caption" }, countCaption(t("ui.stage.parade.plotted", { n: pts.length }))));
   return wrap;
 }
 
@@ -195,7 +202,7 @@ function sampleWall(story: LibraryStory, ctx: Ctx): HTMLElement {
     .filter((row) => story.investigations.includes(row.investigation))
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const wrap = h("div", { class: "lib-sig" });
-  wrap.append(h("p", { class: "lib-sig-caption" }, cite(t("ui.sheet.tests-caption", { n: rows.length }), "data/tests.json")));
+  wrap.append(h("p", { class: "lib-sig-caption" }, countCaption(t("ui.sheet.tests-caption", { n: rows.length }))));
   const list = h("ul", { class: "lib-cards" });
   for (const r of rows) {
     list.append(
@@ -273,7 +280,7 @@ function outcomeStrip(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): 
   const axisLabel = v.unitKey ? `${t(v.labelKey)} (${t(v.unitKey)})` : `${t(v.labelKey)} (cm/s)`;
   svg.append(svgEl("text", { class: "lib-axis", x: String(W / 2), y: "48", "text-anchor": "middle" }, axisLabel));
   wrap.append(svg);
-  wrap.append(h("p", { class: "lib-sig-caption" }, cite(t("ui.library.strip-count", { n: marks.length }), "data/tests.json")));
+  wrap.append(h("p", { class: "lib-sig-caption" }, countCaption(t("ui.library.strip-count", { n: marks.length }))));
   return wrap;
 }
 
@@ -284,7 +291,7 @@ function paperTrail(story: LibraryStory, ctx: Ctx): HTMLElement {
   for (const id of story.investigations) {
     const e = ctx.api.experiment(id);
     for (const p of e?.publications ?? []) {
-      const href = p.doi ? `https://doi.org/${p.doi}` : (e?.psi_url ?? "");
+      const href = p.doi ? safeHref(`https://doi.org/${p.doi}`) : (e?.psi_url ?? "");
       const line = `${p.title}${p.authors ? ` — ${p.authors}` : ""}${p.year ? `, ${p.year}` : ""}`;
       list.append(h("li", {}, href ? cite(line, href, "plain") : line));
     }

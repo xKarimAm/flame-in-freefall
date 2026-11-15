@@ -15,9 +15,14 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs = 
   return el;
 }
 
+/** A URL built from data: only https: survives, anything else (javascript:, bare DOIs) becomes "#". */
+export function safeHref(url: string): string {
+  return url.startsWith("https://") ? url : "#";
+}
+
 /** A piece of text from the data, linked to the page it came from (THE RULE). */
 export function cite(text: string, href: string, cls = "num"): HTMLAnchorElement {
-  return h("a", { class: cls, href, target: "_blank", rel: "noopener" }, text);
+  return h("a", { class: cls, href: safeHref(href), target: "_blank", rel: "noopener" }, text);
 }
 
 /** A number from the data, as a link to its source. `digits` is the most decimals shown. */
