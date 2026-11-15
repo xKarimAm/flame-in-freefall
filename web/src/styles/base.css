@@ -12,7 +12,10 @@ body {
   line-height: 1.5;
 }
 a { color: inherit; }
-:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+/* white on the dark story, ink on the light analyst sheet; yellow stays on the Moon
+   box and the primary button only */
+:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+#sheet :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* header: lens switch, Stories, Skip to Moon air */
 #chrome {

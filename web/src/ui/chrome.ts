@@ -59,7 +59,11 @@ export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: H
     const locales = (Object.keys(ctx.dicts).length ? Object.keys(ctx.dicts) : ["en"]).filter((l) => l in localeNames);
     localeSelect = h("select", { class: "locale-select", "aria-label": t("ui.chrome.locale-label") },
       ...locales.map((locale) => h("option", { value: locale, selected: locale === store.get().locale ? true : undefined }, localeNames[locale]!)));
-    localeSelect.addEventListener("change", () => store.set({ locale: localeSelect!.value as Locale }));
+    // a locale change rebuilds the bar: keep focus on the new picker
+    localeSelect.addEventListener("change", () => {
+      store.set({ locale: localeSelect!.value as Locale });
+      root.querySelector<HTMLSelectElement>(".locale-select")?.focus();
+    });
     root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, storiesBtn, skipBtn, localeSelect));
     sync();
   }

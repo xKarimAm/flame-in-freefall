@@ -149,6 +149,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
   function render(): void {
     const { lens, locale } = ctx.store.get();
     el.dataset.lens = lens;
+    document.documentElement.lang = locale;
     dotsNav.setAttribute("aria-label", ctx.t("ui.engine.pages"));
     dots.forEach((d, i) => d.setAttribute("aria-label", ctx.t("ui.engine.page", { n: i + 1, total: dots.length })));
     coverTitle.textContent = ctx.t("ui.cover.title");
@@ -182,12 +183,16 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     return [...el.querySelectorAll<HTMLElement>(".cover, .step, .ending")];
   }
 
-  /** Keyboard page turning: arrows and space move one page, never hijacking form controls. */
+  /** Keyboard page turning: arrows and space move one page, never hijacking form controls,
+   *  and never inside the analyst workspace or the open overlay. */
   function onKey(e: KeyboardEvent): void {
     if (!el.isConnected) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (ctx.store.get().lens === "analyst") return;
+    const overlay = document.getElementById("overlay");
+    if (overlay && !overlay.hidden) return;
     const target = e.target as HTMLElement | null;
-    if (target && target.closest("input, select, textarea, button, a, [contenteditable]")) return;
+    if (target && target.closest("input, select, textarea, button, a, [contenteditable], #sheet, #panel, #overlay")) return;
     const dir = e.key === "ArrowDown" || e.key === "PageDown" || e.key === " " ? 1 : e.key === "ArrowUp" || e.key === "PageUp" ? -1 : 0;
     if (!dir) return;
     e.preventDefault();

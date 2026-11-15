@@ -266,6 +266,62 @@ describe("engine mount", () => {
     }
   });
 
+  it("page turning stays out of the analyst workspace, and html lang follows the locale (task 36)", () => {
+    const { el, store } = setup();
+    const pages = [...el.querySelectorAll<HTMLElement>(".cover, .step, .ending")];
+    let y = 0;
+    Object.defineProperty(window, "scrollY", { configurable: true, get: () => y });
+    const docTop = (i: number): DOMRect =>
+      ({ top: i * 1000 - y, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+    pages.forEach((p, i) => {
+      p.getBoundingClientRect = () => docTop(i);
+    });
+    const scroll = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>;
+    const key = (key: string, target: Element = document.body) =>
+      target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    try {
+      key("ArrowDown");
+      expect(scroll.mock.contexts.at(-1)).toBe(pages[1]);
+      y = 1000;
+      const before = scroll.mock.calls.length;
+      // the analyst lens is a workspace, not a story: arrows must not turn story pages there
+      store.set({ lens: "analyst" });
+      key("ArrowDown");
+      expect(scroll.mock.calls.length).toBe(before);
+      store.set({ lens: "public" });
+      // keyboard inside the workspace panels and the open overlay stays there too
+      for (const id of ["sheet", "panel", "overlay"]) {
+        const box = document.createElement("div");
+        box.id = id;
+        document.body.append(box);
+        const beforeEach = scroll.mock.calls.length;
+        key("ArrowDown", box);
+        expect(scroll.mock.calls.length, id).toBe(beforeEach);
+        box.remove();
+      }
+      // an open overlay swallows page keys even when the focus is outside it
+      const overlay = document.createElement("div");
+      overlay.id = "overlay";
+      document.body.append(overlay);
+      const beforeOverlay = scroll.mock.calls.length;
+      key("ArrowDown");
+      expect(scroll.mock.calls.length).toBe(beforeOverlay);
+      overlay.remove();
+      // and the page still turns otherwise
+      key("ArrowDown");
+      expect(scroll.mock.contexts.at(-1)).toBe(pages[2]);
+      // the document language follows the locale switch
+      expect(document.documentElement.lang).toBe("en");
+      store.set({ locale: "es" });
+      expect(document.documentElement.lang).toBe("es");
+      store.set({ locale: "en" });
+      expect(document.documentElement.lang).toBe("en");
+    } finally {
+      Object.defineProperty(window, "scrollY", { configurable: true, value: 0, writable: true });
+      document.documentElement.lang = "en";
+    }
+  });
+
   it("pages snap gently and dots sit outside the cards", () => {
     expect(css).toMatch(/scroll-snap-type:\s*y proximity/);
     expect(css).toMatch(/\.cover, \.chapter, #story \.step, \.ending\s*\{[^}]*scroll-snap-align:\s*start/);

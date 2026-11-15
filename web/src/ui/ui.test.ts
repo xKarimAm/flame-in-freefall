@@ -388,6 +388,34 @@ describe("ui", () => {
     expect(live().value).toBe("en");
   });
 
+  it("sorting, details and the language picker keep keyboard focus (task 36c)", () => {
+    const { store } = setup();
+    store.set({ lens: "analyst" });
+    const sheet = roots().sheet;
+    const sortBtn = [...sheet.querySelectorAll<HTMLButtonElement>("table.investigations th button.sort")].find(
+      (b) => b.textContent === "Title",
+    )!;
+    sortBtn.click();
+    const after = document.activeElement as HTMLButtonElement;
+    expect(after.textContent).toBe("Title");
+    expect(after.closest("table.investigations")).not.toBeNull();
+    store.set({ lens: "public" });
+    const toggle = [...roots().panel.querySelectorAll("button")].find((b) => b.textContent === "Show the details")!;
+    toggle.click();
+    expect((document.activeElement as HTMLButtonElement).textContent).toBe("Hide the details");
+    const picker = roots().chrome.querySelector<HTMLSelectElement>(".locale-select")!;
+    picker.value = "es";
+    picker.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(document.activeElement).toBe(roots().chrome.querySelector(".locale-select"));
+  });
+
+  it("the focus ring is white on dark and ink on the light sheet, never yellow (task 36d)", () => {
+    const base = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/base.css"), "utf8");
+    expect(base).toMatch(/:focus-visible\s*\{[^}]*outline:\s*2px solid #fff/);
+    expect(base).toMatch(/#sheet :focus-visible\s*\{[^}]*var\(--ink\)/);
+    expect(base).not.toMatch(/focus-visible[^}]*var\(--moon\)/);
+  });
+
   it("the investigations table has one row per experiment, sorted by family then acronym", () => {
     const { store } = setup();
     store.set({ lens: "analyst" });

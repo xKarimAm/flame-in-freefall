@@ -112,6 +112,22 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     });
   }
 
+  /** Dots and listed ticks select an investigation on click; Enter and Space do the
+   *  same from the keyboard (stopping Space before it turns the story page). */
+  function selectable(el: SVGElement, investigation: string): void {
+    const toggle = (): void => {
+      window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: selectedInv === investigation ? null : investigation } }));
+    };
+    el.setAttribute("tabindex", "0");
+    el.addEventListener("click", toggle);
+    el.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      e.stopPropagation();
+      toggle();
+    });
+  }
+
   // ---------- full draw: axes, grey dots, references, lunar band, no-pressure strip, caption ----------
   function drawAll(): void {
     const state = store.get();
@@ -215,7 +231,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
         window.setTimeout(() => { if (!tiltOn) tiltBox.hidden = true; }, TILT_MS);
       }
     }
-    chart.style.display = useTilt ? "none" : "";
+    chart.classList.toggle("behind-tilt", useTilt);
     if (useTilt && size) {
       try {
         tilt!.resize(size.w, size.h);
@@ -279,9 +295,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       let c = dots.get(test.id);
       if (!c) {
         c = svg("circle", { "data-id": test.id });
-        const inv = test.investigation;
-        c.addEventListener("click", () =>
-          window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: selectedInv === inv ? null : inv } })));
+        selectable(c, test.investigation);
         dots.set(test.id, c);
         gTests.append(c);
       }
@@ -302,9 +316,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
         const kind = dotKind(row, hl);
         const tick = svg("line", { class: kind === "default" ? "ptick" : `ptick ${kind}`, x1: sx + 4, x2: sx + sw - 4, y1: y(row.o2_pct), y2: y(row.o2_pct), "data-id": row.id });
         tick.append(svg("title", {}, t("ui.stage.tick-title", { fuel: row.fuel ?? t("ui.stage.no-fuel"), o2: row.o2_pct, outcome: row.outcome })));
-        const inv = row.investigation;
-        tick.addEventListener("click", () =>
-          window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: selectedInv === inv ? null : inv } })));
+        selectable(tick, row.investigation);
         gStrip.append(tick);
       }
     }
@@ -367,9 +379,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       ...rows.map((row) => {
         const c = svg("circle", { class: "dot nearest", cx: x(row.pressure_kpa), cy: y(row.o2_pct), r: 5, "data-id": row.id });
         c.append(svg("title", {}, dotTitle(row)));
-        const inv = row.investigation;
-        c.addEventListener("click", () =>
-          window.dispatchEvent(new CustomEvent(SELECT_INVESTIGATION, { detail: { investigation: selectedInv === inv ? null : inv } })));
+        selectable(c, row.investigation);
         return c;
       }),
     );

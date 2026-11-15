@@ -121,6 +121,12 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
     { key: "papers", label: "ui.sheet.col.papers" },
   ];
 
+  /** A re-sort rebuilds the table head: put focus back on the new sort button. */
+  function refocusSort(label: string): void {
+    const next = [...body.querySelectorAll<HTMLButtonElement>("th button.sort")].find((x) => x.textContent === label);
+    next?.focus();
+  }
+
   function invHead(): HTMLElement {
     return h("thead", {}, h("tr", {}, ...cols.map((c) => {
       const th = h("th", { scope: "col", "aria-sort": c.key === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none" });
@@ -129,6 +135,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         if (sortKey === c.key) sortDir = sortDir === 1 ? -1 : 1;
         else { sortKey = c.key; sortDir = 1; }
         render();
+        refocusSort(t(c.label));
       });
       th.append(b);
       return th;
@@ -295,6 +302,7 @@ export function mountSheet(root: HTMLElement, ctx: Ctx): void {
         if (testSortKey === c.key) testSortDir = testSortDir === 1 ? -1 : 1;
         else { testSortKey = c.key; testSortDir = 1; }
         render();
+        refocusSort(t(c.label));
       });
       th.append(b);
       return th;

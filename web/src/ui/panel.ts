@@ -120,7 +120,12 @@ export function mountPanel(root: HTMLElement, ctx: Ctx): void {
     const kids: Node[] = [];
     const btn = h("button", { type: "button", class: "btn", "aria-expanded": detailsOpen ? "true" : "false" },
       t(detailsOpen ? "ui.panel.hide-details" : "ui.panel.show-details"));
-    btn.addEventListener("click", () => { detailsOpen = !detailsOpen; renderList(); });
+    // renderList rebuilds the toggle: put focus back on the new button
+    btn.addEventListener("click", () => {
+      detailsOpen = !detailsOpen;
+      renderList();
+      list.querySelector<HTMLButtonElement>(":scope > button")?.focus();
+    });
     const details = h("div", { class: "nearest-details" });
     if (!detailsOpen) details.setAttribute("hidden", "");
     details.append(...full);

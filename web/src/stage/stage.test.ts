@@ -761,6 +761,35 @@ describe("linked selection", () => {
   });
 });
 
+describe("tilt assistive chart and keyboard dots (task 36)", () => {
+  it("the SVG chart is clipped aside when the tilt runs, never display:none (task 36a)", () => {
+    // the canvas stays the decorative duplicate (aria-hidden); the SVG stays the accessible chart
+    expect(css).toMatch(/\.stage-svg\.behind-tilt\s*\{[^}]*clip-path/);
+    expect(css).not.toMatch(/\.stage-svg\.behind-tilt\s*\{[^}]*display:\s*none/);
+    const { host } = setup({ view: "micro-g", show_families: allFamilies });
+    expect((host.querySelector(".stage-svg") as SVGSVGElement).style.display).not.toBe("none");
+    expect(host.querySelector(".stage-svg.behind-tilt")).toBeNull(); // no tilt without WebGL here
+  });
+
+  it("dots and listed ticks activate from the keyboard exactly like a click (task 36e)", () => {
+    const { host } = setup({ view: "micro-g", show_families: allFamilies });
+    const seen: (string | null)[] = [];
+    window.addEventListener(SELECT_INVESTIGATION, (e) =>
+      seen.push((e as CustomEvent<{ investigation: string | null }>).detail.investigation));
+    const dot = host.querySelector<SVGCircleElement>('[data-layer="tests"] circle[data-id="PSI-69#2"]')!;
+    expect(dot.getAttribute("tabindex")).toBe("0");
+    dot.focus();
+    dot.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(seen).toEqual(["PSI-69"]);
+    dot.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }));
+    expect(seen).toEqual(["PSI-69", null]);
+    const tick = host.querySelector('[data-layer="no-pressure"] line.ptick')!;
+    expect(tick.getAttribute("tabindex")).toBe("0");
+    tick.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(seen.at(-1)).toBe(tick.getAttribute("data-id")!.split("#")[0]);
+  });
+});
+
 describe("three.js tilt", () => {
   it("stays on the SVG chart when WebGL is missing", () => {
     const host = document.createElement("div");
