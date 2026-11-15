@@ -1,4 +1,47 @@
-# STATE (build session 1: 2026-11-15 01:25 to 02:00, on Karim's go-ahead: "Go ahead and build Firebreak. This is my approval to start coding now.")
+# STATE: LIVE HANDOVER, written 17:54 on 2026-11-15 (build session 3, Fable orchestrator). Read this block first.
+
+**Karim's words that authorise this work (17:50 and 17:52):** "Finish exactly every task that we agreed upon: the intro, the rest of the stories, everything ... spin as many sonnet agents. Build with Muse ... Multi-develop everything that you can and merge it at the end ... I want everything done in an hour." and "lay everything down so that ... other Claude accounts connect flawlessly". A new account still needs Karim to type his go-ahead in its own conversation (global rule), then it continues from here.
+
+**Deadline:** submit the project form before 20:00 local. UI/UX work stops at about 18:50; after that only merges, the deck stills and the 30 s video.
+
+**What is safe right now:** `main` is green and is the demo (`scripts/check.ps1`: 95 pipeline tests, 372 web tests, build). Run it: `cd web; npm run build; npm run preview`. If anything below goes wrong, present `main` as it is.
+
+## Work in flight (each on its own branch and worktree; nothing below is merged unless ticked)
+| # | What | Who | Worktree | Branch | State |
+|---|---|---|---|---|---|
+| 1 | Intro walkthrough: a guided tour of the page (story column, picture, page dots, chapters, lenses, Stories, Skip to Moon air), opened from a button on the cover and once on a first visit. New files `web/src/ui/tour.ts`, `tour.css`, `tour.test.ts`; two class names added in `chrome.ts`; one call in `ui/index.ts`; keys `ui.tour.*` in `en.json` after `ui.chrome.stories` | orchestrator (this session) | `E:\fif-wt\E` | `lane/ui/intro` | being written |
+| 2 | Story pages reveal in order (label, sentences, sources) and read like a picture book; "turn the page" cue; arrow keys | Sonnet coder C | `E:\fif-wt\C` | `lane/engine/page-reveal` | running (workflow) |
+| 3 | Experiment stories: shelf grouped by family, designed story page, previous/next | Sonnet coder B | `E:\fif-wt\B` | `lane/ui/library-pages` | running (workflow) |
+| 4 | Analyst dashboard: stat tiles, coverage by family, table quality | Sonnet coder D | `E:\fif-wt\D` | `lane/ui/dashboard` | running (workflow) |
+| 5 | `README.md` final pass and `docs/SUBMISSION.md` (text for the project form, every number backed by a repo file) | Sonnet docs coder | `E:\fif-wt\skel` | `lane/docs/submission` | running (workflow) |
+| 6 | Chart label collisions near the Moon box (R17), then the cover on wide screens (R19) | Muse Spark lane | `E:\fif-wt\release` | `release/web` | running since 17:35 (`scripts\night.ps1 -Lane release`); it cannot commit |
+| 7 | Header chapter names cut off between 1280 and 1600 px (R18) | orchestrator | `E:\fif-wt\E` | with #1 or its own branch | not started |
+
+Each Sonnet coder pushes its branch and opens a pull request when done, so its work survives this session. See them with `gh pr list`.
+
+## How to finish each item (the same steps for every branch)
+1. `git -C <worktree> fetch origin` then `git -C <worktree> rebase origin/main` (or merge). `en.json` conflicts: keep both blocks of keys.
+2. `powershell -ExecutionPolicy Bypass -File <worktree>\scripts\check.ps1` must print `check.ps1: green`.
+3. Look at it in the browser at 1280x720 and 1536x864: `cd <worktree>\web; npx vite preview --port 4190 --strictPort` (ports 4173-4181 are taken by old previews).
+4. `git push`, check the push succeeded, then `gh pr merge <n> --squash`. One at a time. Then `git -C E:\flame-in-freefall pull` and rebuild `main`.
+5. Add a line to the log in `ACTIONS.md` and tick the row above.
+
+**Muse lane (item 6):** when its run ends (`E:\spaceapps-data\logs\night-release.log`), its changes sit uncommitted in `E:\fif-wt\release`. Run check.ps1 there, look in the browser, commit for it, push `release/web`, open a PR to `main`. To stop it: create the file `E:\fif-wt\release\STOP`.
+
+**Do not touch:** `E:\fif-wt\A` (uncommitted pipeline files from an earlier session), `E:\fif-wt\pipe`, `pipeline`, `web`, `night-web`, `night-backend` (Karim's call, see the bottom of this file).
+
+## After the merges (in this order)
+1. Rebuild `main`, walk the whole story once in the browser at the size of the presenting laptop.
+2. Deck stills and the 30 s video from `main` (`docs/presentation/DECK.md`, `DEMO-SCRIPT.md`, `VIDEO-30S.md`; the deck build scripts are in `docs/presentation/`).
+3. Karim pastes `docs/SUBMISSION.md` into the project form and submits before 20:00.
+
+## Known gaps (true at 17:54)
+- The look is still plainer than Karim asked for. His reference link for dashboard inspiration is not in this conversation or in the repo; ask him for it again before any further design pass.
+- Not re-checked today: phone and tablet layouts, the Spanish and Hindi text on the new screens (new keys fall back to English), each of the 19 experiment pages.
+- Jumping straight to a middle page once left the chart on the cover picture; not confirmed, not fixed.
+
+---
+# Earlier state (build session 1: 2026-11-15 01:25 to 02:00, on Karim's go-ahead: "Go ahead and build Firebreak. This is my approval to start coding now.")
 
 ## Check-in (max 10 lines), build session 2, written 02:41
 - **On `main`, green (45 pipeline, 94 web tests):** T1-T8, T12, `moments.json` (#11), cover + chapter pages + book pages (#9), Firebreak mark + rail + layout + investigation detail (#10), chart follow-up (#13).
