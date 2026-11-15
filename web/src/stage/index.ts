@@ -248,7 +248,9 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       }
       if (!tilt) tilt = null;
     }
-    const useTilt = tiltAllowed(state.lens, stage.view) && tilt != null;
+    // While the sliders are live the flat chart stays: the tipped view shrinks the tests too far to read.
+    // The tilt still plays on the next page (the gap), where the empty Moon plane is the point.
+    const useTilt = tiltAllowed(state.lens, stage.view) && tilt != null && !state.sliders;
     if (useTilt !== tiltOn) {
       tiltOn = useTilt;
       if (useTilt) {
