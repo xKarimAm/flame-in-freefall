@@ -10,6 +10,10 @@ export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: H
   let lensButtons: [string, HTMLButtonElement][] = [];
   let localeSelect: HTMLSelectElement | null = null;
   let chips: [string, HTMLButtonElement][] = [];
+  // the four bar controls that move into the Menu on a phone; reassigned on every rebuild
+  let movers: HTMLElement[] = [];
+  let menuBody: HTMLElement | null = null;
+  let narrowMql: MediaQueryList | null = null;
   // autonyms: a language name in its own language is never translated, like the μg mark
   const localeNames: Record<string, string> = { en: "English", es: "Español", hi: "हिन्दी", ar: "العربية" };
 
@@ -64,8 +68,37 @@ export function mountChrome(root: HTMLElement, ctx: Ctx, openStories: (opener: H
       store.set({ locale: localeSelect!.value as Locale });
       root.querySelector<HTMLSelectElement>(".locale-select")?.focus();
     });
-    root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, storiesBtn, skipBtn, localeSelect));
+    menuBody = h("div", { class: "menu-body" });
+    const menu = h("details", { class: "chrome-menu" },
+      h("summary", { class: "menu-button btn" }, t("ui.chrome.menu")), menuBody);
+    movers = [group, storiesBtn, skipBtn, localeSelect];
+    root.replaceChildren(h("div", { class: "chrome-bar" }, brand(), rail(), group, storiesBtn, skipBtn, localeSelect, menu));
+    watchNarrow();
+    place();
     sync();
+  }
+
+  /** Under 768 px the bar keeps one row (mark, chapter numbers, Menu) and the four
+   *  controls move into the Menu; wider, they move back. Reparenting keeps the same
+   *  nodes, so listeners, state and focus survive the move. */
+  function place(): void {
+    if (!menuBody) return;
+    const bar = root.querySelector(":scope > .chrome-bar");
+    const menu = root.querySelector(":scope .chrome-menu");
+    if (!bar || !menu) return;
+    if (narrowMql?.matches) {
+      for (const m of movers) menuBody.append(m);
+    } else {
+      for (const m of movers) bar.insertBefore(m, menu);
+    }
+  }
+
+  function watchNarrow(): void {
+    if (narrowMql || typeof window.matchMedia !== "function") return;
+    narrowMql = window.matchMedia("(max-width: 767px)");
+    const onChange = (): void => place();
+    if (typeof narrowMql.addEventListener === "function") narrowMql.addEventListener("change", onChange);
+    else narrowMql.addListener(onChange);
   }
 
   function sync(): void {

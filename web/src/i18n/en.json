@@ -115,6 +115,7 @@
   "ui.chrome.stories": "Stories",
   "ui.chrome.locale-label": "Language",
   "ui.chrome.skip": "Skip to Moon air",
+  "ui.chrome.menu": "Menu",
   "ui.rail.label": "Chapters",
   "ui.rail.chapter": "Chapter {n}",
   "ui.overlay.title": "Stories",

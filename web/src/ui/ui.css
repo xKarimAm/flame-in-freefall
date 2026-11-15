@@ -181,9 +181,19 @@ table.test-rows { margin-top: 12px; font-size: var(--text-body); }
 }
 /* header buttons have no whitespace between them, so the groups must wrap as flex */
 .lens-switch { display: flex; flex-wrap: wrap; gap: 8px; }
+/* the phone Menu: a native details holding the bar controls, shut on desktop */
+.chrome-menu { display: none; }
 @media (max-width: 767px) {
-  .lens-switch { order: 5; width: 100%; }
-  .locale-select { order: 6; }
-  .lens-switch .lens { flex: 1; }
+  /* one 56 px row: the mark, the chapter numbers, the Menu; the rest hides inside it */
+  .chrome-bar { flex-wrap: nowrap; height: 56px; min-height: 56px; }
+  .chrome-bar .brand { flex: none; }
+  .brand-name, .brand-ug { display: none; }
+  .rail { flex: 1; min-width: 0; }
+  .lens-switch { margin-left: 0; }
+  .chrome-menu { display: block; flex: none; position: relative; margin-left: auto; }
+  .menu-button { display: block; }
+  .menu-button::marker { content: ""; }
+  .menu-button::-webkit-details-marker { display: none; }
+  .chrome-menu .menu-body { position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; display: grid; gap: 8px; min-width: 220px; padding: 12px; background: var(--space-black); border: 1px solid var(--rule); font-size: var(--text-body); }
   #sheet { font-size: var(--text-meta); }
 }

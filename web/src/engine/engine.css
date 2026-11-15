@@ -140,7 +140,8 @@ html { scroll-snap-type: y proximity; scroll-padding-top: calc(var(--chrome-h) +
 }
 .page-dot[aria-current="true"] { background: var(--ink-dark); border-color: var(--ink-dark); }
 @media (max-width: 1099px) {
-  .page-dots { left: 50%; top: calc(var(--chrome-h) + 6px); transform: translateX(-50%); flex-direction: row; }
+  /* the card already says "Page n of 18": dots stay only on wide screens */
+  .page-dots { display: none; }
 }
 
 /* narrow screens: cards sit at the bottom so the chart above stays readable */
