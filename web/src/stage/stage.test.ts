@@ -17,7 +17,7 @@ import type { Rect } from "./layout";
 import { chartPasses, dotKind, noPressureRows, refShape } from "./plan";
 import type { ChartFilters } from "../contract";
 import type { RefPlan } from "./plan";
-import { DIAL_IDS, dialH, dialV, dialY, flameHeight, incidentO2, markerBottomFraction, o2Airs } from "./picture";
+import { DIAL_IDS, dialH, dialV, dialY, FLAME_UNITS, incidentO2, markerBottomFraction, o2Airs } from "./picture";
 import { layoutRefs } from "./refs";
 
 const read = <T>(rel: string): T => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf8")) as T;
@@ -603,8 +603,8 @@ describe("public picture", () => {
     const marker = dial.querySelector('[data-incident="apollo-1"]')!;
     expect(marker.getAttribute("y1")).toBe(dial.querySelector('[data-atmosphere="suit"]')!.getAttribute("cy"));
     expect(marker.querySelector("title")!.textContent).toBe(`${apollo.name}: ${apollo.oxygen}`);
-    // tall flame beside the card, and the card keeps every field
-    expect(host.querySelector(".flame-guide.tall")).not.toBeNull();
+    // the flame (the oxygen handle) beside the card, and the card keeps every field
+    expect(host.querySelector(".flame-guide")).not.toBeNull();
     const card = host.querySelector(".incident-card")!;
     for (const field of [apollo.name, apollo.oxygen, apollo.changed]) expect(card.textContent).toContain(field);
     // the dial marks name their source papers
@@ -615,11 +615,10 @@ describe("public picture", () => {
     for (const a of srcLinks) expect(a.getAttribute("href")).toMatch(/^https:\/\//);
   });
 
-  it("an incident with no oxygen number has no marker and a small calm flame", () => {
+  it("an incident with no oxygen number has no incident marker; the flame follows the handle", () => {
     const { host } = pictureSetup([mir.id]);
     expect(host.querySelector(".dial-marker")).toBeNull();
-    expect(host.querySelector(".flame-guide.small")).not.toBeNull();
-    expect(host.querySelector(".flame-guide.tall")).toBeNull();
+    expect(host.querySelectorAll(".flame-guide").length).toBe(1);
   });
 
   it("the flame stands in its own zone left of the scale, never over a label or a mark (R2e)", () => {
@@ -1373,11 +1372,8 @@ describe("act 1 public picture layout (task 21)", () => {
     expect(markerBottomFraction(0)).toBeCloseTo((560 - 524) / 560, 10);
   });
 
-  it("the flame stands on its mark and grows with it, at least 160 tall (task 45)", () => {
-    expect(flameHeight(null)).toBe(110); // small and calm with no marker
-    expect(flameHeight(0)).toBe(160);
-    expect(flameHeight(50)).toBe(210);
-    expect(flameHeight(100)).toBe(260);
+  it("the flame is a constant-size handle, two tick gaps tall, whatever the oxygen value (K3)", () => {
+    expect(FLAME_UNITS).toBeCloseTo((2 * (524 - 28)) / 10, 10);
   });
 
   it("the hook page shows Apollo 1 alone with the flame standing on the dial's 100 % mark (task 45)", () => {
@@ -1386,35 +1382,38 @@ describe("act 1 public picture layout (task 21)", () => {
     expect(cards.map((c) => c.querySelector("h3")!.textContent)).toEqual(["Apollo 1"]);
     // the flame lives inside the dial now, its base exactly on the incident marker
     expect(host.querySelector(".flame-at-mark")).toBeNull();
-    const flame = host.querySelector(".o2-dial .flame-guide.tall") as SVGSVGElement;
+    // K3: the flame is the draggable marker's twin: its wrapper sits at the same y as the
+    // "your air" line, which starts at Apollo's 100 %
+    const flame = host.querySelector(".o2-dial .flame-guide") as SVGSVGElement;
     const marker = host.querySelector('.o2-dial [data-incident="apollo-1"]')!;
-    expect(Number(flame.getAttribute("y")) + Number(flame.getAttribute("height"))).toBeCloseTo(Number(marker.getAttribute("y1")), 5);
-    // the viewport bottom is the DRAWN flame bottom (viewBox cropped at the outer
-    // arc's lowest point, 108 + ry 40 = 148), so the flame visibly touches the mark
+    const you = host.querySelector(".o2-dial .dial-you")!;
+    const travel = host.querySelector(".o2-dial .flame-travel") as unknown as HTMLElement;
+    expect(you.getAttribute("y1")).toBe(marker.getAttribute("y1"));
+    expect(travel.style.transform).toBe(`translateY(${you.getAttribute("y1")}px)`);
+    expect(Number(flame.getAttribute("height"))).toBeCloseTo(FLAME_UNITS, 5);
     const vb = flame.getAttribute("viewBox")!.split(" ").map(Number);
-    expect(vb[2]).toBe(100);
-    expect(vb[3]).toBe(148);
     expect(Number(flame.getAttribute("width"))).toBeCloseTo((Number(flame.getAttribute("height")) * vb[2]) / vb[3], 5);
     const band = host.querySelector('.o2-dial [data-atmosphere="heo-dm-1006"]')!;
     expect(band.tagName).toBe("rect");
     expect(band.getAttribute("width")).toBe("12"); // the scale is 12 wide
   });
 
-  it("the reveal page shows both incidents as two compact cards, flame still at Apollo's mark", () => {
+  it("the reveal page shows both incidents as two compact cards, flame still on the marker", () => {
     const { host } = setup(reveal, null, {}, SIZE);
     expect(host.querySelector('.stage-incidents')!.getAttribute("data-count")).toBe("2");
     const cards = [...host.querySelectorAll(".stage-incidents article.incident-card")];
     expect(cards.map((c) => c.querySelector("h3")!.textContent)).toEqual(["Apollo 1", "Mir oxygen generator fire"]);
-    const flame = host.querySelector(".o2-dial .flame-guide.tall") as SVGSVGElement;
-    const marker = host.querySelector('.o2-dial [data-incident="apollo-1"]')!;
-    expect(Number(flame.getAttribute("y")) + Number(flame.getAttribute("height"))).toBeCloseTo(Number(marker.getAttribute("y1")), 5);
+    const travel = host.querySelector(".o2-dial .flame-travel") as unknown as HTMLElement;
+    const you = host.querySelector(".o2-dial .dial-you")!;
+    expect(travel.style.transform).toBe(`translateY(${you.getAttribute("y1")}px)`);
   });
 
-  it("an incident with no oxygen number leaves the flame on the ground", () => {
+  it("an incident with no oxygen number: the flame still follows the draggable marker (21 % start)", () => {
     const { host } = setup({ view: "incident", incident_ids: ["mir-1997"] } as StageState, null, {}, SIZE);
-    const flame = host.querySelector(".o2-dial .flame-guide.small") as SVGSVGElement;
-    expect(flame).not.toBeNull();
-    expect(Number(flame.getAttribute("y")) + Number(flame.getAttribute("height"))).toBeCloseTo(524, 5); // the dial's 0 line
+    const travel = host.querySelector(".o2-dial .flame-travel") as unknown as HTMLElement;
+    expect(travel).not.toBeNull();
+    expect(travel.getAttribute("data-o2")).toBe("21");
+    expect(travel.style.transform).toBe(`translateY(${dialY(21)}px)`);
   });
 
   it("o2Airs names the atmospheres holding an oxygen value (task 59)", () => {

@@ -69,6 +69,9 @@ body[data-motion="on"] .chapter:not(.is-seen) .chapter-picture {
 /* The dial handle follows the pointer with no lag (paint is synchronous) and its
    halo settles with a short ease. */
 .o2-dial .dial-you { transition: opacity 0.18s ease-out; }
+/* K4: once, when the dial first scrolls into view, the marker bobs to show it can be dragged. */
+@keyframes dial-nudge { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-16px); } 65% { transform: translateY(9px); } }
+@media (prefers-reduced-motion: no-preference) { .o2-dial .dial-you.dial-nudge { animation: dial-nudge 1.2s ease-in-out 1; } }
 /* Slider thumbs answer at once and settle with a short ease. */
 .slider input[type="range"] { transition: opacity 0.3s var(--motion-ease); }
 .slider input[type="range"]::-webkit-slider-thumb { transition: transform 0.18s ease-out; }

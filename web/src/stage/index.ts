@@ -11,7 +11,7 @@ import type { Rect, Size } from "./layout";
 import type { Scales } from "./layout";
 import { chartPasses, dotKind, drawnTests, legendItems, noPressureRows, planReferences, pressuresForDomain } from "./plan";
 import type { DotKind, RefPlan } from "./plan";
-import { DIAL_IDS, dialH, dialHandleSVG, dialSVG, dialV, dialY, flameOverhangUnits, incidentO2, o2Airs } from "./picture";
+import { DIAL_IDS, dialH, dialHandleSVG, dialSVG, dialV, dialY, flameHandleSVG, incidentO2, o2Airs } from "./picture";
 import { renderExplainers } from "./explain";
 import { renderParade } from "./parade";
 import { TILT_MS, lunarLabelFor, mountTilt, tiltAllowed, type TiltView } from "./tilt";
@@ -88,6 +88,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
 
   const dots = new Map<string, SVGElement>(); // test id -> circle, reused so class changes can transition
   let selectedInv: string | null = null; // the linked selection (a dot click or a sheet row), not the story
+  let flameShown = false; // the flame fades in on first paint only, never when the dial is rebuilt
   let youO2: number | null = null; // chapter 1's oxygen handle: the visitor's value, kept across redraws
   let selectedFam: Family | null = null; // chapter 2's family tap: a local highlight, not the story
   let selectedPlane: "micro" | "lunar" | "earth" = "micro"; // chapter 4's plane step: micro-g holds the tests
@@ -607,30 +608,25 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       return;
     }
     incidents.classList.add("public-picture");
-    const place = (side: HTMLElement, src: HTMLElement, overhangUnits: number, ...rest: Node[]): void => {
+    const place = (side: HTMLElement, src: HTMLElement, ...rest: Node[]): void => {
       incidents.replaceChildren(side, src, ...rest);
-      // headroom above the dial for the flame's overhang, scaled to the rendered dial
-      // (jsdom reports no size: fall back to viewBox units, which match at full scale)
-      const dial = side.querySelector(".o2-dial") as SVGSVGElement | null;
-      const scale = (dial?.clientHeight || 560) / 560;
-      side.style.setProperty("--flame-overhang", `${Math.ceil(overhangUnits * scale)}px`);
     };
     if (narrowStage()) {
       // the stage keeps the dial picture; the incident cards move into the active story card
       const beat = store.get().beat;
       const stepCard = beat ? document.querySelector(`#beat-${beat.story}-${beat.scene}-${beat.beat} .step-card`) : null;
-      const { side, src, overhangUnits } = dialSide(pages);
+      const { side, src } = dialSide(pages);
       if (stepCard) {
-        place(side, src, overhangUnits);
+        place(side, src);
         stepCard.append(...cards);
         placedCards = cards;
       } else {
-        place(side, src, overhangUnits, ...cards);
+        place(side, src, ...cards);
       }
       return;
     }
-    const { side, src, overhangUnits } = dialSide(pages);
-    place(side, src, overhangUnits, ...cards);
+    const { side, src } = dialSide(pages);
+    place(side, src, ...cards);
   }
 
   /** Chapter 1's instrument: a draggable oxygen handle on the dial that names the air it
@@ -645,13 +641,32 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     line.setAttribute("aria-label", t("ui.stage.dial-handle"));
     line.setAttribute("aria-valuemin", "0");
     line.setAttribute("aria-valuemax", "100");
-    dial.append(line, hit);
+    // the flame IS the oxygen marker: same value, same drag handler. It is created at the
+    // visitor's value, so a rebuilt dial shows it already in place (only the first paint fades in).
+    const { g: flameG, flame, setO2 } = flameHandleSVG(youO2);
+    if (!flameShown) {
+      flameShown = true;
+      flame.classList.add("flame-in");
+    }
+    dial.append(flameG, line, hit);
+    const hint = html("p", "dial-hint");
+    hint.textContent = t("ui.stage.dial-hint");
     const result = html("p", "dial-result");
     result.setAttribute("aria-live", "polite");
-    side.append(result);
+    side.append(hint, result);
+    // one gentle nudge of the marker the first time the dial is on screen (CSS skips it under reduced motion)
+    if (typeof IntersectionObserver !== "undefined") {
+      const seen = new IntersectionObserver((es) => {
+        if (!es.some((e) => e.isIntersecting)) return;
+        seen.disconnect();
+        line.classList.add("dial-nudge");
+      });
+      seen.observe(dial);
+    }
     const show = (v: number): string => (Number.isInteger(v) ? String(v) : String(Number(v.toFixed(1))));
     const paint = (): void => {
       const v = youO2!;
+      setO2(v);
       line.setAttribute("y1", String(dialY(v)));
       line.setAttribute("y2", String(dialY(v)));
       line.setAttribute("aria-valuenow", String(show(v)));
@@ -690,33 +705,36 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       youO2 = Math.min(100, Math.max(0, Math.round(dialV(units) * 10) / 10));
       paint();
     };
-    hit.addEventListener("pointerdown", (e) => {
+    const grab = (e: PointerEvent): void => {
       try {
         hit.setPointerCapture(e.pointerId);
       } catch {
         /* synthetic or already-released pointers have nothing to capture */
       }
+      flameG.classList.add("dragging"); // no glide lag while the pointer holds it
       move(e.clientY);
       const gl = (ev: PointerEvent): void => move(ev.clientY);
       const up = (): void => {
         window.removeEventListener("pointermove", gl as EventListener);
         window.removeEventListener("pointerup", up);
         window.removeEventListener("pointercancel", up);
+        flameG.classList.remove("dragging");
       };
       window.addEventListener("pointermove", gl as EventListener);
       window.addEventListener("pointerup", up);
       window.addEventListener("pointercancel", up);
-    });
+    };
+    hit.addEventListener("pointerdown", grab);
+    flameG.addEventListener("pointerdown", grab as EventListener);
     paint();
   }
 
   /** The oxygen dial with its flame and source line (the public picture beside the cards). */
-  function dialSide(pages: Incident[]): { side: HTMLElement; src: HTMLElement; overhangUnits: number } {
+  function dialSide(pages: Incident[]): { side: HTMLElement; src: HTMLElement } {
     const side = html("div", "picture-side");
     const dial = dialSVG(ctx, pages);
     side.append(dial);
     wireDialCheck(side, dial, pages);
-    const overhangUnits = flameOverhangUnits(pages.map((i) => incidentO2(i.oxygen)).find((v): v is number => v !== undefined) ?? null);
     const seen = new Set<string>();
     const src = html("p", "dial-source");
     src.append(`${t("ui.stage.dial-source")}: `);
@@ -730,7 +748,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       link.rel = "noopener";
       src.append(link);
     }
-    return { side, src, overhangUnits };
+    return { side, src };
   }
 
   // ---------- wiring ----------
