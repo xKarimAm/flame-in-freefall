@@ -154,6 +154,12 @@ table.test-rows { margin-top: 12px; font-size: var(--text-body); }
 .lib-axis { fill: var(--muted-dark); font-size: var(--text-meta); }
 .lib-sig-caption { color: var(--muted-dark); font-size: var(--text-meta); }
 .lib-moments-title { font-size: var(--text-body); margin: 16px 0 8px; }
+.lib-bignum { margin: 16px 0; }
+.lib-bignum-value { display: block; font-size: var(--text-chapter); font-weight: 700; line-height: 1; }
+.lib-bignum-label { display: block; margin-top: 8px; color: var(--muted-dark); font-size: var(--text-meta); }
+.lib-conditions { border-collapse: collapse; margin: 16px 0; font-size: var(--text-body); }
+.lib-conditions caption { text-align: left; }
+.lib-conditions th, .lib-conditions td { padding: 6px 12px 6px 0; border-bottom: 1px solid var(--rule); font-weight: 400; text-align: left; vertical-align: top; }
 .lib-moments { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
 .lib-cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
 .lib-card { border: 1px solid var(--rule); padding: 8px 12px; }

@@ -11,11 +11,18 @@ export interface LibraryAi {
   made_at: string;
 }
 
+export interface LibraryEngineer {
+  text: string;
+  quote: string;
+}
+
 export interface LibraryStory {
   id: string;
   investigations: string[];
   title: string;
   voice: string;
+  /** Safety-application text drafted from the PSI record; null until the backend writes it. */
+  engineer: LibraryEngineer | null;
   core: { quote: string; investigation: string };
   signature: Signature;
   hook: string;
@@ -62,11 +69,20 @@ export function parseLibrary(json: unknown): LibraryStory[] {
       throw new Error(`invalid library.json: story ${i} has no moments`);
     if (!SIGNATURES.includes(s["signature"] as string))
       throw new Error(`invalid library.json: story ${i} has an unknown signature`);
+    let engineer: LibraryEngineer | null = null;
+    if (s["engineer"] != null) {
+      if (!isRecord(s["engineer"])) throw new Error(`invalid library.json: story ${i} has a bad engineer`);
+      engineer = {
+        text: str(s["engineer"]["text"], `story ${i} engineer text`),
+        quote: str(s["engineer"]["quote"], `story ${i} engineer quote`),
+      };
+    }
     return {
       id: str(s["id"], `story ${i} id`),
       investigations: s["investigations"] as string[],
       title: str(s["title"], `story ${i} title`),
       voice: str(s["voice"], `story ${i} voice`),
+      engineer,
       core: { quote: s["core"]["quote"] as string, investigation: s["core"]["investigation"] as string },
       signature: s["signature"] as Signature,
       hook: str(s["hook"], `story ${i} hook`),
@@ -313,40 +329,115 @@ function signatureView(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx):
   }
 }
 
-/** One template for every story: title, voice, quote with PSI link, hook, reveal, signature, moments, bridge, AI tag. */
-export function renderLibraryPage(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): HTMLElement {
-  const { t } = ctx;
-  const exp = ctx.api.experiment(story.core.investigation);
-  const page = h("article", { class: "lib-page", "data-story": story.id });
-  page.append(h("h3", { class: "lib-title" }, story.title));
-  page.append(h("p", { class: "lib-voice" }, t("ui.library.voice", { voice: story.voice })));
-  const quote = h("blockquote", { class: "lib-quote" }, story.core.quote, " ");
-  if (exp) quote.append(cite(t("ui.sheet.detail.psi-link"), exp.psi_url, "plain"));
-  page.append(quote);
-  page.append(h("p", { class: "lib-hook" }, story.hook));
-  page.append(h("p", { class: "lib-reveal" }, story.reveal));
-  page.append(signatureView(story, moments, ctx));
-  // stories with no moments get no numbers heading and no list
-  if (story.moments.length) {
-    page.append(h("h4", { class: "lib-moments-title" }, t("ui.library.moments")));
-    const list = h("ul", { class: "lib-moments" });
-    for (const id of story.moments) {
-      const m = momentById(moments, id);
-      const value = m.value_max == null ? `${fmt(m.value)} ${m.unit}` : `${fmt(m.value)} to ${fmt(m.value_max)} ${m.unit}`;
-      list.append(h("li", { class: "lib-moment" }, cite(`${m.label}: ${value}`, m.url)));
-    }
-    page.append(list);
-  }
-  page.append(h("p", { class: "lib-bridge" }, story.bridge));
-  const ai = h(
+function aiTag(story: LibraryStory, t: Ctx["t"]): HTMLElement {
+  return h(
     "p",
     { class: "lib-ai", "data-own": true },
     h("span", { class: "ai-tag" }, t("ui.sheet.detail.summary")),
     " ",
     t("ui.sheet.detail.summary-by", { model: story.ai.model, made_at: story.ai.made_at }),
   );
-  page.append(ai);
+}
+
+/** The story's first moment as one large linked number with its label; null with no moments. */
+function bigMoment(story: LibraryStory, moments: LibraryMoment[]): HTMLElement | null {
+  if (!story.moments.length) return null;
+  const m = momentById(moments, story.moments[0]);
+  const value = m.value_max == null ? `${fmt(m.value)} ${m.unit}`.trim() : `${fmt(m.value)} to ${fmt(m.value_max)} ${m.unit}`.trim();
+  // value and label share one link to the PSI row, as the moments list did: names like
+  // FLEX-2 carry digits, and every digit on the page stays inside a link or provenance
+  const a = h("a", { class: "num", href: safeHref(m.url), target: "_blank", rel: "noopener" });
+  a.append(h("span", { class: "lib-bignum-value" }, value), h("span", { class: "lib-bignum-label" }, m.label));
+  return h("p", { class: "lib-bignum" }, a);
+}
+
+/** One compact table row per moment of the story: the condition and the measured value. */
+function conditionsTable(story: LibraryStory, moments: LibraryMoment[]): HTMLElement {
+  const body = h("tbody", {});
+  for (const id of story.moments) {
+    const m = momentById(moments, id);
+    const value = m.value_max == null ? `${fmt(m.value)} ${m.unit}`.trim() : `${fmt(m.value)} to ${fmt(m.value_max)} ${m.unit}`.trim();
+    body.append(
+      h("tr", {}, h("th", { scope: "row" }, cite(m.label, m.url, "plain")), h("td", {}, cite(value, m.url, "num"))),
+    );
+  }
+  const table = h("table", { class: "lib-conditions" });
+  table.append(h("caption", { class: "lib-moments-title" }, ""), body);
+  return table;
+}
+
+/** Oxygen, pressure and flow as words: which of them no test row of the story recorded. */
+function unrecordedFields(story: LibraryStory, ctx: Ctx): string[] {
+  const rows = ctx.api.data.tests.filter((row) => story.investigations.includes(row.investigation));
+  const out: string[] = [];
+  if (!rows.some((row) => row.o2_pct != null)) out.push(ctx.t("ui.nearest.oxygen"));
+  if (!rows.some((row) => row.pressure_kpa != null)) out.push(ctx.t("ui.nearest.pressure"));
+  if (!rows.some((row) => row.flow_cm_s != null)) out.push(ctx.t("ui.nearest.flow"));
+  return out;
+}
+
+function psiLink(story: LibraryStory, ctx: Ctx): HTMLElement | null {
+  const exp = ctx.api.experiment(story.core.investigation);
+  return exp ? cite(ctx.t("ui.sheet.detail.psi-link"), exp.psi_url, "plain") : null;
+}
+
+/** Public: the signature view first, the hook, one moment as a large number, the bridge. */
+function renderPublic(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): HTMLElement {
+  const { t } = ctx;
+  const page = h("article", { class: "lib-page", "data-story": story.id });
+  page.append(h("h3", { class: "lib-title" }, story.title));
+  page.append(signatureView(story, moments, ctx));
+  page.append(h("p", { class: "lib-voice" }, t("ui.library.voice", { voice: story.voice })));
+  page.append(h("p", { class: "lib-hook" }, story.hook));
+  const big = bigMoment(story, moments);
+  if (big) page.append(big);
+  page.append(h("p", { class: "lib-bridge" }, story.bridge));
+  page.append(aiTag(story, t));
   return page;
+}
+
+/** Astronaut: a crew briefing from the engineer text, the tested conditions, the gaps, the PSI link. */
+function renderBriefing(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): HTMLElement {
+  const { t } = ctx;
+  const page = h("article", { class: "lib-page", "data-story": story.id });
+  page.append(h("h3", { class: "lib-title" }, story.title));
+  page.append(h("p", { class: "lib-voice" }, t("ui.library.voice", { voice: story.voice })));
+  page.append(h("h4", { class: "lib-crew lib-moments-title" }, t("ui.library.crew")));
+  if (story.engineer) {
+    page.append(h("p", { class: "lib-crew-text" }, story.engineer.text));
+    page.append(h("blockquote", { class: "lib-quote" }, story.engineer.quote));
+  } else {
+    page.append(h("p", { class: "lib-crew-text" }, t("ui.library.no-safety")));
+  }
+  const table = conditionsTable(story, moments);
+  table.querySelector("caption")!.textContent = t("ui.library.conditions");
+  page.append(table);
+  const missing = unrecordedFields(story, ctx);
+  if (missing.length) page.append(h("p", { class: "lib-unrecorded" }, t("ui.library.unrecorded", { fields: missing.join(", ") })));
+  const link = psiLink(story, ctx);
+  if (link) page.append(h("p", { class: "lib-psi" }, link));
+  page.append(aiTag(story, t));
+  return page;
+}
+
+/** Analyst: the test rows, then the signature view. */
+function renderAnalyst(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): HTMLElement {
+  const { t } = ctx;
+  const page = h("article", { class: "lib-page", "data-story": story.id });
+  page.append(h("h3", { class: "lib-title" }, story.title));
+  page.append(h("p", { class: "lib-voice" }, t("ui.library.voice", { voice: story.voice })));
+  page.append(sampleWall(story, ctx));
+  page.append(signatureView(story, moments, ctx));
+  page.append(aiTag(story, t));
+  return page;
+}
+
+/** One page per story, read differently per lens; every number stays linked to its PSI row. */
+export function renderLibraryPage(story: LibraryStory, moments: LibraryMoment[], ctx: Ctx): HTMLElement {
+  const lens = ctx.store.get().lens;
+  if (lens === "astronaut") return renderBriefing(story, moments, ctx);
+  if (lens === "analyst") return renderAnalyst(story, moments, ctx);
+  return renderPublic(story, moments, ctx);
 }
 
 /** The library shelf: one button per story. */
