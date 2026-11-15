@@ -463,7 +463,15 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
     );
     return card;
   }
+  /** Incident cards moved into a story card on narrow screens, so they can be put back. */
+  let placedCards: HTMLElement[] = [];
+  /** The small-screen stage holds the picture; the story card holds the words. */
+  const narrowStage = (): boolean =>
+    typeof matchMedia === "function" && matchMedia("(max-width: 1099px)").matches;
+
   function drawIncidents(ids: string[]): void {
+    for (const c of placedCards) c.remove();
+    placedCards = [];
     const all = api.data.incidents.incidents;
     const pages = ids.map((id) => all.find((i) => i.id === id)).filter((i): i is Incident => !!i);
     const cards = pages.map(incidentCard);
@@ -473,6 +481,26 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       return;
     }
     incidents.classList.add("public-picture");
+    if (narrowStage()) {
+      // the stage keeps the dial picture; the incident cards move into the active story card
+      const beat = store.get().beat;
+      const stepCard = beat ? document.querySelector(`#beat-${beat.story}-${beat.scene}-${beat.beat} .step-card`) : null;
+      const { side, src } = dialSide(pages);
+      incidents.replaceChildren(side, src);
+      if (stepCard) {
+        stepCard.append(...cards);
+        placedCards = cards;
+      } else {
+        incidents.append(...cards);
+      }
+      return;
+    }
+    const { side, src } = dialSide(pages);
+    incidents.replaceChildren(side, src, ...cards);
+  }
+
+  /** The oxygen dial with its flame and source line (the public picture beside the cards). */
+  function dialSide(pages: Incident[]): { side: HTMLElement; src: HTMLElement } {
     const side = html("div", "picture-side");
     const dial = dialSVG(ctx, pages);
     // the flame stands with its base at the dial's current oxygen mark (the ground when there is none)
@@ -499,7 +527,7 @@ export function mount(el: HTMLElement, ctx: Ctx, opts: MountOptions = {}): void 
       link.rel = "noopener";
       src.append(link);
     }
-    incidents.replaceChildren(side, src, ...cards);
+    return { side, src };
   }
 
   // ---------- wiring ----------

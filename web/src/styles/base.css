@@ -30,13 +30,25 @@ a { color: inherit; }
   height: calc(100vh - var(--chrome-h));
   overflow: hidden;
 }
-/* story steps scroll over the stage; only the cards take clicks */
+/* desktop: two columns that never share space. The story column is the left 40 %
+   (cards only); the stage is the right 60 %, sticky. Only the cards take clicks. */
+@media (min-width: 1100px) {
+  main { display: grid; grid-template-columns: 40% 60%; align-items: start; }
+  #story { grid-column: 1; grid-row: 1; }
+  #stage { grid-column: 2; grid-row: 1; }
+}
 #story {
   position: relative; z-index: 10;
-  margin-top: calc(-1 * (100vh - var(--chrome-h)));
   pointer-events: none;
 }
 #story .step { pointer-events: auto; }
+/* under 1100 px the stage pins under the header at 45 % of the viewport with a solid
+   ground and sits above the story: cards scroll below it and disappear behind it */
+@media (max-width: 1099px) {
+  #stage { height: 45vh; z-index: 12; background: var(--space-deep); }
+}
+/* while the cover or a chapter page is on screen the stage hides instead of peeking out */
+body[data-stage-hidden="true"] #stage { visibility: hidden; }
 
 /* slider panel + nearest list (right side; the UI hides it while sliders are locked) */
 #panel {
@@ -47,10 +59,8 @@ a { color: inherit; }
 }
 #panel[hidden], #sheet[hidden], #overlay[hidden] { display: none; }
 
-/* wide screens: the story cards (28rem + 4vw margin, see engine.css) are on the left and the panel on the right,
-   so the chart takes the middle and never sits under either */
+/* wide screens: the panel floats on the right, so the chart keeps clear of it */
 @media (min-width: 1100px) {
-  #stage { padding-left: calc(4vw + 28rem + 24px); }
   body:has(#panel:not([hidden])) #stage { padding-right: calc(var(--panel-w) + 2 * var(--gap)); }
 }
 
@@ -63,6 +73,7 @@ a { color: inherit; }
 
 /* analyst workspace: the sheet goes full height instead of the story column */
 body[data-lens="analyst"] #story { display: none; }
+body[data-lens="analyst"] main { display: block; }
 @media (min-width: 1100px) {
   body[data-lens="analyst"] #stage { padding-left: 0; }
   body[data-lens="analyst"] #sheet {

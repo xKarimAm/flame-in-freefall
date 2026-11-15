@@ -151,7 +151,7 @@ export function mount(el: HTMLElement, ctx: Ctx, makeScroller: () => Scroller = 
     const vh = window.innerHeight;
     const inView = (n: Element): boolean => {
       const r = n.getBoundingClientRect();
-      return r.top < vh && r.bottom > 0;
+      return r.top < vh / 2 && r.bottom > vh / 2;
     };
     const cover = el.querySelector(".cover");
     const chapter = [...el.querySelectorAll(".chapter")].some(inView);

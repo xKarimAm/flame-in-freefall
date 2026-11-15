@@ -1207,6 +1207,31 @@ describe("act 1 public picture layout (task 21)", () => {
     expect((host.querySelector(".flame-at-mark") as HTMLElement).style.bottom).toBe("0%");
   });
 
+  it("on narrow screens the incident cards move into the story card, the dial stays (task 41b)", () => {
+    const real = (window as unknown as Record<string, unknown>)["matchMedia"];
+    (window as unknown as Record<string, unknown>)["matchMedia"] = (q: string) => ({ matches: q.includes("1099") });
+    const beat = { story: "why-oxygen", scene: "why-oxygen-main", beat: "hook", kind: "hook" as const };
+    const step = document.createElement("div");
+    step.id = "beat-why-oxygen-why-oxygen-main-hook";
+    step.className = "step is-active";
+    const card = document.createElement("div");
+    card.className = "step-card";
+    card.textContent = "beat words";
+    step.append(card);
+    document.body.append(step);
+    try {
+      const { host } = setup({ view: "incident", incident_ids: ["apollo-1"] } as StageState, null, {}, SIZE, "public", beat);
+      expect(card.querySelectorAll("article.incident-card").length).toBe(1);
+      expect(card.textContent).toContain("beat words");
+      expect(host.querySelectorAll(".stage-incidents article.incident-card").length).toBe(0);
+      expect(host.querySelector(".stage-incidents .picture-side")).not.toBeNull();
+    } finally {
+      if (real !== undefined) (window as unknown as Record<string, unknown>)["matchMedia"] = real;
+      else delete (window as unknown as Record<string, unknown>)["matchMedia"];
+      step.remove();
+    }
+  });
+
   it("other lenses keep the plain cards with no picture side", () => {
     const { host } = setup(hook, null, {}, SIZE, "astronaut");
     expect(host.querySelector(".picture-side")).toBeNull();
